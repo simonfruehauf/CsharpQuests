@@ -12,13 +12,105 @@ namespace HelloWorld
         public static string Worldstring = "Ham and Eggs are better than \"Hello World!\"";
         public static int TheAnswer = 42;
         public static bool WorldFlat = true;
+        public enum OperationType
+        {
+            subtract, 
+            add, 
+            multiply,
+            divide
+        } 
 
         static void Main(string[] args)
         {
-
+            Calculator();
         }
+        static void Calculator()
+        {
+            int a;
+            retryVarA:
+            Console.Write("Input variable A: ");
+            try
+            {
+                a = Convert.ToInt32(Console.ReadLine());
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Variable needs to be an Int. ");
+                goto retryVarA;
+            }
 
+            OperationType operation;
+        retryOperator:
+            Console.Write("Input an operator: ");
 
+            switch (Console.ReadLine())
+            {
+                case "plus":
+                    goto case "+";
+                case "add":
+                    goto case "+";
+                case "+":
+                    operation = OperationType.add;
+                    break;
+                case "minus":
+                    goto case "-";
+                case "remove":
+                    goto case "+";
+                case "-":
+                    operation = OperationType.subtract;
+                    break;
+                case "multiply":
+                    goto case "x";
+                case "*":
+                    goto case "+";
+                case "x":
+                    operation = OperationType.multiply;
+                    break;
+                case "by":
+                    goto case "/";
+                case "divide":
+                    goto case "/";
+                case "/":
+                    operation = OperationType.divide;
+                    break;
+                default:
+                    Console.WriteLine("Unknown operator, try agtain.");
+                    goto retryOperator;
+            }
+            int b;
+            retryVarB:
+            Console.Write("Input variable B: ");
+            try
+            {
+               b = Convert.ToInt32(Console.ReadLine());
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Variable needs to be an Int. ");
+                goto retryVarB;
+            }
+            int c;
+            switch (operation)
+            {
+                case OperationType.subtract:
+                    c = a - b;
+                    break;
+                case OperationType.add:
+                    c = a + b;
+                    break;
+                case OperationType.multiply:
+                    c = a * b;
+                    break;
+                case OperationType.divide:
+                    c = a / b;
+                    break;
+                default:
+                    c = 0;
+                    break;
+            }
+            Console.WriteLine("Equals to " + c);
+            Console.ReadLine(); 
+        }
         static void dataTypes()
         {
             bool boolean = true;
