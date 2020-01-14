@@ -12,13 +12,16 @@ namespace HelloWorld
         public static string Worldstring = "Ham and Eggs are better than \"Hello World!\"";
         public static int TheAnswer = 42;
         public static bool WorldFlat = true;
+        public static string UserName;
+        public static int UserAge;
         public enum OperationType
         {
-            subtract, 
-            add, 
+            naught,
+            subtract,
+            add,
             multiply,
             divide
-        } 
+        }
 
         static void Main(string[] args)
         {
@@ -26,69 +29,13 @@ namespace HelloWorld
         }
         static void Calculator()
         {
+
             int a;
-            retryVarA:
-            Console.Write("Input variable A: ");
-            try
-            {
-                a = Convert.ToInt32(Console.ReadLine());
-            }
-            catch (Exception)
-            {
-                Console.WriteLine("Variable needs to be an Int. ");
-                goto retryVarA;
-            }
-
-            OperationType operation;
-        retryOperator:
-            Console.Write("Input an operator: ");
-
-            switch (Console.ReadLine())
-            {
-                case "plus":
-                    goto case "+";
-                case "add":
-                    goto case "+";
-                case "+":
-                    operation = OperationType.add;
-                    break;
-                case "minus":
-                    goto case "-";
-                case "remove":
-                    goto case "+";
-                case "-":
-                    operation = OperationType.subtract;
-                    break;
-                case "multiply":
-                    goto case "x";
-                case "*":
-                    goto case "+";
-                case "x":
-                    operation = OperationType.multiply;
-                    break;
-                case "by":
-                    goto case "/";
-                case "divide":
-                    goto case "/";
-                case "/":
-                    operation = OperationType.divide;
-                    break;
-                default:
-                    Console.WriteLine("Unknown operator, try agtain.");
-                    goto retryOperator;
-            }
+            SetInteger("A", out a);
+            OperationType operation = OperationType.naught;
+            SetOperator(out operation);
             int b;
-            retryVarB:
-            Console.Write("Input variable B: ");
-            try
-            {
-               b = Convert.ToInt32(Console.ReadLine());
-            }
-            catch (Exception)
-            {
-                Console.WriteLine("Variable needs to be an Int. ");
-                goto retryVarB;
-            }
+            SetInteger("B", out b);
             int c;
             switch (operation)
             {
@@ -109,7 +56,53 @@ namespace HelloWorld
                     break;
             }
             Console.WriteLine("Equals to " + c);
-            Console.ReadLine(); 
+            Console.ReadLine();
+        }
+        static void SetInteger(string intName, out int integer)
+        {
+            Console.Write("Input variable " + intName + ": ");
+            try
+            {
+                integer = Convert.ToInt32(Console.ReadLine());
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Input needs to be an integer.");
+                SetInteger(intName, out integer);
+                return;
+            }
+        }
+        static void SetOperator(out OperationType localoperator)
+        {
+            localoperator = OperationType.naught;
+            Console.Write("Input an operator: ");
+            switch (Console.ReadLine())
+            {
+                case "plus":
+                case "add":
+                case "+":
+                    localoperator = OperationType.add;
+                    break;
+                case "minus":
+                case "remove":
+                case "-":
+                    localoperator = OperationType.subtract;
+                    break;
+                case "multiply":
+                case "*":
+                case "x":
+                    localoperator = OperationType.multiply;
+                    break;
+                case "by":
+                case "divide":
+                case "/":
+                    localoperator = OperationType.divide;
+                    break;
+                default:
+                    Console.WriteLine("Unknown operator, try agtain.");
+                    SetOperator(out localoperator);
+                    break;
+            }
         }
         static void dataTypes()
         {
@@ -119,7 +112,7 @@ namespace HelloWorld
             float floatpoint = 1.11f;
             string textstring = "random text";
             char singlechar = 'a';
-            Console.WriteLine("bool " + boolean);   
+            Console.WriteLine("bool " + boolean);
             Console.WriteLine("int " + integer);
             Console.WriteLine("double " + doublenumber);
             Console.WriteLine("float " + floatpoint);
@@ -199,19 +192,21 @@ namespace HelloWorld
         static void Name()
         {
             string name;
-            retryName:
             Console.Write("Please input your name: ");
             name = Console.ReadLine();
-            if (name=="")
+            if (name == "")
             {
-                goto retryName;
-
-            }          
+                Name();
+            }
 
             Console.WriteLine("Hello, " + name + "!");
+            UserName = name;
+            Console.ReadLine();
 
-            int age;
-            retryAge:
+        }
+        static void Age()
+        {
+            int age = -1;
             Console.Write("Please input your age as a number: ");
             try
             {
@@ -219,18 +214,21 @@ namespace HelloWorld
             }
             catch (Exception)
             {
-                goto retryAge;
+                Console.WriteLine("Invalid input.");
+                Age();
             }
 
-            
-            if (name==age.ToString())
+            if (UserName != null)
             {
-                Console.WriteLine("Your Name is the same as your age. Interesting.");
+                Console.WriteLine("Hello, " + UserName + "! Thank you for telling me your age (which is " + age + ").");
+                UserAge = age;
             }
-            Console.WriteLine("Hello, " + name + "! Thank you for telling me your age (which is " + age + ").");
+            else
+            {
+                Console.WriteLine("Your age is " + age + ".");
+                UserAge = age;
+            }
             Console.ReadLine();
-
-
         }
     }
 }
