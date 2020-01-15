@@ -67,7 +67,6 @@ namespace HelloWorld
         public static Random rnd = new Random();
         static bool calendarHasMonth;
         static bool calendarHasYear;
-        static bool inMainMenu;
         static void Main(string[] args)
         {
             MainMenu();
@@ -75,7 +74,6 @@ namespace HelloWorld
 
         static void MainMenu(bool unknownInput = false)
         {
-            inMainMenu = true;
             if (!unknownInput)
             {
                 Console.WriteLine("Welcome " + ((MainMenuOpened == true) ? "back " : "") + "to the Main Menu.");
@@ -91,11 +89,9 @@ namespace HelloWorld
                     Console.WriteLine("Here a list of available commands. ()Brackets indicate shortcuts. \n help \n current calendar \n lookup calendar \n super smart (ai) \n (c)alculator \n name \n age \n random number \n (e)xit or (q)uit");
                     break;
                 case "current calendar":
-                    inMainMenu = false;
                     DrawMonth(true);
                     break;
                 case "lookup calendar":
-                    inMainMenu = false;
                     DrawMonth(false);
                     break;
                 case "q":
@@ -108,25 +104,20 @@ namespace HelloWorld
                 case "super smart AI":
                 case "AI":
                 case "ai":
-                    inMainMenu = false;
                     SuperSmartAI();
                     break;
                 case "calculator":
                 case "calc":
                 case "c":
-                    inMainMenu = false;
                     Calculator();
                     break;
                 case "name":
-                    inMainMenu = false;
                     Name();
                     break;
                 case "age":
-                    inMainMenu = false;
                     Age();
                     break;
                 case "random number":
-                    inMainMenu = false;
                     GenerateRandomNumberBetween();
                     break;
                 default:
