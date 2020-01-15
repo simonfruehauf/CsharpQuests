@@ -1,18 +1,18 @@
 using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace HelloWorld
 {
 
     class Program
     {
+        #region randomvars
         public static string Worldstring = "Ham and Eggs are better than \"Hello World!\"";
         public static int TheAnswer = 42;
         public static bool WorldFlat = true;
+        #endregion
+
         public static string UserName;
         public static int UserAge;
         static bool MainMenuOpened;
@@ -76,7 +76,8 @@ namespace HelloWorld
             Console.WriteLine("Please input your command.");
             Console.Write("> ");
             MainMenuOpened = true;
-            switch (Console.ReadLine())
+            string input = Console.ReadLine();
+            switch (input)
             {
                 case "help":
                 case "h":
@@ -94,7 +95,7 @@ namespace HelloWorld
                 case "quit":
                 case "exit":
                 case "e":
-                    System.Environment.Exit(1);
+                    Environment.Exit(1);
                     break;
                 case "super smart ai":
                 case "super smart AI":
@@ -235,15 +236,15 @@ namespace HelloWorld
             DateTime date = new DateTime(year, month, 1); // get the datetime for the first day of the month? i think
             int weekday = date.Day;
             int daysInMonth = DateTime.DaysInMonth(year, month); //get the amount of days in the month for this section of the calendar to draw
-            int[,] calendar = new int[6,7]; //make our calendar 2D array, in this case being the weeks & weekdays
-            int dayOfWeek =  Convert.ToInt32(date.DayOfWeek); //get the day of the week of the first day in the month as an int
+            int[,] calendar = new int[6, 7]; //make our calendar 2D array, in this case being the weeks & weekdays
+            int dayOfWeek = Convert.ToInt32(date.DayOfWeek); //get the day of the week of the first day in the month as an int
             int currentlyDrawingDay = 1; //start counting here
 
             for (int x = 0; x < calendar.GetLength(0); x++) //if x(current day of the week) is within the week (length of 0 axis in calendar array)
             {
-                for (int y = 0; y < calendar.GetLength(1) && (currentlyDrawingDay - dayOfWeek +1 /*plus one because we start counting at 1*/) <= daysInMonth; y++) //if y is within the week, and the currently drawing day minus the day of the week is within the month
+                for (int y = 0; y < calendar.GetLength(1) && (currentlyDrawingDay - dayOfWeek + 1 /*plus one because we start counting at 1*/) <= daysInMonth; y++) //if y is within the week, and the currently drawing day minus the day of the week is within the month
                 {
-                    calendar[x, y] = currentlyDrawingDay - dayOfWeek +1; //set the day to the index minus the starting date 
+                    calendar[x, y] = currentlyDrawingDay - dayOfWeek + 1; //set the day to the index minus the starting date 
                     currentlyDrawingDay++;
 
                 }
@@ -270,7 +271,9 @@ namespace HelloWorld
                     {
                         Console.Write("   ");
                     }
+
                 }
+                Console.WriteLine();
             }
             #endregion
             Console.ReadLine();
@@ -367,7 +370,7 @@ namespace HelloWorld
             Console.WriteLine("----------------------------");
             Console.WriteLine("I am an AI. Hello. Ask me any question you'd like.");
 
-            string input ="";
+            string input = "";
             input = Console.ReadLine();
             while (!input.Contains("exit") && !input.Contains("goodbye"))
             {
