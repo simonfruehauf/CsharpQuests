@@ -45,10 +45,24 @@ namespace HelloWorld
 
         static void Main(string[] args)
         {
-            Console.WriteLine(Secret());
+
+            PrintGrid(10, 10);
             Console.ReadLine();
 
         }
+        static void PrintGrid(int x, int y)
+        {
+            for (int localx = 0; localx < x; localx++)
+            {
+                for (int localy = 0; localy < y; localy++)
+                {
+                    Console.Write(localx + "/" + localy);
+                    Console.Write(" ");
+                }
+                Console.WriteLine();
+            }
+        }
+
         static string Secret()
         {
             string input = "";
