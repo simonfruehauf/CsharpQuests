@@ -1,7 +1,6 @@
 using System;
 using System.Globalization;
-using System.Text;
-
+#pragma warning disable IDE0051
 namespace HelloWorld
 {
 
@@ -67,7 +66,7 @@ namespace HelloWorld
         public static Random rnd = new Random();
         static bool calendarHasMonth;
         static bool calendarHasYear;
-        static void Main(string[] args)
+        static void Main()
         {
             MainMenu();
         }
@@ -127,7 +126,7 @@ namespace HelloWorld
             }
             MainMenu();
         }
-        
+
         static void DrawMonth(bool current = true)
         {
             int month = 0;
@@ -238,8 +237,6 @@ namespace HelloWorld
             #region ClearMonthYear
             calendarHasMonth = false;
             calendarHasYear = false;
-            month = 0;
-            year = 0;
             #endregion
         }
 
@@ -292,9 +289,9 @@ namespace HelloWorld
 
         static string Secret()
         {
-            string input = "";
+
             Console.Write("Input a secret passphrase: ");
-            input = Console.ReadLine();
+            string input = Console.ReadLine();
 
             switch (input)
             {
@@ -341,7 +338,7 @@ namespace HelloWorld
 
         static void PrintWeekdayEnum()
         {
-            foreach (var item in Enum.GetNames(typeof(Weekdays)))
+            foreach (string item in Enum.GetNames(typeof(Weekdays)))
             {
                 Console.WriteLine(item);
             }
@@ -351,11 +348,12 @@ namespace HelloWorld
         {
             Console.WriteLine("----------------------------");
             Console.WriteLine("Calculator initiated.");
-            int a;
-            if (!GetIntegerInput("A", out a))
+            if (!GetIntegerInput("A", out int a))
+            {
                 return;
-            OperationType operation = OperationType.naught;
-            if (!SetOperator(out operation))
+            }
+
+            if (!SetOperator(out OperationType operation))
             {
                 operation = OperationType.naught;
                 return;
@@ -364,7 +362,9 @@ namespace HelloWorld
             if (operation != OperationType.naught)
             {
                 if (!GetIntegerInput("B", out b))
+                {
                     return;
+                }
             }
             else
             {
@@ -397,7 +397,7 @@ namespace HelloWorld
             Console.WriteLine("Equals to " + c);
             Console.WriteLine("----------------------------");
         }
-        static bool GetIntegerInput (string intName, out int integer)
+        static bool GetIntegerInput(string intName, out int integer)
         {
             switch (SetInteger(intName, out integer))
             {
@@ -471,7 +471,7 @@ namespace HelloWorld
             }
             return true;
         }
-        static void dataTypes()
+        static void DataTypes()
         {
             bool boolean = true;
             int integer = 1;
@@ -490,8 +490,6 @@ namespace HelloWorld
         {
             string amount = Console.ReadLine();
             int number;
-
-
             try
             {
                 number = Convert.ToInt16(amount);
