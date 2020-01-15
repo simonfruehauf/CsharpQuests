@@ -16,13 +16,20 @@ namespace HelloWorld
         public static string UserName;
         public static int UserAge;
         static bool MainMenuOpened;
+        public enum ReturnType
+        {
+            valid,
+            invalid,
+            quit
+        }
         public enum OperationType
         {
             naught,
             subtract,
             add,
             multiply,
-            divide
+            divide,
+            retry
         }
         public enum Weekdays
         {
@@ -129,47 +136,7 @@ namespace HelloWorld
             }
             MainMenu();
         }
-        private static string ConsoleReadLineWithCancel()
-        {
-            string result = null;
-
-            StringBuilder buffer = new StringBuilder();
-
-            //The key is read passing true for the intercept argument to prevent
-            //any characters from displaying when the Escape key is pressed.
-            ConsoleKeyInfo info = Console.ReadKey(true);
-            while (info.Key != ConsoleKey.Enter && info.Key != ConsoleKey.Escape)
-            {
-                Console.Write(info.KeyChar);
-                buffer.Append(info.KeyChar);
-                info = Console.ReadKey(true);
-                if (info.Key == ConsoleKey.Backspace)
-                {
-                    Console.Write("\b");
-                    buffer.Remove(buffer.Length - 1, 1);
-                }
-            }
-
-            if (info.Key == ConsoleKey.Enter)
-            {
-                result = buffer.ToString();
-            }
-            if (info.Key == ConsoleKey.Escape)
-            {
-                if (inMainMenu)
-                {
-                    Environment.Exit(0);
-                }
-                else
-                {
-                    Console.WriteLine();
-                    MainMenu();
-                }
-            }
-
-            Console.WriteLine();
-            return result;
-        }
+        
         static void DrawMonth(bool current = true)
         {
             int month = 0;
@@ -372,14 +339,13 @@ namespace HelloWorld
 
             string input = "";
             input = Console.ReadLine();
-            while (!input.Contains("exit") && !input.Contains("goodbye"))
+            while (!input.Contains("exit") && !input.Contains("goodbye") && !input.Contains("quit"))
             {
                 Console.WriteLine("Very good question, I will come back to you in a moment!");
 
                 input = Console.ReadLine();
             }
             Console.WriteLine("----------------------------");
-            MainMenu();
         }
 
         static void PrintWeekdayEnum()
@@ -395,11 +361,24 @@ namespace HelloWorld
             Console.WriteLine("----------------------------");
             Console.WriteLine("Calculator initiated.");
             int a;
-            SetInteger("A", out a);
+            if (!GetIntegerInput("A", out a))
+                return;
             OperationType operation = OperationType.naught;
-            SetOperator(out operation);
+            if (!SetOperator(out operation))
+            {
+                operation = OperationType.naught;
+                return;
+            }
             int b;
-            SetInteger("B", out b);
+            if (operation != OperationType.naught)
+            {
+                if (!GetIntegerInput("B", out b))
+                    return;
+            }
+            else
+            {
+                return;
+            }
             int c;
             switch (operation)
             {
@@ -415,29 +394,55 @@ namespace HelloWorld
                 case OperationType.divide:
                     c = a / b;
                     break;
+                case OperationType.retry:
+                    c = 0;
+                    break;
+                case OperationType.naught:
+                    return;
                 default:
                     c = 0;
                     break;
             }
             Console.WriteLine("Equals to " + c);
             Console.WriteLine("----------------------------");
-            MainMenu();
         }
-        static void SetInteger(string intName, out int integer)
+        static bool GetIntegerInput (string intName, out int integer)
+        {
+            switch (SetInteger(intName, out integer))
+            {
+                case ReturnType.valid:
+                    return true;
+                case ReturnType.invalid:
+                    GetIntegerInput(intName, out integer);
+                    return true;
+                case ReturnType.quit:
+                    return false;
+                default:
+                    return false;
+            }
+        }
+        static ReturnType SetInteger(string intName, out int integer)
         {
             Console.Write("Input integer value for " + intName + ": ");
             try
             {
-                integer = Convert.ToInt32(Console.ReadLine());
+                string input = Console.ReadLine();
+                if (input == "q")
+                {
+                    integer = 0;
+                    return ReturnType.quit;
+                }
+                integer = Convert.ToInt32(input);
             }
             catch (Exception)
             {
                 Console.WriteLine("Input needs to be an integer.");
-                SetInteger(intName, out integer);
-                return;
+                integer = 0;
+                return ReturnType.invalid;
             }
+            return ReturnType.valid;
         }
-        static void SetOperator(out OperationType localoperator)
+        static bool SetOperator(out OperationType localoperator)
         {
             localoperator = OperationType.naught;
             Console.Write("Input an operator: ");
@@ -464,14 +469,16 @@ namespace HelloWorld
                     localoperator = OperationType.divide;
                     break;
                 case "b":
+                case "q":
+                case "quit":
                 case "back":
-                    MainMenu();
-                    break;
+                    return false;
                 default:
                     Console.WriteLine("Unknown operator, try again.");
-                    SetOperator(out localoperator);
+                    localoperator = OperationType.retry;
                     break;
             }
+            return true;
         }
         static void dataTypes()
         {
@@ -567,9 +574,9 @@ namespace HelloWorld
             {
                 Name();
             }
-            else if (name == "back" || name == "b")
+            else if (name == "back" || name == "b" || name == "q" || name == "quit")
             {
-                MainMenu();
+                return;
             }
 
             Console.WriteLine("Hello, " + name + "!");
