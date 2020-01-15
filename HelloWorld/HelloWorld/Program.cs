@@ -23,10 +23,88 @@ namespace HelloWorld
             divide
         }
 
+        public enum Weekdays
+        {
+            Monday,
+            Tuesday,
+            Wednesday,
+            Thursday,
+            Friday,
+            Saturday,
+            Sunday
+        }
+
+        public enum EnumSecret
+        {
+            Power,
+            Bananas,
+            Complication,
+            Programming,
+            Everything
+        }
+
         static void Main(string[] args)
         {
-            Calculator();
+            Console.WriteLine(Secret());
+            Console.ReadLine();
+
         }
+        static string Secret()
+        {
+            string input = "";
+            Console.Write("Input a secret passphrase: ");
+            input = Console.ReadLine();
+
+            switch (input)
+            {
+                case "Power":
+                    return "The secret to power is... Milkshakes.";
+                case "Bananas":
+                case "Banana":
+                case "bananas":
+                case "banana":
+                    return "Banana.Banana.Banana.Banana.Banana.Banana.Banana.Banana.Banana.Banana.Banana.";
+                case "complication":
+                    return "Sorry, there has been a complication. Goodbye.";
+                case "Programming":
+                    return "The secret to programming is trial and error.";
+                case "Everything":
+                    return "42";
+                default:
+                    return "Invalid Password.";
+            }
+        }
+
+        static void Naughty(int amount)
+        {
+            for (int i = 0; i < amount; i++)
+            {
+                Console.WriteLine("\"I have been bad today, sorry!\"");
+            }
+        }
+        static void SuperSmartAI()
+        {
+            Console.WriteLine("I am an AI. Ask me any question you'd like.");
+
+            string input ="";
+            input = Console.ReadLine();
+            while (input != "Goodbye.")
+            {
+                Console.WriteLine("Very good question, I will come back to you in a moment!");
+
+                input = Console.ReadLine();
+            }
+            Console.Read();
+        }
+
+        static void PrintWeekdayEnum()
+        {
+            foreach (var item in Enum.GetNames(typeof(Weekdays)))
+            {
+                Console.WriteLine(item);
+            }
+        }
+
         static void Calculator()
         {
 
