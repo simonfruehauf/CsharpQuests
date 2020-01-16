@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.Linq;
 #pragma warning disable IDE0051
 namespace HelloWorld
 {
@@ -104,7 +105,6 @@ namespace HelloWorld
             } while (!valid);
             return yes;
         }
-
     }
     class Program
     {
@@ -113,7 +113,6 @@ namespace HelloWorld
         public static int TheAnswer = 42;
         public static bool WorldFlat = true;
         #endregion
-
         public static string UserName;
         public static int UserAge;
         static bool MainMenuOpened;
@@ -169,14 +168,14 @@ namespace HelloWorld
         static bool calendarHasMonth;
         static bool calendarHasYear;
         static int guessingNumber = 0;
-        public static string divider = "----------------------------";
         static void Main()
         {
             MainMenu();
         }
-        static void DrawDivider()
+        public const string divider = "----------------------------";
+        public static void DrawDivider(string a_divider = divider)
         {
-            Console.WriteLine(divider);
+                Console.WriteLine(a_divider);
         }
         public static void MainMenu(bool unknownInput = false)
         {
@@ -188,6 +187,11 @@ namespace HelloWorld
             string input = Read.String("Please input your command.");
             switch (input)
             {
+                case "potion game":
+                case "potion":
+                case "p":
+                    Gambling.Game();
+                    return;
                 case "help":
                 case "h":
                     Console.WriteLine("Here a list of available commands. ()Brackets indicate shortcuts. \n> help \n> calendar \n> guessing game \n> super smart (ai) \n> (c)alculator \n> name \n> age \n> random number \n> (e)xit or (q)uit");
@@ -734,5 +738,239 @@ namespace HelloWorld
             Console.ReadLine();
         }
     }
+
+    public class Gambling
+    {
+        static int itemWidth = 5;
+        static int maxItems = 5;
+        static readonly string[] Bottle = new string[] 
+        { 
+            " { } " ,
+            " | | ", 
+            " ) ( ", 
+            "|___|" , 
+            "|   |" , 
+            "|___|" 
+        };
+
+        static readonly string[] SelectionArrow = new string[]
+        {
+            "  ^  ",
+            "  |  "
+        };
+        struct Player
+        {
+            public int maxHealth;
+            public int health;
+            public bool poisoned;
+            public Player(int a_MaxHealth) //simple init with max health
+            {
+                maxHealth = a_MaxHealth;
+                health = maxHealth;
+                poisoned = false;
+            }
+            public Player(int a_MaxHealth, bool hasMaxHealth, int a_Health, bool a_Poisoned = false) //init with all data health
+            {
+                maxHealth = a_MaxHealth;
+                if (!hasMaxHealth)
+                {
+                    health = a_Health;
+                }
+                else
+                {
+                    health = maxHealth;
+                }
+                poisoned = a_Poisoned;
+            }
+        }
+
+        enum Potion
+        {
+            Yellow,
+            Blue,
+            Brown,
+            Pink,
+            Red,
+            Blank,
+            Purple,
+            Green, 
+            Cyan,
+            White,
+            Transparent,
+            Black
+        }
+
+        enum PotionEvents
+        {
+            Damage,
+            Heal,
+            Nothing
+        }
+
+        public static void Game()
+        {
+            Player currentPlayer = new Player(10);
+            int score = 0;
+            int itemIndex = 0;
+            Console.WriteLine("Welcome Traveler. I am the Potion Seller. I have the strongest potions in the land.");
+            do
+            {
+                Console.WriteLine("These are my potions. Please do not touch them.");
+                DrawBottle(maxItems);
+                ConsoleKey keyinfo;
+                Console.WriteLine();
+                RedrawArrow(itemIndex);
+                do
+                {
+                    
+                    keyinfo = Console.ReadKey().Key;
+                    switch (keyinfo)
+                    {
+                        case ConsoleKey.LeftArrow:
+                            if (itemIndex > 0)
+                            {
+                                itemIndex--;
+                                MoveCursorUp(3);
+                                RedrawArrow(itemIndex);
+                            }
+                            break;
+                        case ConsoleKey.RightArrow:
+                            if (itemIndex < maxItems-1)
+                            {
+                                itemIndex++;
+                                MoveCursorUp(3);
+                                RedrawArrow(itemIndex);
+                            }
+                            break;
+
+                        case ConsoleKey.Enter:
+                            break;
+                        default:
+                            break;
+                    }
+                } while (keyinfo != ConsoleKey.Enter);
+
+                // here: select potion
+
+                // switch on potion type
+
+                // display health / redraw health
+                itemIndex = 0;
+                score++;
+            } while (currentPlayer.health > 0);
+            Console.WriteLine("I told you Traveler... You were not strong enough for my potions...\n <<You drank " + score + ((score > 0) ? "potions.>>" : "potion.>>"));
+        }
+
+        static Potion GetPotion()
+        {
+            return (Potion)Program.rnd.Next(Enum.GetNames(typeof(Potion)).Length);
+        }
+
+        Player DamagePlayer(Player a_Player, int damage)
+        {
+            a_Player.health -= damage;
+            string output;
+            switch (Program.rnd.Next(3))
+            {
+                case 0:
+                    output = "You can't handle my strongest potions! No one can! My strongest potions are fit for a beast let alone a man.";
+                    break;
+                case 1:
+                    output = "You can't handle my potions. They're too strong for you.";
+                    break;
+                case 2:
+                    output = "My strongest potions will kill a dragon, let alone a man. You need a seller that sells weaker potions, because my potions are too strong.";
+                    break;
+                case 3:
+                    output = "My strongest potions would kill you, traveler. You can't handle my strongest potions. You'd better go to a seller that sells weaker potions.";
+                    break;
+                default:
+                    output = "You can't handle my strongest potions! No one can! My strongest potions are fit for a beast let alone a man.";
+                    break;
+            }
+            Console.WriteLine(output);
+            return a_Player;
+        }
+
+        PotionEvents GetEvent(Potion a_potionToCheck)
+        {
+            switch (a_potionToCheck)
+            {
+                case Potion.Yellow:
+                    return PotionEvents.Damage;
+                case Potion.Blue:
+                    return PotionEvents.Damage;
+                case Potion.Brown:
+                    return PotionEvents.Damage;
+                case Potion.Pink:
+                    return PotionEvents.Heal;
+                case Potion.Red:
+                    return PotionEvents.Heal;
+                case Potion.Blank:
+                    return PotionEvents.Nothing;
+                case Potion.Purple:
+                    return PotionEvents.Damage;
+                case Potion.Green:
+                    return PotionEvents.Damage;
+                case Potion.Cyan:
+                    return PotionEvents.Nothing;
+                case Potion.White:
+                    return PotionEvents.Nothing;
+                case Potion.Transparent:
+                    return PotionEvents.Damage;
+                case Potion.Black:
+                    return PotionEvents.Nothing;
+                default:
+                    return PotionEvents.Nothing;
+            }
+        }
+
+        public static void DrawBottle(int amount)
+        {
+            int count=0;
+            foreach (string line in Bottle)
+            {
+                for (int i = 0; i < amount; i++)
+                {
+                    Console.Write(Bottle[count]);
+                }
+                Console.WriteLine();
+                count++;
+            }
+        }
+        public static void RedrawArrow(int offset)
+        {
+            int count = 0;
+            foreach (string line in SelectionArrow)
+            {
+                
+                
+                for (int i = 0; i < maxItems; i++)
+                {
+                    if (i == offset)
+                    {
+                        Console.Write(SelectionArrow[count]);
+                    }
+                    else 
+                    {
+                        Console.Write(String.Concat(Enumerable.Repeat(" ", itemWidth)));
+                    }
+                }
+                Console.WriteLine();
+                count++;
+            }
+        }
+        public static void MoveCursorUp(int amount = 1) //and delete
+        {
+
+            Console.SetCursorPosition(0, Console.CursorTop - amount);
+            for (int i = 0; i < amount; i++)
+            {
+                Console.Write("   ", 0, 80);
+            }
+            Console.WriteLine();
+        }
+    }
+
 
 }
