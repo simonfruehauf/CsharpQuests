@@ -3,6 +3,74 @@ using System.Globalization;
 #pragma warning disable IDE0051
 namespace HelloWorld
 {
+    class Read
+    {
+        static string ConsoleIndicator = "\n> ";
+        static bool valid = false;
+        public static int Int(string ConsoleText, string ErrorMessage)
+        {
+            valid = false;
+            int integer = 0;
+            do
+            {
+                try
+                {
+                    Console.Write(ConsoleText + ConsoleIndicator);
+                    string temp = Console.ReadLine();
+                    if (temp == "q" || temp == "quit")
+                    {
+                        Program.MainMenu();
+                        return 0;
+                    }
+                    integer = Convert.ToInt32(temp);
+                    valid = true;
+                }
+                catch
+                {
+                    Console.WriteLine(ErrorMessage);
+                    valid = false;
+                }
+
+            } while (!valid);
+            return integer;
+        }
+        static float Float(string ConsoleText, string ErrorMessage)
+        {
+            valid = false;
+            float floatnumber = 0;
+            do
+            {
+                try
+                {
+                    Console.Write(ConsoleText + ConsoleIndicator);
+                    string temp = Console.ReadLine();
+                    if (temp == "q" || temp == "quit")
+                    {
+                        Program.MainMenu();
+                        return 0;
+                    }
+                    floatnumber = float.Parse(temp);
+                    valid = true;
+                }
+                catch
+                {
+                    Console.WriteLine(ErrorMessage);
+                    valid = false;
+                }
+
+            } while (!valid);
+            return floatnumber;
+        }
+        public static string String(string ConsoleText)
+        {
+            Console.Write(ConsoleText + ConsoleIndicator);
+            string input = Console.ReadLine();
+            return input;
+            //valid = false;
+            //return "";
+        }
+
+    }
     class Program
     {
         #region randomvars
@@ -69,28 +137,22 @@ namespace HelloWorld
         {
             MainMenu();
         }
-
-        static void MainMenu(bool unknownInput = false)
+        public static void MainMenu(bool unknownInput = false)
         {
             if (!unknownInput)
             {
                 Console.WriteLine("Welcome " + ((MainMenuOpened == true) ? "back " : "") + "to the Main Menu.");
             }
-            Console.WriteLine("Please input your command.");
-            Console.Write("> ");
             MainMenuOpened = true;
-            string input = Console.ReadLine();
+            string input = Read.String("Please input your command.");
             switch (input)
             {
                 case "help":
                 case "h":
-                    Console.WriteLine("Here a list of available commands. ()Brackets indicate shortcuts. \n help \n current calendar \n lookup calendar \n super smart (ai) \n (c)alculator \n name \n age \n random number \n (e)xit or (q)uit");
+                    Console.WriteLine("Here a list of available commands. ()Brackets indicate shortcuts. \n> help \n> current calendar \n> lookup calendar \n> super smart (ai) \n> (c)alculator \n> name \n> age \n> random number \n> (e)xit or (q)uit");
                     break;
-                case "current calendar":
-                    DrawMonth(true);
-                    break;
-                case "lookup calendar":
-                    DrawMonth(false);
+                case "calendar":
+                    DrawMonth();
                     break;
                 case "q":
                 case "quit":
@@ -118,6 +180,8 @@ namespace HelloWorld
                 case "random number":
                     GenerateRandomNumberBetween();
                     break;
+                case "guessing game":
+                    break;
                 default:
                     Console.Write("Unknown Input. ");
                     MainMenu(true);
@@ -126,8 +190,33 @@ namespace HelloWorld
             MainMenu();
         }
 
-        static void DrawMonth(bool current = true)
+        static void GuessingGame()
         {
+            
+        }
+        static void DrawMonth()
+        {
+            bool current;
+            switch (Read.String("Do you want the current or a different month?"))
+            {
+                case "c":
+                case "current":
+                    current = true;
+                    break;
+                case "d":
+                case "different":
+                    current = false;
+                    break;
+                case "q":
+                case "quit":
+                case "b":
+                case "back":
+                    return;
+                default:
+                    DrawMonth();
+                    return;
+            }
+
             int month = 0;
             int year = 0;
             #region GetMonthYear
@@ -141,40 +230,18 @@ namespace HelloWorld
             {
                 if (!calendarHasYear)
                 {
-                    Console.Write("Please input the year you're looking for: \n> ");
-
-                    try
-                    {
-                        year = Convert.ToInt32(Console.ReadLine());
-                    }
-                    catch (Exception)
-                    {
-                        Console.WriteLine("Could not convert this to a year. Please input a number.");
-                        DrawMonth();
-                        return;
-                    }
+                    year = Read.Int("Please input the year you're looking for:", "Sorry, that was not a valid year. Please input a positive integer.");
                     calendarHasYear = true;
                 }
                 if (!calendarHasMonth)
                 {
-                    Console.Write("Please input the month (as a number) you're looking for: \n> ");
-
-                    try
-                    {
-                        month = Convert.ToInt32(Console.ReadLine());
-                    }
-                    catch (Exception)
-                    {
-                        Console.WriteLine("Could not convert this to a month. Please input a number.");
-                        DrawMonth();
-                        return;
-                    }
+                    month = Read.Int("Please input the month you're looking for:", "Sorry, that was not a valid month. Please input a integer between 1 and 12.");
                     calendarHasMonth = true;
                 }
             }
             #endregion
             #region DrawHeaders
-            Console.Write("\n\n");
+            Console.Write("\n");
             Console.WriteLine(CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(month) + ", " + year);
             Console.WriteLine("Su Mo Tu We Th Fr Sa"); //weird cause some ppl start week on sunday
             #endregion
@@ -192,7 +259,6 @@ namespace HelloWorld
              * 9. profit
             */
             DateTime date = new DateTime(year, month, 1); // get the datetime for the first day of the month? i think
-            int weekday = date.Day;
             int daysInMonth = DateTime.DaysInMonth(year, month); //get the amount of days in the month for this section of the calendar to draw
             int[,] calendar = new int[6, 7]; //make our calendar 2D array, in this case being the weeks & weekdays
             int dayOfWeek = Convert.ToInt32(date.DayOfWeek) +1; //get the day of the week of the first day in the month as an int, plus one because week does not start on sunday
@@ -239,28 +305,16 @@ namespace HelloWorld
             #endregion
         }
 
-        static double GenerateRandomNumberBetween(int a = 0, int b = 1, bool floatnumbers = false)
+        static double GenerateRandomNumberBetween(bool floatnumbers = false)
         {
             Console.WriteLine("----------------------------");
-            try
-            {
-                Console.Write("Please input the minmum: \n> ");
-                a = Convert.ToInt32(Console.ReadLine());
-            }
-            catch (Exception)
-            {
-                Console.WriteLine("Unexpected Input. Defaulting to 0.");
-            }
-            try
-            {
-                Console.Write("Please input the maximum: \n> ");
-                b = Convert.ToInt32(Console.ReadLine());
-            }
-            catch (Exception)
-            {
-                Console.WriteLine("Unexpected Input. Defaulting to 0.");
-            }
-            double randomnumber = 0;
+            
+            int a = Read.Int("Please input the minmum:", "Sorry, that was not a valit integer. Try again.");
+            
+            
+            int b = Read.Int("Please input the maximum:", "Sorry, that was not a valid year. Please input a positive integer.");
+            
+            double randomnumber;
             if (floatnumbers)
             {
                 Console.WriteLine("Generating random int number...");
@@ -271,7 +325,7 @@ namespace HelloWorld
                 Console.WriteLine("Generating random float number...");
                 randomnumber = rnd.NextDouble() * (a - b) + b;
             }
-            Console.WriteLine("Radom Number: " + randomnumber);
+            Console.WriteLine("Random Number: " + randomnumber);
             Console.WriteLine("----------------------------");
             return randomnumber;
         }
@@ -291,9 +345,7 @@ namespace HelloWorld
 
         static string Secret()
         {
-
-            Console.Write("Input a secret passphrase: ");
-            string input = Console.ReadLine();
+            string input = Read.String("Input a secret passphrase: ");
 
             switch (input)
             {
@@ -325,15 +377,12 @@ namespace HelloWorld
         static void SuperSmartAI()
         {
             Console.WriteLine("----------------------------");
-            Console.WriteLine("I am an AI. Hello. Ask me any question you'd like.");
-
-            string input = "";
-            input = Console.ReadLine();
+            string input = Read.String("I am an AI. Hello. Ask me any question you'd like.");
             while (!input.Contains("exit") && !input.Contains("goodbye") && !input.Contains("quit"))
             {
                 Console.WriteLine("Very good question, I will come back to you in a moment!");
 
-                input = Console.ReadLine();
+                input = Read.String("I am an AI. Hello. Ask me any question you'd like.");
             }
             Console.WriteLine("----------------------------");
         }
@@ -357,7 +406,6 @@ namespace HelloWorld
 
             if (!SetOperator(out OperationType operation))
             {
-                operation = OperationType.naught;
                 return;
             }
             int b;
