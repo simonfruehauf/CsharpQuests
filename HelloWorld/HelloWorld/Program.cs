@@ -176,7 +176,7 @@ namespace HelloWorld
             #region DrawHeaders
             Console.Write("\n\n");
             Console.WriteLine(CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(month) + ", " + year);
-            Console.WriteLine("Mo Tu We Th Fr Sa Su");
+            Console.WriteLine("Su Mo Tu We Th Fr Sa"); //weird cause some ppl start week on sunday
             #endregion
             #region FillCalendar
             /* todo: 
@@ -195,7 +195,7 @@ namespace HelloWorld
             int weekday = date.Day;
             int daysInMonth = DateTime.DaysInMonth(year, month); //get the amount of days in the month for this section of the calendar to draw
             int[,] calendar = new int[6, 7]; //make our calendar 2D array, in this case being the weeks & weekdays
-            int dayOfWeek = Convert.ToInt32(date.DayOfWeek); //get the day of the week of the first day in the month as an int
+            int dayOfWeek = Convert.ToInt32(date.DayOfWeek) +1; //get the day of the week of the first day in the month as an int, plus one because week does not start on sunday
             int currentlyDrawingDay = 1; //start counting here
 
             for (int x = 0; x < calendar.GetLength(0); x++) //if x(current day of the week) is within the week (length of 0 axis in calendar array)
@@ -204,7 +204,6 @@ namespace HelloWorld
                 {
                     calendar[x, y] = currentlyDrawingDay - dayOfWeek + 1; //set the day to the index minus the starting date 
                     currentlyDrawingDay++;
-
                 }
             }
             #endregion
