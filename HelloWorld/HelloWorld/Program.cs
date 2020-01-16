@@ -3,7 +3,6 @@ using System.Globalization;
 #pragma warning disable IDE0051
 namespace HelloWorld
 {
-
     class Program
     {
         #region randomvars
@@ -142,7 +141,7 @@ namespace HelloWorld
             {
                 if (!calendarHasYear)
                 {
-                    Console.Write("Please input the year you're looking for: ");
+                    Console.Write("Please input the year you're looking for: \n> ");
 
                     try
                     {
@@ -152,12 +151,13 @@ namespace HelloWorld
                     {
                         Console.WriteLine("Could not convert this to a year. Please input a number.");
                         DrawMonth();
+                        return;
                     }
                     calendarHasYear = true;
                 }
                 if (!calendarHasMonth)
                 {
-                    Console.Write("Please input the month (as a number) you're looking for: ");
+                    Console.Write("Please input the month (as a number) you're looking for: \n> ");
 
                     try
                     {
@@ -167,6 +167,7 @@ namespace HelloWorld
                     {
                         Console.WriteLine("Could not convert this to a month. Please input a number.");
                         DrawMonth();
+                        return;
                     }
                     calendarHasMonth = true;
                 }
@@ -233,7 +234,6 @@ namespace HelloWorld
                 Console.WriteLine();
             }
             #endregion
-            Console.ReadLine();
             #region ClearMonthYear
             calendarHasMonth = false;
             calendarHasYear = false;
@@ -242,9 +242,10 @@ namespace HelloWorld
 
         static double GenerateRandomNumberBetween(int a = 0, int b = 1, bool floatnumbers = false)
         {
+            Console.WriteLine("----------------------------");
             try
             {
-                Console.WriteLine("Please input the minmum: ");
+                Console.Write("Please input the minmum: \n> ");
                 a = Convert.ToInt32(Console.ReadLine());
             }
             catch (Exception)
@@ -253,7 +254,7 @@ namespace HelloWorld
             }
             try
             {
-                Console.WriteLine("Please input the maximum: ");
+                Console.Write("Please input the maximum: \n> ");
                 b = Convert.ToInt32(Console.ReadLine());
             }
             catch (Exception)
@@ -271,6 +272,8 @@ namespace HelloWorld
                 Console.WriteLine("Generating random float number...");
                 randomnumber = rnd.NextDouble() * (a - b) + b;
             }
+            Console.WriteLine("Radom Number: " + randomnumber);
+            Console.WriteLine("----------------------------");
             return randomnumber;
         }
 
