@@ -5,7 +5,7 @@ namespace HelloWorld
 {
     class Read
     {
-        static string ConsoleIndicator = "\n> ";
+        static readonly string ConsoleIndicator = "\n> ";
         static bool valid = false;
         public static int Int(string ConsoleText, string ErrorMessage)
         {
@@ -70,6 +70,41 @@ namespace HelloWorld
             //return "";
         }
 
+        public static bool YesNo(string ConsoleText, string ErrorMessage)
+        {
+            string yesno = "Y/N";
+            valid = false;
+            bool yes = false;
+            do
+            {
+                Console.WriteLine(ConsoleText + " " + yesno);
+                ConsoleKey input = Console.ReadKey().Key;
+                Console.WriteLine();
+                if (input == ConsoleKey.Q)
+                {
+                    Program.MainMenu();
+                    return false;
+                }
+                else if (input == ConsoleKey.Y)
+                {
+                    valid = true;
+                    yes = true;
+                }
+                else if (input == ConsoleKey.N)
+                {
+                    valid = true;
+                    yes = false;
+                }
+                else
+                {
+                    Console.WriteLine(ErrorMessage);
+                    valid = false;
+                }
+
+            } while (!valid);
+            return yes;
+        }
+
     }
     class Program
     {
@@ -130,12 +165,18 @@ namespace HelloWorld
             Programming,
             Everything
         }
-        public static Random rnd = new Random();
+        public static Random rnd = new Random(DateTime.Now.GetHashCode());
         static bool calendarHasMonth;
         static bool calendarHasYear;
+        static int guessingNumber = 0;
+        public static string divider = "----------------------------";
         static void Main()
         {
             MainMenu();
+        }
+        static void DrawDivider()
+        {
+            Console.WriteLine(divider);
         }
         public static void MainMenu(bool unknownInput = false)
         {
@@ -149,7 +190,7 @@ namespace HelloWorld
             {
                 case "help":
                 case "h":
-                    Console.WriteLine("Here a list of available commands. ()Brackets indicate shortcuts. \n> help \n> current calendar \n> lookup calendar \n> super smart (ai) \n> (c)alculator \n> name \n> age \n> random number \n> (e)xit or (q)uit");
+                    Console.WriteLine("Here a list of available commands. ()Brackets indicate shortcuts. \n> help \n> calendar \n> guessing game \n> super smart (ai) \n> (c)alculator \n> name \n> age \n> random number \n> (e)xit or (q)uit");
                     break;
                 case "calendar":
                     DrawMonth();
@@ -181,6 +222,7 @@ namespace HelloWorld
                     GenerateRandomNumberBetween();
                     break;
                 case "guessing game":
+                    GuessingGame(1, 5);
                     break;
                 default:
                     Console.Write("Unknown Input. ");
@@ -190,9 +232,50 @@ namespace HelloWorld
             MainMenu();
         }
 
-        static void GuessingGame()
+        static void GuessingGame(int a, int b, bool generate = true)
         {
-            
+            DrawDivider();
+            if (a > b)
+            {
+                Console.WriteLine(a + "is bigger than " + b + ". Cancelling request.");
+                return;
+            }
+            //Generate a random number the user has to guess. Ask the user for a number in a range of [n1-nn] and compare it with the value
+            if (generate)
+            {
+                guessingNumber = rnd.Next(a, b);
+                Console.WriteLine("Generating a number from " + a + " to " + b + "...");
+            }
+            int input = Read.Int("Guess the number!", "Not a valid number. Please guess again.");
+            if (input == guessingNumber)
+            {
+                Console.WriteLine("Congratulations! You Win!");
+                DrawDivider();
+            }
+            else if (input > guessingNumber)
+            {
+                Console.Write("You guessed too high... ");
+                if (Read.YesNo("Guess again?", "Invalid input."))
+                {
+                    GuessingGame(a, b, false);
+                    return;
+                }
+                DrawDivider();
+            }
+            else if (input < guessingNumber)
+            {
+                Console.Write("You guessed too low... ");
+                if (Read.YesNo("Guess again?", "Invalid input."))
+                {
+                    GuessingGame(a, b, false);
+                    return;
+                }
+                DrawDivider();
+            }
+            else
+            {
+                Console.Write("ERROR."); //shouldn't be able to reach this code
+            }
         }
         static void DrawMonth()
         {
@@ -261,7 +344,7 @@ namespace HelloWorld
             DateTime date = new DateTime(year, month, 1); // get the datetime for the first day of the month? i think
             int daysInMonth = DateTime.DaysInMonth(year, month); //get the amount of days in the month for this section of the calendar to draw
             int[,] calendar = new int[6, 7]; //make our calendar 2D array, in this case being the weeks & weekdays
-            int dayOfWeek = Convert.ToInt32(date.DayOfWeek) +1; //get the day of the week of the first day in the month as an int, plus one because week does not start on sunday
+            int dayOfWeek = Convert.ToInt32(date.DayOfWeek) + 1; //get the day of the week of the first day in the month as an int, plus one because week does not start on sunday
             int currentlyDrawingDay = 1; //start counting here
 
             for (int x = 0; x < calendar.GetLength(0); x++) //if x(current day of the week) is within the week (length of 0 axis in calendar array)
@@ -307,13 +390,11 @@ namespace HelloWorld
 
         static double GenerateRandomNumberBetween(bool floatnumbers = false)
         {
-            Console.WriteLine("----------------------------");
-            
-            int a = Read.Int("Please input the minmum:", "Sorry, that was not a valit integer. Try again.");
-            
-            
-            int b = Read.Int("Please input the maximum:", "Sorry, that was not a valid year. Please input a positive integer.");
-            
+            DrawDivider();
+            int a = Read.Int("Please input the minmum:", "Sorry, that was not a valid integer. Try again.");
+
+            int b = Read.Int("Please input the maximum:", "Sorry, that was not a valid Integer. Try again.");
+
             double randomnumber;
             if (floatnumbers)
             {
@@ -326,7 +407,7 @@ namespace HelloWorld
                 randomnumber = rnd.NextDouble() * (a - b) + b;
             }
             Console.WriteLine("Random Number: " + randomnumber);
-            Console.WriteLine("----------------------------");
+            DrawDivider();
             return randomnumber;
         }
 
@@ -376,7 +457,8 @@ namespace HelloWorld
         }
         static void SuperSmartAI()
         {
-            Console.WriteLine("----------------------------");
+
+            DrawDivider();
             string input = Read.String("I am an AI. Hello. Ask me any question you'd like.");
             while (!input.Contains("exit") && !input.Contains("goodbye") && !input.Contains("quit"))
             {
@@ -384,7 +466,8 @@ namespace HelloWorld
 
                 input = Read.String("I am an AI. Hello. Ask me any question you'd like.");
             }
-            Console.WriteLine("----------------------------");
+
+            DrawDivider();
         }
 
         static void PrintWeekdayEnum()
@@ -397,7 +480,8 @@ namespace HelloWorld
 
         static void Calculator()
         {
-            Console.WriteLine("----------------------------");
+
+            DrawDivider();
             Console.WriteLine("Calculator initiated.");
             if (!GetIntegerInput("A", out int a))
             {
@@ -445,7 +529,7 @@ namespace HelloWorld
                     break;
             }
             Console.WriteLine("Equals to " + c);
-            Console.WriteLine("----------------------------");
+            DrawDivider();
         }
         static bool GetIntegerInput(string intName, out int integer)
         {
