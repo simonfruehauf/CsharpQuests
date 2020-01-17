@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 #pragma warning disable IDE0051
@@ -741,22 +742,22 @@ namespace HelloWorld
 
     public class Gambling
     {
-        static int itemWidth = 5;
-        static int maxItems = 5;
+        static int itemWidth = 9;
+        const int maxItems = 5;
         static readonly string[] Bottle = new string[] 
         { 
-            " { } " ,
-            " | | ", 
-            " ) ( ", 
-            "|___|" , 
-            "|   |" , 
-            "|___|" 
+            "   { }   " ,
+            "   | |   ", 
+            "   ) (   ", 
+            "  |___|  " , 
+            "  |   |  " , 
+            "  |___|  " 
         };
 
         static readonly string[] SelectionArrow = new string[]
         {
-            "  ^  ",
-            "  |  "
+            "    ^    ",
+            "    |    "
         };
         struct Player
         {
@@ -784,7 +785,7 @@ namespace HelloWorld
             }
         }
 
-        enum Potion
+        public enum PotionTypes
         {
             Yellow,
             Blue,
@@ -796,17 +797,16 @@ namespace HelloWorld
             Green, 
             Cyan,
             White,
-            Transparent,
             Black
         }
-
+        
         enum PotionEvents
         {
             Damage,
             Heal,
             Nothing
         }
-
+        public static List<PotionTypes> shop = new List<PotionTypes>();
         public static void Game()
         {
             Player currentPlayer = new Player(10);
@@ -815,14 +815,18 @@ namespace HelloWorld
             Console.WriteLine("Welcome Traveler. I am the Potion Seller. I have the strongest potions in the land.");
             do
             {
+
+                PopulateShop(out shop);
                 Console.WriteLine("These are my potions. Please do not touch them.");
                 DrawBottle(maxItems);
                 ConsoleKey keyinfo;
                 Console.WriteLine();
                 RedrawArrow(itemIndex);
+
+
                 do
                 {
-                    
+
                     keyinfo = Console.ReadKey().Key;
                     switch (keyinfo)
                     {
@@ -830,7 +834,7 @@ namespace HelloWorld
                             if (itemIndex > 0)
                             {
                                 itemIndex--;
-                                MoveCursorUp(3);
+                                MoveCursorUp(2);
                                 RedrawArrow(itemIndex);
                             }
                             break;
@@ -838,7 +842,7 @@ namespace HelloWorld
                             if (itemIndex < maxItems-1)
                             {
                                 itemIndex++;
-                                MoveCursorUp(3);
+                                MoveCursorUp(2);
                                 RedrawArrow(itemIndex);
                             }
                             break;
@@ -861,9 +865,9 @@ namespace HelloWorld
             Console.WriteLine("I told you Traveler... You were not strong enough for my potions...\n <<You drank " + score + ((score > 0) ? "potions.>>" : "potion.>>"));
         }
 
-        static Potion GetPotion()
+        static PotionTypes GetPotion()
         {
-            return (Potion)Program.rnd.Next(Enum.GetNames(typeof(Potion)).Length);
+            return (PotionTypes)Program.rnd.Next(Enum.GetNames(typeof(PotionTypes)).Length);
         }
 
         Player DamagePlayer(Player a_Player, int damage)
@@ -892,33 +896,31 @@ namespace HelloWorld
             return a_Player;
         }
 
-        PotionEvents GetEvent(Potion a_potionToCheck)
+        PotionEvents GetEvent(PotionTypes a_potionToCheck)
         {
             switch (a_potionToCheck)
             {
-                case Potion.Yellow:
+                case PotionTypes.Yellow:
                     return PotionEvents.Damage;
-                case Potion.Blue:
+                case PotionTypes.Blue:
                     return PotionEvents.Damage;
-                case Potion.Brown:
+                case PotionTypes.Brown:
                     return PotionEvents.Damage;
-                case Potion.Pink:
+                case PotionTypes.Pink:
                     return PotionEvents.Heal;
-                case Potion.Red:
+                case PotionTypes.Red:
                     return PotionEvents.Heal;
-                case Potion.Blank:
+                case PotionTypes.Blank:
                     return PotionEvents.Nothing;
-                case Potion.Purple:
+                case PotionTypes.Purple:
                     return PotionEvents.Damage;
-                case Potion.Green:
+                case PotionTypes.Green:
                     return PotionEvents.Damage;
-                case Potion.Cyan:
+                case PotionTypes.Cyan:
                     return PotionEvents.Nothing;
-                case Potion.White:
+                case PotionTypes.White:
                     return PotionEvents.Nothing;
-                case Potion.Transparent:
-                    return PotionEvents.Damage;
-                case Potion.Black:
+                case PotionTypes.Black:
                     return PotionEvents.Nothing;
                 default:
                     return PotionEvents.Nothing;
@@ -937,16 +939,61 @@ namespace HelloWorld
                 Console.WriteLine();
                 count++;
             }
+            count = 0;
+            for (int i = 0; i < maxItems; i++)
+            {
+                int charCount = shop[i].ToString().Length;
+                string lable = shop[i].ToString();
+                bool flipFlop = false;
+                while (charCount != itemWidth-1)
+                {
+                    if (charCount >= itemWidth)
+                    {
+                        Console.WriteLine();
+                        break;
+                    }
+                    switch (flipFlop)
+                    {
+                        case true:
+                            lable = " " +lable;
+                            flipFlop = !flipFlop;
+                            break;
+                        case false:
+                            lable = lable + " ";
+                            flipFlop = !flipFlop;
+                            break;
+                        default:
+                            break;
+                    }
+                    charCount = lable.Length;
+                }
+
+                Console.Write(lable + "|"); ///ADD POTION NAME
+            }
+        }
+        public static void PopulateShop(out List<PotionTypes> shop)
+        {
+            shop = new List<PotionTypes>();
+
+            for (int i = 0; i < maxItems; i++)
+            {
+                PotionTypes thistype = (PotionTypes)Program.rnd.Next(Enum.GetNames(typeof(PotionTypes)).Length);
+                shop.Add(thistype);
+                //Console.WriteLine(thistype);
+            }
         }
         public static void RedrawArrow(int offset)
         {
             int count = 0;
             foreach (string line in SelectionArrow)
             {
-                
-                
+                if (count != 0)
+                {
+                    Console.WriteLine();
+                }
                 for (int i = 0; i < maxItems; i++)
                 {
+
                     if (i == offset)
                     {
                         Console.Write(SelectionArrow[count]);
@@ -956,19 +1003,21 @@ namespace HelloWorld
                         Console.Write(String.Concat(Enumerable.Repeat(" ", itemWidth)));
                     }
                 }
-                Console.WriteLine();
                 count++;
+
             }
         }
         public static void MoveCursorUp(int amount = 1) //and delete
         {
 
-            Console.SetCursorPosition(0, Console.CursorTop - amount);
+            Console.SetCursorPosition(0, Console.CursorTop - amount+1);
+            
             for (int i = 0; i < amount; i++)
             {
-                Console.Write("   ", 0, 80);
+                Console.Write("                 ", 0, 80);
             }
             Console.WriteLine();
+            Console.SetCursorPosition(0, Console.CursorTop - 1);
         }
     }
 
