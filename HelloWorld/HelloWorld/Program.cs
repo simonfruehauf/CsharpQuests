@@ -189,6 +189,7 @@ namespace HelloWorld
             switch (input)
             {
                 case "potion game":
+                case "potion seller":
                 case "potion":
                 case "p":
                     Gambling.Game();
@@ -807,16 +808,18 @@ namespace HelloWorld
             Nothing
         }
         public static List<PotionTypes> shop = new List<PotionTypes>();
+        public static int score;
         public static void Game()
         {
             Player currentPlayer = new Player(10);
-            int score = 0;
+            score = 0;
             int itemIndex = 0;
             Console.WriteLine("Welcome Traveler. I am the Potion Seller. I have the strongest potions in the land.");
             do
             {
 
                 PopulateShop(out shop);
+                Console.WriteLine();
                 Console.WriteLine("These are my potions. Please do not touch them.");
                 DrawBottle(maxItems);
                 ConsoleKey keyinfo;
@@ -848,11 +851,28 @@ namespace HelloWorld
                             break;
 
                         case ConsoleKey.Enter:
+                            Console.WriteLine();
+                            Console.WriteLine("<You picked a " + shop[itemIndex].ToString() + " potion.>");
                             break;
                         default:
                             break;
                     }
                 } while (keyinfo != ConsoleKey.Enter);
+
+                switch (GetEvent(shop[itemIndex]))
+                {
+                    case PotionEvents.Damage:
+                        currentPlayer = DamagePlayer(currentPlayer, 2);
+                        break;
+                    case PotionEvents.Heal:
+                        currentPlayer = DamagePlayer(currentPlayer, -1); //heals
+                        break;
+                    case PotionEvents.Nothing:
+                        Console.WriteLine("<Nothing happened after drinking the potion.>");
+                        break;
+                    default:
+                        break;
+                }
 
                 // here: select potion
 
@@ -870,10 +890,47 @@ namespace HelloWorld
             return (PotionTypes)Program.rnd.Next(Enum.GetNames(typeof(PotionTypes)).Length);
         }
 
-        Player DamagePlayer(Player a_Player, int damage)
+        static Player DamagePlayer(Player a_Player, int damage)
         {
-            a_Player.health -= damage;
-            string output;
+            string output = "";
+            if (damage <= 0)
+            {
+                a_Player.health -= damage;
+                if (a_Player.health > a_Player.maxHealth)
+                {
+                    a_Player.health = a_Player.maxHealth;
+                }
+
+                Console.WriteLine("<You gained [" + (damage * -1) + "] health, and now have [" + a_Player.health.ToString() + "].>");
+                switch (Program.rnd.Next(2))
+                {
+                    case 0:
+                        output = "You managed to drink one of my potions? Congratiolations traveler.";
+                        break;
+                    case 1:
+                        output = "I would not have thought you'd live.";
+                        break;
+                    case 2:
+                        output = "Congratiolations traveler, on surviving one of my strongest potions!";
+                        break;
+                    default:
+                        output = "You managed to drink one of my potions? Congratiolations traveler.";
+                        break;
+                }
+                return a_Player;
+            }
+            if (a_Player.health - damage > 0)
+            {
+                a_Player.health -= damage;
+                Console.WriteLine("<You took [" + damage + "] damage, and have [" + a_Player.health.ToString() + "] left.>");
+            }
+            else
+            {
+                a_Player.health -= damage;
+                Console.WriteLine("<You took [" + damage + "] damage and died.>");
+                Console.WriteLine("I told you! I told you! ... I told you!!!!!");
+                GameOver();
+            }
             switch (Program.rnd.Next(3))
             {
                 case 0:
@@ -896,7 +953,13 @@ namespace HelloWorld
             return a_Player;
         }
 
-        PotionEvents GetEvent(PotionTypes a_potionToCheck)
+        static void GameOver()
+        {
+            Console.WriteLine("<Congratulations on drinking " + score + " potions.>\n<Going back to the main menu.>");
+            Program.DrawDivider();
+            Program.MainMenu();
+        }
+        static PotionEvents GetEvent(PotionTypes a_potionToCheck)
         {
             switch (a_potionToCheck)
             {
@@ -1020,6 +1083,4 @@ namespace HelloWorld
             Console.SetCursorPosition(0, Console.CursorTop - 1);
         }
     }
-
-
 }
