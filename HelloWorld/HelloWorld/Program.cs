@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+
+
 #pragma warning disable IDE0051
 namespace HelloWorld
 {
@@ -230,12 +232,59 @@ namespace HelloWorld
                 case "guessing game":
                     GuessingGame(1, 5);
                     break;
+                case "remindme":
+                    RemindMe();
+                    break;
+
                 default:
                     Console.Write("Unknown Input. ");
                     MainMenu(true);
                     break;
             }
             MainMenu();
+        }
+
+        void ArrayStuff()
+        {
+            string[] m_string = new string[10]; //Declared a string array of length 10
+            m_string[0] = "test"; //first element in the array  set to "test"
+        }
+
+        void LoopThroughForeach(List<string> M_list)
+        {
+            Console.WriteLine("Printing all items on list.");
+            foreach (string item in M_list)
+            {
+                Console.WriteLine(item);
+            }
+
+        }
+
+        public static void RemindMe()
+        {
+            List<string> inputList = new List<string>();
+            string input = Read.String("");
+            while (!input.Contains("end"))
+            {
+                inputList.Add(input);
+                input = Read.String("");
+            }
+           foreach (string item in inputList)
+            {
+                    Console.WriteLine(item);
+            }
+            inputList.Clear();  // not needed, but a good practice for me to 
+                                // remember doing in case the variable is 
+                                // declared outside of the scope
+        }
+
+        void LoopThroughFor(string[] m_array)
+        {
+            Console.WriteLine("Printing all items on list.");
+            for (int i = 0; i < m_array.Length; i++)
+            {
+                Console.WriteLine(m_array[i]);
+            }
         }
 
         static void GuessingGame(int a, int b, bool generate = true)
