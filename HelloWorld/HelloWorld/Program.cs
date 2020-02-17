@@ -235,7 +235,9 @@ namespace HelloWorld
                 case "remindme":
                     RemindMe();
                     break;
-
+                case "arraystuff":
+                    ArrayStuff();
+                    break;
                 default:
                     Console.Write("Unknown Input. ");
                     MainMenu(true);
@@ -244,10 +246,29 @@ namespace HelloWorld
             MainMenu();
         }
 
-        void ArrayStuff()
+        public static void ArrayStuff()
         {
-            string[] m_string = new string[10]; //Declared a string array of length 10
-            m_string[0] = "test"; //first element in the array  set to "test"
+            int[,] int2dArray = new int[4, 4];
+            int counter = 0;
+            for (int i = 0; i < int2dArray.GetLength(0); i++)
+            {
+                for (int j = 0; j < int2dArray.GetLength(1); j++)
+                {
+                    int2dArray[i, j] = counter;
+                    counter++;
+                }
+            }
+            counter = 0;
+            foreach (int item in int2dArray)
+            {
+                if (counter%4 == 0)
+                {
+                    Console.WriteLine();
+                }
+                Console.Write(item + " ");
+                counter++;
+            }
+            Console.ReadLine();
         }
 
         void LoopThroughForeach(List<string> M_list)
@@ -789,7 +810,6 @@ namespace HelloWorld
             Console.ReadLine();
         }
     }
-
     public class Gambling
     {
         static int itemWidth = 9;
@@ -938,10 +958,11 @@ namespace HelloWorld
         {
             return (PotionTypes)Program.rnd.Next(Enum.GetNames(typeof(PotionTypes)).Length);
         }
-
         static Player DamagePlayer(Player a_Player, int damage)
         {
-            string output = "";
+        #pragma warning disable IDE0059 // Unnecessary assignment of a value
+
+            string _output;
             if (damage <= 0)
             {
                 a_Player.health -= damage;
@@ -954,16 +975,16 @@ namespace HelloWorld
                 switch (Program.rnd.Next(2))
                 {
                     case 0:
-                        output = "You managed to drink one of my potions? Congratiolations traveler.";
+                        _output = "You managed to drink one of my potions? Congratiolations traveler.";
                         break;
                     case 1:
-                        output = "I would not have thought you'd live.";
+                        _output = "I would not have thought you'd live.";
                         break;
                     case 2:
-                        output = "Congratiolations traveler, on surviving one of my strongest potions!";
+                        _output = "Congratiolations traveler, on surviving one of my strongest potions!";
                         break;
                     default:
-                        output = "You managed to drink one of my potions? Congratiolations traveler.";
+                        _output = "You managed to drink one of my potions? Congratiolations traveler.";
                         break;
                 }
                 return a_Player;
@@ -980,27 +1001,29 @@ namespace HelloWorld
                 Console.WriteLine("I told you! I told you! ... I told you!!!!!");
                 GameOver();
             }
+
             switch (Program.rnd.Next(3))
             {
                 case 0:
-                    output = "You can't handle my strongest potions! No one can! My strongest potions are fit for a beast let alone a man.";
+                    _output = "You can't handle my strongest potions! No one can! My strongest potions are fit for a beast let alone a man.";
                     break;
                 case 1:
-                    output = "You can't handle my potions. They're too strong for you.";
+                    _output = "You can't handle my potions. They're too strong for you.";
                     break;
                 case 2:
-                    output = "My strongest potions will kill a dragon, let alone a man. You need a seller that sells weaker potions, because my potions are too strong.";
+                    _output = "My strongest potions will kill a dragon, let alone a man. You need a seller that sells weaker potions, because my potions are too strong.";
                     break;
                 case 3:
-                    output = "My strongest potions would kill you, traveler. You can't handle my strongest potions. You'd better go to a seller that sells weaker potions.";
+                    _output = "My strongest potions would kill you, traveler. You can't handle my strongest potions. You'd better go to a seller that sells weaker potions.";
                     break;
                 default:
-                    output = "You can't handle my strongest potions! No one can! My strongest potions are fit for a beast let alone a man.";
+                    _output = "You can't handle my strongest potions! No one can! My strongest potions are fit for a beast let alone a man.";
                     break;
             }
-            Console.WriteLine(output);
+            Console.WriteLine(_output);
             return a_Player;
         }
+        #pragma warning restore IDE0059 // Unnecessary assignment of a value
 
         static void GameOver()
         {
@@ -1041,7 +1064,7 @@ namespace HelloWorld
 
         public static void DrawBottle(int amount)
         {
-            int count=0;
+            int count = 0;
             foreach (string line in Bottle)
             {
                 for (int i = 0; i < amount; i++)
@@ -1051,7 +1074,6 @@ namespace HelloWorld
                 Console.WriteLine();
                 count++;
             }
-            count = 0;
             for (int i = 0; i < maxItems; i++)
             {
                 int charCount = shop[i].ToString().Length;
@@ -1071,7 +1093,7 @@ namespace HelloWorld
                             flipFlop = !flipFlop;
                             break;
                         case false:
-                            lable = lable + " ";
+                            lable += " ";
                             flipFlop = !flipFlop;
                             break;
                         default:
