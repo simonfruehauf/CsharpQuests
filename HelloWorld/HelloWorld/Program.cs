@@ -238,6 +238,9 @@ namespace HelloWorld
                 case "arraystuff":
                     ArrayStuff();
                     break;
+                case "warehouse":
+                    Warehouse.MainWarehouse();
+                    break;
                 default:
                     Console.Write("Unknown Input. ");
                     MainMenu(true);
@@ -1153,5 +1156,58 @@ namespace HelloWorld
             Console.WriteLine();
             Console.SetCursorPosition(0, Console.CursorTop - 1);
         }
+    }
+    public class Warehouse
+    {
+        static int[] products = new int[] { 1, 3, 5, 7, 9, 23, 39, 12, 39, 20, 13, 13, 14 };
+        static float[] money_value = new float[] { 0.99f, 3.0f, 5.99f, 2.99f, 9.99f, 2.22f, 3.9f, 1.2f, 3.9f, 2.01f, 1.3f, 1.3f, 1.4f };
+
+        static int[] warehouseItems = new int[] { 10, 20, 125, -2, 43, 10020, 232 };
+        public static void MainWarehouse()
+        {
+            int a = 0;
+            DisplayAmountOfProducts(products);
+            foreach (int item in products)
+            {
+                DisplayItemValue(products, money_value, a);
+                a++;
+            }
+            DisplayTotalValue(products, money_value);
+
+
+            FindHighestOfArray(warehouseItems);
+
+
+
+        }
+        public static void DisplayAmountOfProducts(int[] products)
+        {
+            Console.WriteLine("There are " + products.Length +" items in the warehouse.");
+        }
+        public static void DisplayItemValue(int[] products, float[] money_value, int index)
+        {
+            Console.WriteLine("Item #" + products[index] + " is worth " + money_value[index] + ".");
+        }
+
+        public static void DisplayTotalValue(int[] products, float[] money_value)
+        {
+            int index = 0;
+            float totalValue = 0;
+            foreach (int item in products)
+            {
+                totalValue += money_value[index];
+                index++;
+            }
+            Console.WriteLine("The value of the warehouse inventory is " + totalValue + ".");
+        }
+
+        public static void FindHighestOfArray(int[] m_array)
+        {
+            int highestValue = m_array.Max();
+            int index = m_array.ToList().IndexOf(highestValue);
+
+            Console.WriteLine("The highest value in the array is " + highestValue + " at the index #" + index); //starting from 0
+        }
+
     }
 }
