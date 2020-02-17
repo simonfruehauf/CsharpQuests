@@ -4,7 +4,9 @@ using System.Globalization;
 using System.Linq;
 
 
-#pragma warning disable IDE0051
+#pragma warning disable IDE0051 //unused
+#pragma warning disable IDE0044 //add readonly
+
 namespace HelloWorld
 {
     class Read
@@ -111,6 +113,7 @@ namespace HelloWorld
     }
     class Program
     {
+
         #region randomvars
         public static string Worldstring = "Ham and Eggs are better than \"Hello World!\"";
         public static int TheAnswer = 42;
@@ -167,6 +170,38 @@ namespace HelloWorld
             Programming,
             Everything
         }
+
+        public struct Point2D
+        {
+
+            public float x, y;
+            public Point2D(float x_value, float y_value)
+            {
+                x = x_value;
+                y = y_value;
+            }
+        }
+        public struct Vector2D
+        {
+            public Point2D origin;
+            public Point2D direction;
+
+            public Vector2D(float origin_x, float origin_y, float direction_x, float direction_y)
+            {
+                origin = new Point2D(origin_x, origin_y);
+                direction = new Point2D(direction_x, direction_y);
+
+            }
+            public Vector2D(Point2D m_origin, Point2D m_direction)
+            {
+                origin = m_origin;
+                direction = m_direction;
+
+            }
+        }
+        
+
+
         public static Random rnd = new Random(DateTime.Now.GetHashCode());
         static bool calendarHasMonth;
         static bool calendarHasYear;
@@ -180,7 +215,34 @@ namespace HelloWorld
         {
                 Console.WriteLine(a_divider);
         }
-        public static void MainMenu(bool unknownInput = false)
+        //public static bool IsPointOnLine(Point2D point, Point2D vectorOrigin, Point2D vectorDirection)
+        //{
+        //    if (vectorDirection.x == 0)
+        //    {
+        //        return point.x == vectorOrigin.x;
+        //    }
+        //    if (vectorDirection.y == 0)
+        //    {
+        //        return point.y == vectorOrigin.y;
+        //    }
+        //    return (vectorOrigin.x - point.x) / vectorDirection.x == (vectorOrigin.y - point.y) / vectorDirection.y;
+        //}
+        public static bool IsPointOnLine(Point2D point, Point2D vectorOrigin, Point2D vectorDirection, float deviation = 0)
+        {
+            float difference = (Distance(point, vectorDirection) + Distance(point, vectorOrigin)) - Distance(vectorOrigin, vectorDirection);
+
+            return difference <= deviation;
+        }
+        public static float Distance(Point2D point_a, Point2D point_b)
+        {
+            return (float)Math.Sqrt(((point_a.x-point_b.x)* (point_a.x - point_b.x)) +((point_a.y - point_b.y)* (point_a.y - point_b.y)));
+        }
+        public static float Distance(float a_x, float a_y, float b_x, float b_y)
+        {
+            return (float)Math.Sqrt(((a_x - b_x) * (a_x - b_x)) + ((a_y - b_y) * (a_y - b_y)));
+        }
+
+    public static void MainMenu(bool unknownInput = false)
         {
             if (!unknownInput)
             {
@@ -241,6 +303,11 @@ namespace HelloWorld
                 case "warehouse":
                     Warehouse.MainWarehouse();
                     break;
+                case "chess":
+                case "checker":
+                    Vector2D vector = new Vector2D(5,12,18,2);
+                    CheckerBoard(20, 20, vector);
+                    break;
                 default:
                     Console.Write("Unknown Input. ");
                     MainMenu(true);
@@ -249,6 +316,103 @@ namespace HelloWorld
             MainMenu();
         }
 
+        static void CheckerBoard(int x_size = 8, int y_size = 8, bool diagonal_line =false)
+        {
+            if (!diagonal_line)
+            {
+                int counter = 0;
+                for (int row = 0; row < x_size; row++)
+                {
+                    for (int col = 0; col < y_size; col++)
+                    {
+                        if (counter >= x_size) //check if we wrote a whole row
+                        {
+                            Console.WriteLine();
+                            counter = 0;
+                        }
+                        //check if the amount of tiles is odd or even, on this row, 
+                        // offset by the row itself (so we have alternating 
+                        //colors even on odd amount of tiles)
+                        if ((row + col) % 2 == 0)
+                        {
+                            Console.Write("X");
+                        }
+                        else
+                        {
+                            Console.Write("O");
+                        }
+                        counter++;
+                    }
+                }
+            }
+            else
+            {
+                int counter = 0;
+                for (int row = 0; row < x_size; row++)
+                {
+                    for (int col = 0; col < y_size; col++)
+                    {
+                        if (counter >= x_size) //check if we wrote a whole row
+                        {
+                            Console.WriteLine();
+                            counter = 0;
+                        }
+                        if (row == col)
+                        {
+                            Console.Write("I");
+                        }
+                        else
+                        {
+                            if ((row + col) % 2 == 0)
+                            {
+                                Console.Write("X");
+                            }
+                            else
+                            {
+                                Console.Write("O");
+                            }
+                        }
+                        counter++;
+                    }
+                }
+            }
+            Console.WriteLine();
+        }
+        static void CheckerBoard(int x_size, int y_size, Vector2D line)
+        {
+
+            int counter = 0;
+            for (int row = 0; row < x_size; row++)
+            {
+                for (int col = 0; col < y_size; col++)
+                {
+                    if (counter >= x_size) //check if we wrote a whole row
+                    {
+                        Console.WriteLine();
+                        counter = 0;
+                    }
+                    Point2D point = new Point2D(row, col);
+                    if (!IsPointOnLine(point, line.origin, line.direction, 0.05f))
+                    {
+                        if ((row + col) % 2 == 0)
+                        {
+                            Console.Write("X");
+                        }
+                        else
+                        {
+                            Console.Write("O");
+                        }
+                    }
+                    else
+                    {
+                        Console.Write("*");
+                    }
+                    counter++;
+                }
+            }
+
+            Console.WriteLine();
+        }
         public static void ArrayStuff()
         {
             int[,] int2dArray = new int[4, 4];
@@ -786,6 +950,7 @@ namespace HelloWorld
             Console.ReadLine();
 
         }
+
         static void Age()
         {
             int age = -1;
