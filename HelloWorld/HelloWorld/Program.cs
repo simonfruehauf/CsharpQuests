@@ -314,6 +314,12 @@ namespace HelloWorld
                 case "iterator":
                     IteratorTests();
                     break;
+                case "cave":
+                    CaveGenerator CG = new CaveGenerator();
+                    int[,] map = CG.CreateCave(60, 60, 75, 1000);
+                    Print2dIntArray(map);
+                    Console.WriteLine();
+                    break;
                 default:
                     Console.Write("Unknown Input. ");
                     MainMenu(true);
@@ -420,7 +426,26 @@ namespace HelloWorld
             }
             Console.WriteLine();
         }
-
+        static void Print2dIntArray(int[,] array)
+        {
+            int x_size = array.GetLength(0);
+            int y_size = array.GetLength(1);
+            int counter = 0;
+            for (int row = 0; row < x_size; row++)
+            {
+                for (int col = 0; col < y_size; col++)
+                {
+                    if (counter >= x_size) //check if we wrote a whole row
+                    {
+                        Console.WriteLine();
+                        counter = 0;
+                    }
+                    counter++;
+                    
+                    Console.Write(array[row, col] == 1 ? " " : "X");
+                }
+            }
+        }
         public static void IteratorTests()
         {
             foreach (int number in EvenNumbers(25, 40))
