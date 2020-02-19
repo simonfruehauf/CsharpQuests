@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
-
 #pragma warning disable IDE0051 //unused
 #pragma warning disable IDE0044 //add readonly
 
@@ -200,7 +199,11 @@ namespace HelloWorld
             }
         }
         
-
+        string WhatIsFunction(string input)
+        {
+            Console.WriteLine("Hello " +input);
+            return "Hello " + input;
+        }
 
         public static Random rnd = new Random(DateTime.Now.GetHashCode());
         static bool calendarHasMonth;
@@ -215,18 +218,18 @@ namespace HelloWorld
         {
                 Console.WriteLine(a_divider);
         }
-        //public static bool IsPointOnLine(Point2D point, Point2D vectorOrigin, Point2D vectorDirection)
-        //{
-        //    if (vectorDirection.x == 0)
-        //    {
-        //        return point.x == vectorOrigin.x;
-        //    }
-        //    if (vectorDirection.y == 0)
-        //    {
-        //        return point.y == vectorOrigin.y;
-        //    }
-        //    return (vectorOrigin.x - point.x) / vectorDirection.x == (vectorOrigin.y - point.y) / vectorDirection.y;
-        //}
+        public static bool IsPointOnLine(Point2D point, Point2D pointA, Point2D pointB)
+        {
+            if (pointB.x == 0)
+            {
+                return point.x == pointA.x;
+            }
+            if (pointB.y == 0)
+            {
+                return point.y == pointA.y;
+            }
+            return (pointA.x - point.x) / pointB.x == (pointA.y - point.y) / pointB.y;
+        }
         public static bool IsPointOnLine(Point2D point, Point2D vectorOrigin, Point2D vectorDirection, float deviation = 0)
         {
             float difference = (Distance(point, vectorDirection) + Distance(point, vectorOrigin)) - Distance(vectorOrigin, vectorDirection);
@@ -305,8 +308,11 @@ namespace HelloWorld
                     break;
                 case "chess":
                 case "checker":
-                    Vector2D vector = new Vector2D(5,12,18,2);
+                    Vector2D vector = new Vector2D(0,0,20,20);
                     CheckerBoard(20, 20, vector);
+                    break;
+                case "iterator":
+                    IteratorTests();
                     break;
                 default:
                     Console.Write("Unknown Input. ");
@@ -316,6 +322,8 @@ namespace HelloWorld
             MainMenu();
         }
 
+        struct Tile { int i; }
+        
         static void CheckerBoard(int x_size = 8, int y_size = 8, bool diagonal_line =false)
         {
             if (!diagonal_line)
@@ -392,7 +400,7 @@ namespace HelloWorld
                         counter = 0;
                     }
                     Point2D point = new Point2D(row, col);
-                    if (!IsPointOnLine(point, line.origin, line.direction, 0.05f))
+                    if (!IsPointOnLine(point, new Point2D(0f, 0f), new Point2D(5f,5f))) //!IsPointOnLine(point, line.origin, line.direction, 0.05f)
                     {
                         if ((row + col) % 2 == 0)
                         {
@@ -410,11 +418,43 @@ namespace HelloWorld
                     counter++;
                 }
             }
-
             Console.WriteLine();
+        }
+
+        public static void IteratorTests()
+        {
+            foreach (int number in EvenNumbers(25, 40))
+            {
+                Console.Write(number.ToString() + " ");
+            }
+            //prints: 26 28 30 32 34 36 38 40
+        }
+
+        IEnumerable<float> IteratorTestNumbers()
+        {
+            yield return 1f;
+            yield return 2f;
+            yield return 5f;
+        }
+
+        static IEnumerable<float> EvenNumbers(float start, float end)
+        {
+            //yields all even numbers
+            for (float number = start; number <= end; number++)
+            {
+                if (number % 2 == 0)
+                {
+                    yield return number;
+                }
+            }
         }
         public static void ArrayStuff()
         {
+            List<int> intlist = new List<int> { };
+            foreach (int item in intlist)
+            {
+                Console.WriteLine(item);
+            }
             int[,] int2dArray = new int[4, 4];
             int counter = 0;
             for (int i = 0; i < int2dArray.GetLength(0); i++)
