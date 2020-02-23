@@ -45,6 +45,7 @@
     <Compile Include="CaveGenerator.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RandomStatGenerator.cs" />
     <Compile Include="Roguelite.cs" />
   </ItemGroup>
   <ItemGroup>
