@@ -316,7 +316,8 @@ namespace HelloWorld
                     break;
                 case "cave":
                     CaveGenerator CG = new CaveGenerator();
-                    int[,] map = CG.CreateCave(90, 30, 60, 30, false, 5, 5);
+                    int[,] map = CG.CreateCave(50,25, 70, 2);
+                    map = CG.iterateCave(map, 2, 5,5);
                     Print2dIntArray(map);
                     Console.WriteLine();
                     break;
@@ -433,18 +434,17 @@ namespace HelloWorld
             int x_size = array.GetLength(0);
             int y_size = array.GetLength(1);
             int counter = 0;
-            for (int row = 0; row < x_size; row++)
+            for (int col = 0; col < y_size; col++)
             {
-                for (int col = 0; col < y_size; col++)
-                {
+                for (int row = 0; row < x_size; row++)
+            {   
                     if (counter >= x_size) //check if we wrote a whole row
                     {
                         Console.WriteLine();
                         counter = 0;
                     }
                     counter++;
-                    Console.Write(array[row,col]);
-                    //Console.Write(array[row, col] == 1 ? " " : "X");
+                    Console.Write(array[row, col] == 1 ? " " : "X");
                 }
             }
         }

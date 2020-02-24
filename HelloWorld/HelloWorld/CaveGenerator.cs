@@ -11,58 +11,43 @@ namespace HelloWorld
         Random rnd = new Random();
         public int[,] Map;
 
-        public int[,] CreateCave(int size_x, int size_y, int probability, int iterations = 300, bool old = false, float deathLimit = 5, float birthLimit = 5)
+        public int[,] CreateCave(int size_x, int size_y, int probability, int iterations = 300, bool old = false, float deathLimit = 5, float birthLimit =7)
         {
             Map = new int[size_x, size_y];
 
             //go through each cell and use the specified probability to determine if it's open
-            //for (int x = 0; x < Map.GetLength(0); x++)
-            //{
-            //    for (int y = 0; y < Map.GetLength(1); y++)
-            //    {
-            //        if (rnd.Next(0, 100) < probability)
-            //        {
-            //            Map[x, y] = 1;
-            //        }
-            //    }
-            //}
-            int banana = 0;
-            int apple = 0;
-            Console.WriteLine(Map.GetLength(0));
-            Console.WriteLine(Map.GetLength(1));
-
-
-            // Somehow, the outer loop completes before the inner loop, multiple times
-            for (banana = 0; banana < size_x; banana++)
+            for (int x = 0; x < Map.GetLength(0); x++)
             {
-                for (apple = 0; apple < size_y; apple++)
+                for (int y = 0; y < Map.GetLength(1); y++)
                 {
-                    if (apple < 1)
+                    if (rnd.Next(0, 100) < probability)
                     {
-                        Map[banana, apple] = 1;
-                    }
-                    else
-                    {
-                        Map[banana, apple] = 0;
+                        Map[x, y] = 1;
                     }
                 }
             }
-            //return Map;
-
 
             for (int i = 0; i <= iterations; i++)
             {
-                //Map = doSimulationStep(Map, deathLimit, birthLimit);
+                Map = doSimulationStep(Map, deathLimit, birthLimit);
             }
            
-
-            return Map;
+            
+            return blowUpArray(Map);
         }
 
+        public int[,] iterateCave(int[,] map, int iterations, float deathLimit = 5, float birthLimit = 7)
+        {
+            int[,] t_map = map;
+            for (int i = 1; i <= iterations; i++)
+            {
+                t_map = doSimulationStep(map, deathLimit, birthLimit);
+            }
+            return t_map;
+        }
         public int[,] doSimulationStep(int[,] map, float deathLimit = 5, float birthLimit = 5)
         {
             int[,] t_map = map;
-            Program.Print2dIntArray(t_map);
             for (int x = 0; x < t_map.GetLength(0); x++)
             {
                 for (int y = 0; y < t_map.GetLength(1); y++)
@@ -115,6 +100,29 @@ namespace HelloWorld
             {
                 return false;
             }
+        }
+
+        int[,] blowUpArray(int[,] m_array, int size = 2)
+        {
+            int sizeX = m_array.GetLength(0) * size;
+            int sizeY = m_array.GetLength(1) * size;
+            int[,] t_array = new int[sizeX, sizeY];
+            for (int i = 0; i < m_array.GetLength(0); i++)
+            {
+                for (int j = 0; j < m_array.GetLength(1); j++)
+                {
+                        t_array[i * size, j * size] = m_array[i, j];
+
+                    for (int x = 1; x < size; x++)
+                    {
+                        t_array[i * size + x, j * size] = m_array[i, j];
+                        t_array[i * size, j * size + x] = m_array[i, j];
+                        t_array[i * size + x, j * size + x] = m_array[i, j];
+                    }
+                    
+                }
+            }
+            return t_array;
         }
     }
 }
