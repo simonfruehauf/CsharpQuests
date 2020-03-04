@@ -49,6 +49,7 @@
     <Compile Include="RandomStatGenerator.cs" />
     <Compile Include="Roguelite.cs" />
     <Compile Include="RPS.cs" />
+    <Compile Include="Warehouse.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

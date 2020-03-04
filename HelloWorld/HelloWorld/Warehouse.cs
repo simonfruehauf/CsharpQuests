@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace HelloWorld
 {
@@ -13,17 +14,70 @@ namespace HelloWorld
         static float[] money_value = new float[] { 0.99f, 3.0f, 5.99f, 2.99f, 9.99f, 2.22f, 3.9f, 1.2f, 3.9f, 2.01f, 1.3f, 1.3f, 1.4f };
         static int[] warehouseItems = new int[] { 10, 20, 125, -2, 43, 10020, 232 };
         static int[] inventory = new int[20];
+        static int[] values = new int[20];
+        static string file = "files\\warehouse.txt";
         public static void MainWarehouse()
         {
-            int a = 0;
-            DisplayAmountOfProducts(products);
-            foreach (int item in products)
+            //int a = 0;
+            //DisplayAmountOfProducts(products);
+            //foreach (int item in products)
+            //{
+            //    DisplayItemValue(products, money_value, a);
+            //    a++;
+            //}
+            //DisplayTotalValue(products, money_value);
+            //FindHighestOfArray(warehouseItems);
+
+            ReadFile();
+        }
+
+        public static void ReadFile(string directoryfile = "files\\warehouse.txt")
+        {
+            if (!Directory.Exists("files"))
             {
-                DisplayItemValue(products, money_value, a);
-                a++;
+                Directory.CreateDirectory("files");
+                Console.WriteLine("Missing Directory, now created. Cannot read file.");
+                var t_file = File.Create(file);
+                t_file.Close();
             }
-            DisplayTotalValue(products, money_value);
-            FindHighestOfArray(warehouseItems);
+            else
+            {
+                if (!File.Exists(file))
+                {
+                    var t_file = File.Create(file);
+                    t_file.Close();
+                    Console.WriteLine("Missing File, now created.");
+                }
+                else
+                {
+                    if (new FileInfo(file).Length == 0)
+                    {
+                        Console.WriteLine("Emtpy file.");
+                    }
+                    else
+                    { 
+                        //main code
+                        string t = File.ReadLines(file).Skip(0).Take(1).First();
+                        string[] t_string = t.Split(' ');
+                        int i = 0;
+                        List<int> v = new List<int>(); //item
+                        List<int> w = new List<int>(); //value
+                        foreach (string item in t_string)
+                        {
+                            v.Add(Convert.ToInt32(item.Split(',')[0]));
+                            w.Add(Convert.ToInt32(item.Split(',')[1]));
+                        }
+                        inventory = v.ToArray();
+                        values = w.ToArray();
+                    }
+
+                }
+            }
+
+        }
+        public static void WriteFile(string directoryfile = "files\\warehouse.txt")
+        {
+
         }
         public static void DisplayAmountOfProducts(int[] products)
         {
