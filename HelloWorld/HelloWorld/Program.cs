@@ -329,12 +329,57 @@ namespace HelloWorld
                         running = BuildMenu.Build();
                     }
                     break;
+                case "roots":
+                    PrintRoots(new int[] { 5, 23, 55, -3, 0, 5, 323, 65, -5 });
+                    break;
+                case "negative":
+                    Console.WriteLine(findFirstNegative(new int[] { 5, 23, 55, -3, 0, 5, 323, 65, -5 }));
+                    break;
                 default:
                     Console.Write("Unknown Input. ");
                     MainMenu(true);
                     break;
             }
             MainMenu();
+        }
+        static void PrintRoots(List<int> list)
+        {
+            foreach (int number in list)
+            {
+                if (number < 0)
+                {
+                    continue;
+                }
+                Console.WriteLine(Math.Sqrt(number));
+                
+            }
+        }
+        static void PrintRoots(int[] array)
+        {
+            foreach (int number in array)
+            {
+                if (number < 0)
+                {
+                    continue;
+                }
+                Console.WriteLine(Math.Sqrt(number));
+            }
+        }
+
+        static int findFirstNegative(int[] array)
+        {
+            int i = 0;
+            foreach (int number in array)
+            {
+                i++;
+                if (number < 0 )
+                {
+                    return i; 
+                    // either return i for the index,
+                    //or number for the number itself
+                }
+            }
+            return -1;
         }
         int returnIndex(string lookfor, dynamic array)
         {
@@ -766,6 +811,8 @@ namespace HelloWorld
                 Console.WriteLine();
             }
         }
+        
+        
         static string Secret()
         {
             string input = Read.String("Input a secret passphrase: ");
