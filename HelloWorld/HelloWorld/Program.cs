@@ -6,7 +6,6 @@ using System.IO;
 #pragma warning disable IDE0051 //unused var
 #pragma warning disable IDE0044 //add readonly
 #pragma warning disable IDE0060 //unused parameter
-
 namespace HelloWorld
 {
     class Read
@@ -36,7 +35,6 @@ namespace HelloWorld
                     Console.WriteLine(ErrorMessage);
                     valid = false;
                 }
-
             } while (!valid);
             return integer;
         }
@@ -63,7 +61,6 @@ namespace HelloWorld
                     Console.WriteLine(ErrorMessage);
                     valid = false;
                 }
-
             } while (!valid);
             return floatnumber;
         }
@@ -105,14 +102,12 @@ namespace HelloWorld
                     Console.WriteLine(ErrorMessage);
                     valid = false;
                 }
-
             } while (!valid);
             return yes;
         }
     }
     class Program
     {
-
         #region randomvars
         public static string Worldstring = "Ham and Eggs are better than \"Hello World!\"";
         public static int TheAnswer = 42;
@@ -169,10 +164,8 @@ namespace HelloWorld
             Programming,
             Everything
         }
-
         public struct Point2D
         {
-
             public float x, y;
             public Point2D(float x_value, float y_value)
             {
@@ -184,27 +177,22 @@ namespace HelloWorld
         {
             public Point2D origin;
             public Point2D direction;
-
             public Vector2D(float origin_x, float origin_y, float direction_x, float direction_y)
             {
                 origin = new Point2D(origin_x, origin_y);
                 direction = new Point2D(direction_x, direction_y);
-
             }
             public Vector2D(Point2D m_origin, Point2D m_direction)
             {
                 origin = m_origin;
                 direction = m_direction;
-
             }
         }
-        
         string WhatIsFunction(string input)
         {
-            Console.WriteLine("Hello " +input);
+            Console.WriteLine("Hello " + input);
             return "Hello " + input;
         }
-
         public static Random rnd = new Random(DateTime.Now.GetHashCode());
         static bool calendarHasMonth;
         static bool calendarHasYear;
@@ -216,7 +204,7 @@ namespace HelloWorld
         public const string divider = "----------------------------";
         public static void DrawDivider(string a_divider = divider)
         {
-                Console.WriteLine(a_divider);
+            Console.WriteLine(a_divider);
         }
         public static bool IsPointOnLine(Point2D point, Point2D pointA, Point2D pointB)
         {
@@ -233,19 +221,17 @@ namespace HelloWorld
         public static bool IsPointOnLine(Point2D point, Point2D vectorOrigin, Point2D vectorDirection, float deviation = 0)
         {
             float difference = (Distance(point, vectorDirection) + Distance(point, vectorOrigin)) - Distance(vectorOrigin, vectorDirection);
-
             return difference <= deviation;
         }
         public static float Distance(Point2D point_a, Point2D point_b)
         {
-            return (float)Math.Sqrt(((point_a.x-point_b.x)* (point_a.x - point_b.x)) +((point_a.y - point_b.y)* (point_a.y - point_b.y)));
+            return (float)Math.Sqrt(((point_a.x - point_b.x) * (point_a.x - point_b.x)) + ((point_a.y - point_b.y) * (point_a.y - point_b.y)));
         }
         public static float Distance(float a_x, float a_y, float b_x, float b_y)
         {
             return (float)Math.Sqrt(((a_x - b_x) * (a_x - b_x)) + ((a_y - b_y) * (a_y - b_y)));
         }
-
-    public static void MainMenu(bool unknownInput = false)
+        public static void MainMenu(bool unknownInput = false)
         {
             if (!unknownInput)
             {
@@ -308,7 +294,7 @@ namespace HelloWorld
                     break;
                 case "chess":
                 case "checker":
-                    Vector2D vector = new Vector2D(0,0,20,20);
+                    Vector2D vector = new Vector2D(0, 0, 20, 20);
                     CheckerBoard(20, 20, vector);
                     break;
                 case "iterator":
@@ -316,8 +302,8 @@ namespace HelloWorld
                     break;
                 case "cave":
                     CaveGenerator CG = new CaveGenerator();
-                    int[,] map = CG.CreateCave(10,5, 70, 2);
-                    map = CG.iterateCave(map, 2, 5,5);
+                    int[,] map = CG.CreateCave(10, 5, 70, 2);
+                    map = CG.iterateCave(map, 2, 5, 5);
                     Print2dIntArray(map);
                     CG.WriteMap(map, "test");
                     Console.WriteLine();
@@ -350,10 +336,32 @@ namespace HelloWorld
             }
             MainMenu();
         }
-
+        int returnIndex(string lookfor, dynamic array)
+        {
+            int i = 0;
+            foreach (string item in array)
+            {
+                if (item == lookfor)
+                {
+                    return i;
+                }
+                i++;
+            }
+            return -1;
+        }
+        int returnIndex(string lookfor, List<string> list)
+        {
+            foreach (string item in list)
+            {
+                if (item == lookfor)
+                {
+                    return list.IndexOf(item);
+                }
+            }
+            return -1;
+        }
         struct Tile { int i; }
-        
-        static void CheckerBoard(int x_size = 8, int y_size = 8, bool diagonal_line =false)
+        static void CheckerBoard(int x_size = 8, int y_size = 8, bool diagonal_line = false)
         {
             if (!diagonal_line)
             {
@@ -415,11 +423,8 @@ namespace HelloWorld
             }
             Console.WriteLine();
         }
-
         static void CheckerBoard(int x_size, int y_size, Vector2D line)
-
         {
-
             int counter = 0;
             for (int row = 0; row < x_size; row++)
             {
@@ -431,7 +436,7 @@ namespace HelloWorld
                         counter = 0;
                     }
                     Point2D point = new Point2D(row, col);
-                    if (!IsPointOnLine(point, new Point2D(0f, 0f), new Point2D(5f,5f))) //!IsPointOnLine(point, line.origin, line.direction, 0.05f)
+                    if (!IsPointOnLine(point, new Point2D(0f, 0f), new Point2D(5f, 5f))) //!IsPointOnLine(point, line.origin, line.direction, 0.05f)
                     {
                         if ((row + col) % 2 == 0)
                         {
@@ -454,14 +459,13 @@ namespace HelloWorld
         static public void Print2dIntArray(int[,] array)
         {
             Console.WriteLine(); Console.WriteLine();
-
             int x_size = array.GetLength(0);
             int y_size = array.GetLength(1);
             int counter = 0;
             for (int col = 0; col < y_size; col++)
             {
                 for (int row = 0; row < x_size; row++)
-            {   
+                {
                     if (counter >= x_size) //check if we wrote a whole row
                     {
                         Console.WriteLine();
@@ -475,7 +479,6 @@ namespace HelloWorld
         static public void Print2dArray(dynamic[,] array)
         {
             Console.WriteLine(); Console.WriteLine();
-
             int x_size = array.GetLength(0);
             int y_size = array.GetLength(1);
             int counter = 0;
@@ -501,14 +504,12 @@ namespace HelloWorld
             }
             //prints: 26 28 30 32 34 36 38 40
         }
-
         IEnumerable<float> IteratorTestNumbers()
         {
             yield return 1f;
             yield return 2f;
             yield return 5f;
         }
-
         static IEnumerable<float> EvenNumbers(float start, float end)
         {
             //yields all even numbers
@@ -540,7 +541,7 @@ namespace HelloWorld
             counter = 0;
             foreach (int item in int2dArray)
             {
-                if (counter%4 == 0)
+                if (counter % 4 == 0)
                 {
                     Console.WriteLine();
                 }
@@ -549,7 +550,6 @@ namespace HelloWorld
             }
             Console.ReadLine();
         }
-
         void LoopThroughForeach(List<string> M_list)
         {
             Console.WriteLine("Printing all items on list.");
@@ -557,9 +557,7 @@ namespace HelloWorld
             {
                 Console.WriteLine(item);
             }
-
         }
-
         public static void RemindMe()
         {
             List<string> inputList = new List<string>();
@@ -569,15 +567,14 @@ namespace HelloWorld
                 inputList.Add(input);
                 input = Read.String("");
             }
-           foreach (string item in inputList)
+            foreach (string item in inputList)
             {
-                    Console.WriteLine(item);
+                Console.WriteLine(item);
             }
             inputList.Clear();  // not needed, but a good practice for me to 
                                 // remember doing in case the variable is 
                                 // declared outside of the scope
         }
-
         void LoopThroughFor(string[] m_array)
         {
             Console.WriteLine("Printing all items on list.");
@@ -586,7 +583,6 @@ namespace HelloWorld
                 Console.WriteLine(m_array[i]);
             }
         }
-
         static void GuessingGame(int a, int b, bool generate = true)
         {
             DrawDivider();
@@ -654,7 +650,6 @@ namespace HelloWorld
                     DrawMonth();
                     return;
             }
-
             int month = 0;
             int year = 0;
             #region GetMonthYear
@@ -662,7 +657,6 @@ namespace HelloWorld
             {
                 month = DateTime.Now.Month;
                 year = DateTime.Now.Year;
-
             }
             else
             {
@@ -701,7 +695,6 @@ namespace HelloWorld
             int[,] calendar = new int[6, 7]; //make our calendar 2D array, in this case being the weeks & weekdays
             int dayOfWeek = Convert.ToInt32(date.DayOfWeek) + 1; //get the day of the week of the first day in the month as an int, plus one because week does not start on sunday
             int currentlyDrawingDay = 1; //start counting here
-
             for (int x = 0; x < calendar.GetLength(0); x++) //if x(current day of the week) is within the week (length of 0 axis in calendar array)
             {
                 for (int y = 0; y < calendar.GetLength(1) && (currentlyDrawingDay - dayOfWeek + 1 /*plus one because we start counting at 1*/) <= daysInMonth; y++) //if y is within the week, and the currently drawing day minus the day of the week is within the month
@@ -732,7 +725,6 @@ namespace HelloWorld
                     {
                         Console.Write("   ");
                     }
-
                 }
                 Console.WriteLine();
             }
@@ -742,14 +734,11 @@ namespace HelloWorld
             calendarHasYear = false;
             #endregion
         }
-
         static double GenerateRandomNumberBetween(bool floatnumbers = false)
         {
             DrawDivider();
             int a = Read.Int("Please input the minmum:", "Sorry, that was not a valid integer. Try again.");
-
             int b = Read.Int("Please input the maximum:", "Sorry, that was not a valid Integer. Try again.");
-
             double randomnumber;
             if (floatnumbers)
             {
@@ -765,7 +754,6 @@ namespace HelloWorld
             DrawDivider();
             return randomnumber;
         }
-
         static void PrintGrid(int x, int y)
         {
             for (int localx = 0; localx < x; localx++)
@@ -778,11 +766,9 @@ namespace HelloWorld
                 Console.WriteLine();
             }
         }
-
         static string Secret()
         {
             string input = Read.String("Input a secret passphrase: ");
-
             switch (input)
             {
                 case "Power":
@@ -802,7 +788,6 @@ namespace HelloWorld
                     return "Invalid Password.";
             }
         }
-
         static void Naughty(int amount)
         {
             for (int i = 0; i < amount; i++)
@@ -812,19 +797,15 @@ namespace HelloWorld
         }
         static void SuperSmartAI()
         {
-
             DrawDivider();
             string input = Read.String("I am an AI. Hello. Ask me any question you'd like.");
             while (!input.Contains("exit") && !input.Contains("goodbye") && !input.Contains("quit"))
             {
                 Console.WriteLine("Very good question, I will come back to you in a moment!");
-
                 input = Read.String("I am an AI. Hello. Ask me any question you'd like.");
             }
-
             DrawDivider();
         }
-
         static void PrintWeekdayEnum()
         {
             foreach (string item in Enum.GetNames(typeof(Weekdays)))
@@ -832,17 +813,14 @@ namespace HelloWorld
                 Console.WriteLine(item);
             }
         }
-
         static void Calculator()
         {
-
             DrawDivider();
             Console.WriteLine("Calculator initiated.");
             if (!GetIntegerInput("A", out int a))
             {
                 return;
             }
-
             if (!SetOperator(out OperationType operation))
             {
                 return;
@@ -988,14 +966,12 @@ namespace HelloWorld
             {
                 Console.WriteLine("Not a number.");
             }
-
             Console.ReadLine();
         }
         static void Banana()
         {
             int sliceAmount = 1;
             bool sliced = true;
-
             switch (sliced)
             {
                 case false:
@@ -1005,9 +981,7 @@ namespace HelloWorld
                     Console.WriteLine("The banana is sliced. " + "sliced = " + sliced);
                     break;
             }
-
             Console.WriteLine("There are " + sliceAmount + " slices.");
-
         }
         static int AddOne(int number)
         {
@@ -1018,29 +992,19 @@ namespace HelloWorld
         {
             int a;
             int b;
-
             a = 10;
             b = 69;
-
             int c = a + b;
-
             Console.WriteLine(c);
-
             float d;
             float e;
-
             d = 12.400f;
             e = 57.44f;
-
             float f = d - e;
-
             Console.WriteLine(f);
-
             int g = a * b;
             float h = d * e;
-
             float i = g / h;
-
             Console.WriteLine(i);
         }
         static void Name()
@@ -1056,13 +1020,10 @@ namespace HelloWorld
             {
                 return;
             }
-
             Console.WriteLine("Hello, " + name + "!");
             UserName = name;
             Console.ReadLine();
-
         }
-
         static void Age()
         {
             int age = -1;
@@ -1076,7 +1037,6 @@ namespace HelloWorld
                 Console.WriteLine("Invalid input.");
                 Age();
             }
-
             if (UserName != null)
             {
                 Console.WriteLine("Hello, " + UserName + "! Thank you for telling me your age (which is " + age + ").");
@@ -1094,16 +1054,15 @@ namespace HelloWorld
     {
         static int itemWidth = 9;
         const int maxItems = 5;
-        static readonly string[] Bottle = new string[] 
-        { 
+        static readonly string[] Bottle = new string[]
+        {
             "   { }   " ,
-            "   | |   ", 
-            "   ) (   ", 
-            "  |___|  " , 
-            "  |   |  " , 
-            "  |___|  " 
+            "   | |   ",
+            "   ) (   ",
+            "  |___|  " ,
+            "  |   |  " ,
+            "  |___|  "
         };
-
         static readonly string[] SelectionArrow = new string[]
         {
             "    ^    ",
@@ -1134,7 +1093,6 @@ namespace HelloWorld
                 poisoned = a_Poisoned;
             }
         }
-
         public enum PotionTypes
         {
             Yellow,
@@ -1144,12 +1102,11 @@ namespace HelloWorld
             Red,
             Blank,
             Purple,
-            Green, 
+            Green,
             Cyan,
             White,
             Black
         }
-        
         enum PotionEvents
         {
             Damage,
@@ -1166,7 +1123,6 @@ namespace HelloWorld
             Console.WriteLine("Welcome Traveler. I am the Potion Seller. I have the strongest potions in the land.");
             do
             {
-
                 PopulateShop(out shop);
                 Console.WriteLine();
                 Console.WriteLine("These are my potions. Please do not touch them.");
@@ -1174,11 +1130,8 @@ namespace HelloWorld
                 ConsoleKey keyinfo;
                 Console.WriteLine();
                 RedrawArrow(itemIndex);
-
-
                 do
                 {
-
                     keyinfo = Console.ReadKey().Key;
                     switch (keyinfo)
                     {
@@ -1191,14 +1144,13 @@ namespace HelloWorld
                             }
                             break;
                         case ConsoleKey.RightArrow:
-                            if (itemIndex < maxItems-1)
+                            if (itemIndex < maxItems - 1)
                             {
                                 itemIndex++;
                                 MoveCursorUp(2);
                                 RedrawArrow(itemIndex);
                             }
                             break;
-
                         case ConsoleKey.Enter:
                             Console.WriteLine();
                             Console.WriteLine("<You picked a " + shop[itemIndex].ToString() + " potion.>");
@@ -1207,7 +1159,6 @@ namespace HelloWorld
                             break;
                     }
                 } while (keyinfo != ConsoleKey.Enter);
-
                 switch (GetEvent(shop[itemIndex]))
                 {
                     case PotionEvents.Damage:
@@ -1222,26 +1173,21 @@ namespace HelloWorld
                     default:
                         break;
                 }
-
                 // here: select potion
-
                 // switch on potion type
-
                 // display health / redraw health
                 itemIndex = 0;
                 score++;
             } while (currentPlayer.health > 0);
             Console.WriteLine("I told you Traveler... You were not strong enough for my potions...\n <<You drank " + score + ((score > 0) ? "potions.>>" : "potion.>>"));
         }
-
         static PotionTypes GetPotion()
         {
             return (PotionTypes)Program.rnd.Next(Enum.GetNames(typeof(PotionTypes)).Length);
         }
         static Player DamagePlayer(Player a_Player, int damage)
         {
-        #pragma warning disable IDE0059 // Unnecessary assignment of a value
-
+#pragma warning disable IDE0059 // Unnecessary assignment of a value
             string _output;
             if (damage <= 0)
             {
@@ -1250,7 +1196,6 @@ namespace HelloWorld
                 {
                     a_Player.health = a_Player.maxHealth;
                 }
-
                 Console.WriteLine("<You gained [" + (damage * -1) + "] health, and now have [" + a_Player.health.ToString() + "].>");
                 switch (Program.rnd.Next(2))
                 {
@@ -1281,7 +1226,6 @@ namespace HelloWorld
                 Console.WriteLine("I told you! I told you! ... I told you!!!!!");
                 GameOver();
             }
-
             switch (Program.rnd.Next(3))
             {
                 case 0:
@@ -1303,8 +1247,7 @@ namespace HelloWorld
             Console.WriteLine(_output);
             return a_Player;
         }
-        #pragma warning restore IDE0059 // Unnecessary assignment of a value
-
+#pragma warning restore IDE0059 // Unnecessary assignment of a value
         static void GameOver()
         {
             Console.WriteLine("<Congratulations on drinking " + score + " potions.>\n<Going back to the main menu.>");
@@ -1341,7 +1284,6 @@ namespace HelloWorld
                     return PotionEvents.Nothing;
             }
         }
-
         public static void DrawBottle(int amount)
         {
             int count = 0;
@@ -1359,7 +1301,7 @@ namespace HelloWorld
                 int charCount = shop[i].ToString().Length;
                 string lable = shop[i].ToString();
                 bool flipFlop = false;
-                while (charCount != itemWidth-1)
+                while (charCount != itemWidth - 1)
                 {
                     if (charCount >= itemWidth)
                     {
@@ -1369,7 +1311,7 @@ namespace HelloWorld
                     switch (flipFlop)
                     {
                         case true:
-                            lable = " " +lable;
+                            lable = " " + lable;
                             flipFlop = !flipFlop;
                             break;
                         case false:
@@ -1381,14 +1323,12 @@ namespace HelloWorld
                     }
                     charCount = lable.Length;
                 }
-
                 Console.Write(lable + "|"); ///ADD POTION NAME
             }
         }
         public static void PopulateShop(out List<PotionTypes> shop)
         {
             shop = new List<PotionTypes>();
-
             for (int i = 0; i < maxItems; i++)
             {
                 PotionTypes thistype = (PotionTypes)Program.rnd.Next(Enum.GetNames(typeof(PotionTypes)).Length);
@@ -1407,25 +1347,21 @@ namespace HelloWorld
                 }
                 for (int i = 0; i < maxItems; i++)
                 {
-
                     if (i == offset)
                     {
                         Console.Write(SelectionArrow[count]);
                     }
-                    else 
+                    else
                     {
                         Console.Write(String.Concat(Enumerable.Repeat(" ", itemWidth)));
                     }
                 }
                 count++;
-
             }
         }
         public static void MoveCursorUp(int amount = 1) //and delete
         {
-
-            Console.SetCursorPosition(0, Console.CursorTop - amount+1);
-            
+            Console.SetCursorPosition(0, Console.CursorTop - amount + 1);
             for (int i = 0; i < amount; i++)
             {
                 Console.Write("                 ", 0, 80);
@@ -1439,9 +1375,7 @@ namespace HelloWorld
         static Random rnd = new Random();
         static int[] products = new int[] { 1, 3, 5, 7, 9, 23, 39, 12, 39, 20, 13, 13, 14 };
         static float[] money_value = new float[] { 0.99f, 3.0f, 5.99f, 2.99f, 9.99f, 2.22f, 3.9f, 1.2f, 3.9f, 2.01f, 1.3f, 1.3f, 1.4f };
-
         static int[] warehouseItems = new int[] { 10, 20, 125, -2, 43, 10020, 232 };
-
 #pragma warning disable IDE0052 // Remove unread private members
         static int[] inventory = new int[20];
 #pragma warning restore IDE0052 // Remove unread private members
@@ -1455,12 +1389,7 @@ namespace HelloWorld
                 a++;
             }
             DisplayTotalValue(products, money_value);
-
-
             FindHighestOfArray(warehouseItems);
-
-
-
         }
         public static void DisplayAmountOfProducts(int[] products)
         {
@@ -1485,7 +1414,6 @@ namespace HelloWorld
         {
             int highestValue = m_array.Max();
             int index = m_array.ToList().IndexOf(highestValue);
-
             Console.WriteLine("The highest value in the array is " + highestValue + " at the index #" + index); //starting from 0
         }
         public static void PopulateArrayRandom(out int[] m_array, int length = 20)
