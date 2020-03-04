@@ -2,9 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-
-#pragma warning disable IDE0051 //unused
+using System.IO;
+#pragma warning disable IDE0051 //unused var
 #pragma warning disable IDE0044 //add readonly
+#pragma warning disable IDE0060 //unused parameter
 
 namespace HelloWorld
 {
@@ -315,15 +316,24 @@ namespace HelloWorld
                     break;
                 case "cave":
                     CaveGenerator CG = new CaveGenerator();
-                    int[,] map = CG.CreateCave(50,25, 70, 2);
+                    int[,] map = CG.CreateCave(10,5, 70, 2);
                     map = CG.iterateCave(map, 2, 5,5);
                     Print2dIntArray(map);
+                    CG.WriteMap(map, "test");
                     Console.WriteLine();
                     break;
                 case "rps":
                 case "rock paper scissors":
                     RPS RockPaperScissors = new RPS();
                     RockPaperScissors.Play();
+                    break;
+                case "read map":
+                    CaveGenerator CG2 = new CaveGenerator();
+                    string[,] thisMap = CG2.ReadMap("test");
+                    Print2dArray(thisMap);
+                    Console.WriteLine();
+                    Console.WriteLine("This was the read map.");
+                    Console.WriteLine();
                     break;
                 default:
                     Console.Write("Unknown Input. ");
@@ -397,7 +407,9 @@ namespace HelloWorld
             }
             Console.WriteLine();
         }
+
         static void CheckerBoard(int x_size, int y_size, Vector2D line)
+
         {
 
             int counter = 0;
@@ -449,6 +461,27 @@ namespace HelloWorld
                     }
                     counter++;
                     Console.Write(array[row, col] == 1 ? " " : "X");
+                }
+            }
+        }
+        static public void Print2dArray(dynamic[,] array)
+        {
+            Console.WriteLine(); Console.WriteLine();
+
+            int x_size = array.GetLength(0);
+            int y_size = array.GetLength(1);
+            int counter = 0;
+            for (int col = 0; col < y_size; col++)
+            {
+                for (int row = 0; row < x_size; row++)
+                {
+                    if (counter >= x_size) //check if we wrote a whole row
+                    {
+                        Console.WriteLine();
+                        counter = 0;
+                    }
+                    counter++;
+                    Console.Write((string)array[row, col]);
                 }
             }
         }
@@ -1401,7 +1434,9 @@ namespace HelloWorld
 
         static int[] warehouseItems = new int[] { 10, 20, 125, -2, 43, 10020, 232 };
 
+#pragma warning disable IDE0052 // Remove unread private members
         static int[] inventory = new int[20];
+#pragma warning restore IDE0052 // Remove unread private members
         public static void MainWarehouse()
         {
             int a = 0;

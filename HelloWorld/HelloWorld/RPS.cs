@@ -8,11 +8,11 @@ namespace HelloWorld
 {
     class RPS
     {
-        Random ThisIsAI = new Random();
+        readonly Random ThisIsAI = new Random();
         bool validInput = false;
         struct Score
         {
-            public int player {get; set;}
+            public int Player {get; set;}
             public int AI { get; set; }
         }
         Score score;
@@ -88,7 +88,7 @@ namespace HelloWorld
             }
             else
             {
-                Console.WriteLine("Next Round! You are in round " + round +".\nThe current score is: " + score.player + " to " + score.AI);
+                Console.WriteLine("Next Round! You are in round " + round +".\nThe current score is: " + score.Player + " to " + score.AI);
 
             }
             Choices player = GetPlayerInput("Make your choice:");
@@ -100,26 +100,26 @@ namespace HelloWorld
                     break;
                 case States.Win:
                     Console.WriteLine("The AI picked " + AI + ". You won.");
-                    score.player++;
+                    score.Player++;
                     break;
                 case States.Loss:
                     Console.WriteLine("Oh no! The AI picked " + AI + ", and you lost.");
                     score.AI++;
                     break;
             }
-            if (score.AI >= 3 || score.player >= 3)
+            if (score.AI >= 3 || score.Player >= 3)
             {
                 if (score.AI >= 3)
                 {
                     Win(1);
                     score.AI = 0;
-                    score.player = 0;
+                    score.Player = 0;
                 }
                 else
                 {
                     Win(0);
                     score.AI = 0;
-                    score.player = 0;
+                    score.Player = 0;
                 }
             }
             else
@@ -139,7 +139,7 @@ namespace HelloWorld
                 Console.WriteLine("Aw... The AI won.");
             }
         }
-        Choices GetPlayerInput(string ConsoleText, bool restart = false)
+        Choices GetPlayerInput(string ConsoleText)
         {
             validInput = false;
             Choices choice = 0;
