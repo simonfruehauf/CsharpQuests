@@ -31,44 +31,16 @@ namespace HelloWorld
         int currentRound;
         States ResolveRound(Choices player_a, Choices player_b)
         {
-            switch (player_a)
+            int intcase = Math.Abs(player_a - player_b);
+
+            switch (intcase)
             {
-                case Choices.Rock:
-                    switch (player_b)
-                    {
-                        case Choices.Rock:
-                            return States.Tie;
-                        case Choices.Paper:
-                            return States.Loss;
-                        case Choices.Scissors:
-                            return States.Win;
-                        default:
-                            return States.Tie;
-                    }
-                case Choices.Paper:
-                    switch (player_b)
-                    {
-                        case Choices.Rock:
-                            return States.Win;
-                        case Choices.Paper:
-                            return States.Tie;
-                        case Choices.Scissors:
-                            return States.Loss;
-                        default:
-                            return States.Tie;
-                    }
-                case Choices.Scissors:
-                    switch (player_b)
-                    {
-                        case Choices.Rock:
-                            return States.Loss;
-                        case Choices.Paper:
-                            return States.Win;
-                        case Choices.Scissors:
-                            return States.Tie;
-                        default:
-                            return States.Tie;
-                    }
+                case 0:
+                    return States.Tie;
+                case 1:
+                    return States.Loss;
+                case 2:
+                    return States.Win;
                 default:
                     return States.Tie;
             }
