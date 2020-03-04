@@ -10,7 +10,7 @@ namespace HelloWorld
 {
     class Read
     {
-        static readonly string ConsoleIndicator = "\n> ";
+        public static readonly string ConsoleIndicator = "\n> ";
         static bool valid = false;
         public static int Int(string ConsoleText, string ErrorMessage)
         {
@@ -74,7 +74,6 @@ namespace HelloWorld
             //valid = false;
             //return "";
         }
-
         public static bool YesNo(string ConsoleText, string ErrorMessage)
         {
             string yesno = "Y/N";
@@ -320,6 +319,11 @@ namespace HelloWorld
                     map = CG.iterateCave(map, 2, 5,5);
                     Print2dIntArray(map);
                     Console.WriteLine();
+                    break;
+                case "rps":
+                case "rock paper scissors":
+                    RPS RockPaperScissors = new RPS();
+                    RockPaperScissors.Play();
                     break;
                 default:
                     Console.Write("Unknown Input. ");
