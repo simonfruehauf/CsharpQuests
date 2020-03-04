@@ -46,8 +46,7 @@ namespace HelloWorld
                     }
                     else
                     {
-                        t_map_string[c,i] = item;
-
+                        t_map_string[c, i] = item;
                     }
                     c++;
                 }

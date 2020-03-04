@@ -31,19 +31,26 @@ namespace HelloWorld
         int currentRound;
         States ResolveRound(Choices player_a, Choices player_b)
         {
-            int intcase = Math.Abs(player_a - player_b);
+            int intcase =  (((player_a - player_b)% Enum.GetNames(typeof(Choices)).Length)+ Enum.GetNames(typeof(Choices)).Length)% Enum.GetNames(typeof(Choices)).Length;
 
+            //This works, because it wraps around the numbers, and if the distance between player and ai is 1, that is a win, if it is 2, then it is a loss.
+
+            //(n % M) + M) % M
+            // Rock Papers Scissors 0 1 2
+            // 0 2 = -2
+            // 0 1 = -1
             switch (intcase)
             {
+                case 2:
+                    return States.Loss;
+                case 1:
+                    return States.Win;
                 case 0:
                     return States.Tie;
-                case 1:
-                    return States.Loss;
-                case 2:
-                    return States.Win;
                 default:
                     return States.Tie;
             }
+
         }
 
         Choices Pick()
