@@ -335,6 +335,14 @@ namespace HelloWorld
                     Console.WriteLine("This was the read map.");
                     Console.WriteLine();
                     break;
+                case "weird menu":
+                    BuildMenu bm = new BuildMenu();
+                    bool running = true;
+                    while (running)
+                    {
+                        running = BuildMenu.Build();
+                    }
+                    break;
                 default:
                     Console.Write("Unknown Input. ");
                     MainMenu(true);
