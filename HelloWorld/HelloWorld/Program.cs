@@ -361,6 +361,14 @@ namespace HelloNamespace
                     Warehouse WH = new Warehouse();
                     Warehouse.LookAtInventory(WH.Inventory);
                     break;
+                case "sorter":
+                    int e = Sorter.ReadFile();
+                    if (e == 0)
+                    {
+                        Sorter.Sort(Sorter.items, Sorter.values, true);
+                        PrintArray(Sorter.items, Sorter.values);
+                    }
+                    break;
                 default:
                     Console.Write("Unknown Input. ");
                     MainMenu(true);
@@ -527,9 +535,43 @@ namespace HelloNamespace
             }
             Console.WriteLine();
         }
+        static public void PrintArray(dynamic array)
+        {
+            Console.WriteLine();
+            foreach (var item in array)
+            {
+                Console.WriteLine(item.ToString());
+            }
+        }
+
+        static public void PrintArray(dynamic array, dynamic array_b)
+        {
+            Console.WriteLine();
+            int l = array.Length;
+            int l_b = array_b.Length;
+
+            int length = Math.Max(l, l_b);
+            for (int i = 0; i < length; i++)
+            {
+                if (array[i] != null)
+                {
+                    Console.Write(array[i]);
+                    Console.Write(" --> ");
+                    if (array_b != null)
+                    {
+                        Console.Write(array_b[i]);
+                    }
+                    else
+                    {
+                        Console.Write("null");
+                    }
+                    Console.WriteLine();
+                }
+            }
+        }
         static public void Print2dIntArray(int[,] array, bool special = false, int x = 0, int y = 0)
         {
-            Console.WriteLine(); Console.WriteLine();
+            Console.WriteLine();
             int x_size = array.GetLength(0);
             int y_size = array.GetLength(1);
             int counter = 0;

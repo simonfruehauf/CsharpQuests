@@ -145,4 +145,141 @@ namespace HelloNamespace
             }
         }
     }
+    public class Sorter
+    {
+        public static int[] items;
+        public static int[] values;
+        static string file = "files\\sorter.txt";
+
+        public static int ReadFile(int min = 20)
+        {
+            items = null;
+            values = null;
+            if (!Directory.Exists("files"))
+            {
+                Directory.CreateDirectory("files");
+                Console.WriteLine("Missing Directory, now created. Cannot read file.");
+                var t_file = File.Create(file);
+                t_file.Close();
+                return 1;
+            }
+            else
+            {
+                if (!File.Exists(file))
+                {
+                    var t_file = File.Create(file);
+                    t_file.Close();
+                    Console.WriteLine("Missing File, now created.");
+                    return 2;
+                }
+                else
+                {
+                    if (new FileInfo(file).Length == 0)
+                    {
+                        Random rnd = new Random();
+                        Console.WriteLine("Emtpy file. Filling file with random ints.");
+                        items = new int[min];
+                        values = new int[min];
+                        for (int i = 0; i < min; i++)
+                        {
+                            items[i] = rnd.Next(1, 100);
+                        }
+                        for (int j = 0; j < min; j++)
+                        {
+                            values[j] = rnd.Next(1, 100);
+                        }
+                        WriteFile();
+                        return 3;
+
+                    }
+                    else
+                    {
+                        
+                        string t = File.ReadAllLines(file).Skip(0).Take(1).First();
+                        string[] t_string = t.Split('.');
+                        List<int> v = new List<int>(); //item
+                        List<int> w = new List<int>(); //value
+                        foreach (string item in t_string)
+                        {
+                            v.Add(Convert.ToInt32(item.Split(',')[0]));
+                            w.Add(Convert.ToInt32(item.Split(',')[1]));
+                        }
+                        items = v.ToArray();
+                        values = w.ToArray();
+                        return 0;
+                    }
+
+                }
+            }
+        }
+
+        public static void WriteFile()
+        {
+            if (!Directory.Exists("files"))
+            {
+                Directory.CreateDirectory("files");
+                Console.WriteLine("Missing Directory, now created. Cannot read file.");
+                var t_file = File.Create(file);
+                t_file.Close();
+            }
+            else
+            {
+                if (!File.Exists(file))
+                {
+                    var t_file = File.Create(file);
+                    t_file.Close();
+                    Console.WriteLine("Missing File, now created.");
+                }
+                else if (items != null && values != null)
+                {
+                    if (items.Length == values.Length)
+                    {
+                        string text = "";
+                        for (int i = 0; i < items.Length; i++)
+                        {
+                            if (i == items.Length-1)
+                            {
+                                text += items[i].ToString() + "," + values[i].ToString();
+                            }
+                            else
+                                    {
+                                text += items[i].ToString() + "," + values[i].ToString() + ".";
+                            }
+                        }
+                        File.WriteAllText(file, text);
+                        Console.WriteLine("Written down.");
+                    }
+                    else
+                    {
+                        Console.WriteLine("We are missing some values or items. Please check again.");
+                    }
+                }
+
+            }
+        }
+
+        public static void Sort(int[] array_a, int[] array_b, bool reverse = false, bool write = true)
+        {
+            int[] temp_a = array_a;
+            int[] temp_b = array_b;
+            if (reverse)
+            {
+                Array.Sort(temp_a, array_b);
+                Array.Reverse(array_b);
+                Array.Sort(temp_a, array_a);
+                Array.Reverse(array_a);
+
+            }
+            else
+            {
+                Array.Sort(temp_a, array_b);
+                Array.Sort(temp_a, array_a);
+            }
+            if (write)
+            {
+                WriteFile();
+            }
+            //
+        }
+    }
 }
