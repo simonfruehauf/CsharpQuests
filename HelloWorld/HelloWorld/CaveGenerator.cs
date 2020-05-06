@@ -139,7 +139,6 @@ namespace HelloWorld
             
             return blowUpArray(Map);
         }
-
         public int[,] iterateCave(int[,] map, int iterations, float deathLimit = 5, float birthLimit = 7)
         {
             int[,] t_map = map;
@@ -228,5 +227,128 @@ namespace HelloWorld
             }
             return t_array;
         }
+
+        int countCells(int[,] m_array, int tocount=0)
+        {
+            int amount = 0;
+            foreach (int tile in m_array)
+            {
+                if (tile==tocount)
+                {
+                    amount++;
+                }
+            }
+            return amount;
+
+        }
+
+        public int[,] findEmptyCell(int[,] m_array, bool middle = true, int empty = 1)
+        {
+            if (middle==false)
+            {
+                int[,] m_tile = null;
+                for (int x = 0; x < m_array.GetLength(0); x++)
+                {
+                    for (int y = 0; y < m_array.GetLength(1); y++)
+                    {
+                        if (m_array[x, y] == empty)
+                        {
+                            m_tile = new int[x, y];
+                            return m_tile;
+                            
+                        }
+                    }
+                }
+                return new int[0, 0]; //technically an error
+            }
+            else
+            {
+                //doing a spiral
+                int x=0;
+                int y=0;
+
+                //get center
+                x = (int)Math.Floor((m_array.GetLength(0) / 2.0f)-1.0f);
+                y= (int)Math.Floor((m_array.GetLength(1) / 2.0f) - 1.0f);
+
+                int d = 0; //direction
+                int c = 1; //current chain size
+
+                for (int k = 0; k <= (m_array.GetLength(0)); k++)
+                {
+                    for (int j = 0; j < (m_array.GetLength(1)); j++)
+                    {
+                        for (int l = 0; l < c; l++)
+                        {
+
+                            //current tile: m_array[x,y]
+                            try
+                            {
+                                if (m_array[x, y] == empty)
+                                {
+                                    return new int[x, y];
+                                }
+                            }
+                            catch
+                            {
+                                Console.WriteLine("Cannot find an empty tile in the middle.");
+                                return new int[400, 400];
+                            }
+                            switch (d)
+                            {
+                                case 0:
+                                    y++;
+                                    break;
+                                case 1:
+                                    x++;
+                                    break;
+                                case 2:
+                                    y--;
+                                    break;
+                                case 3:
+                                    x--;
+                                    break;
+
+                            }
+                        }
+                        d = (d + 1) % 4; //switch directions
+                    }
+                    c++;
+                }
+                return new int[0,0]; //technically an error
+
+            }
+        }
+        public void printSpiral(int n)
+        {
+            for (int i = 0; i < n; i++)
+            {
+                for (int j = 0; j < n; j++)
+                {
+
+                    // x stores the layer in which  
+                    // (i, j)th element lies 
+                    int x;
+
+                    // Finds minimum of four inputs 
+                    x = Math.Min(Math.Min(i, j),
+                        Math.Min(n - 1 - i, n - 1 - j));
+
+                    // For upper right half 
+                    if (i <= j)
+                        Console.Write((n - 2 * x) *
+                                      (n - 2 * x) -
+                                      (i - x) - (j - x) + "\t");
+
+                    // for lower left half 
+                    else
+                        Console.Write((n - 2 * x - 2) *
+                                      (n - 2 * x - 2) +
+                                      (i - x) + (j - x) + "\t");
+                }
+                Console.WriteLine();
+            }
+        }
     }
+
 }

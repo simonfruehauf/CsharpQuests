@@ -309,11 +309,22 @@ namespace HelloWorld
                     break;
                 case "cave":
                     CaveGenerator CG = new CaveGenerator();
-                    int[,] map = CG.CreateCave(10, 5, 70, 2);
+                    int[,] map = CG.CreateCave(15, 10, 70, 2);
                     map = CG.iterateCave(map, 2, 5, 5);
-                    Print2dIntArray(map);
+                    //Print2dIntArray(map);
                     CG.WriteMap(map, "test");
                     Console.WriteLine();
+                    int[,] error = new int[400, 400];
+                    int[,] start = CG.findEmptyCell(map, true);
+                    if (start == error)
+                    {
+                        //error
+                    }
+                    else
+                    {
+                        Print2dIntArray(map, true, start.GetLength(0), start.GetLength(1));
+                    }
+                    Console.WriteLine(start.GetLength(0)+ " " + start.GetLength(1));
                     break;
                 case "rps":
                 case "rock paper scissors":
@@ -341,6 +352,10 @@ namespace HelloWorld
                     break;
                 case "negative":
                     Console.WriteLine(findFirstNegative(new int[] { 5, 23, 55, -3, 0, 5, 323, 65, -5 }));
+                    break;
+                case "printspiral":
+                    CaveGenerator CG3 = new CaveGenerator();
+                    CG3.printSpiral(10);
                     break;
                 default:
                     Console.Write("Unknown Input. ");
@@ -508,7 +523,7 @@ namespace HelloWorld
             }
             Console.WriteLine();
         }
-        static public void Print2dIntArray(int[,] array)
+        static public void Print2dIntArray(int[,] array, bool special = false, int x = 0, int y = 0)
         {
             Console.WriteLine(); Console.WriteLine();
             int x_size = array.GetLength(0);
@@ -524,7 +539,27 @@ namespace HelloWorld
                         counter = 0;
                     }
                     counter++;
-                    Console.Write(array[row, col] == 1 ? " " : "X");
+                    if (row == x && col == y && special)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.Write("@"); 
+                        Console.ResetColor();
+                    }
+                    else
+                    {
+                        switch (array[row, col])
+                        {
+                            case 0:
+                                Console.Write("X");
+                                break;
+                            case 1:
+                                Console.Write(" ");
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                    //Console.Write(array[row, col] == 1 ? " " : "X");
                 }
             }
         }
