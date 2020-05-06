@@ -5,10 +5,17 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 
-namespace HelloWorld
+namespace HelloNamespace
 {
     public class Warehouse
     {
+        public Dictionary<string, float> Inventory = new Dictionary<string, float>(){
+            {"bow", 2f},
+            {"dagger", 1f},
+            {"sword", 4f},
+            {"crossbow", 3f}
+        };
+
         static Random rnd = new Random();
         static int[] products = new int[] { 1, 3, 5, 7, 9, 23, 39, 12, 39, 20, 13, 13, 14 };
         static float[] money_value = new float[] { 0.99f, 3.0f, 5.99f, 2.99f, 9.99f, 2.22f, 3.9f, 1.2f, 3.9f, 2.01f, 1.3f, 1.3f, 1.4f };
@@ -29,6 +36,24 @@ namespace HelloWorld
             //FindHighestOfArray(warehouseItems);
 
             ReadFile();
+        }
+        public static void LookAtInventory(Dictionary<string, float> Inv)
+        {
+            Console.WriteLine("These items are the ones that are available:");
+            foreach (KeyValuePair<string, float> i in Inv)
+            {
+                Console.WriteLine(i.Key);
+            }
+            string input = Read.String("What would you like to look at?");
+
+            if (Inv.ContainsKey(input))
+            {
+                Console.WriteLine("The " + input + " is worth " + Inv[input] + " schmeckles.");
+            }
+            else
+            {
+                Console.WriteLine("Sorry, we don't have " + input + "s.");
+            }
         }
 
         public static void ReadFile(string directoryfile = "files\\warehouse.txt")
@@ -59,7 +84,6 @@ namespace HelloWorld
                         //main code
                         string t = File.ReadLines(file).Skip(0).Take(1).First();
                         string[] t_string = t.Split(' ');
-                        int i = 0;
                         List<int> v = new List<int>(); //item
                         List<int> w = new List<int>(); //value
                         foreach (string item in t_string)

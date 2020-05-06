@@ -6,7 +6,7 @@ using System.IO;
 #pragma warning disable IDE0051 //unused var
 #pragma warning disable IDE0044 //add readonly
 #pragma warning disable IDE0060 //unused parameter
-namespace HelloWorld
+namespace HelloNamespace
 {
     class Read
     {
@@ -356,6 +356,10 @@ namespace HelloWorld
                 case "printspiral":
                     CaveGenerator CG3 = new CaveGenerator();
                     CG3.printSpiral(10);
+                    break;
+                case "storefront":
+                    Warehouse WH = new Warehouse();
+                    Warehouse.LookAtInventory(WH.Inventory);
                     break;
                 default:
                     Console.Write("Unknown Input. ");
