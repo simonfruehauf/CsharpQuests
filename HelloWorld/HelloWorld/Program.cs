@@ -20,6 +20,11 @@ namespace HelloWorld
             {
                 try
                 {
+                    if (Console.ReadKey().Key == ConsoleKey.Escape)
+                    {
+                        Program.MainMenu();
+                        return 0;
+                    }
                     Console.Write(ConsoleText + ConsoleIndicator);
                     string temp = Console.ReadLine();
                     if (temp == "q" || temp == "quit")
@@ -106,8 +111,10 @@ namespace HelloWorld
             return yes;
         }
     }
+
     class Program
     {
+
         #region randomvars
         public static string Worldstring = "Ham and Eggs are better than \"Hello World!\"";
         public static int TheAnswer = 42;

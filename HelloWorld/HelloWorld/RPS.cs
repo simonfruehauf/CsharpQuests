@@ -39,6 +39,8 @@ namespace HelloWorld
             // Rock Papers Scissors 0 1 2
             // 0 2 = -2
             // 0 1 = -1
+
+
             switch (intcase)
             {
                 case 2:
@@ -107,6 +109,7 @@ namespace HelloWorld
                 Play(currentRound);
             }
         }
+
         void Win(int player)
         {
             if (player == 0)
@@ -124,7 +127,32 @@ namespace HelloWorld
             Choices choice = 0;
             do
             {
-                    Console.Write(ConsoleText + "\n> ");
+                Console.Write(ConsoleText+"\n");
+                if (true)
+                {
+                    ConsoleKeyInfo temp = Console.ReadKey();
+                    switch (temp.Key)
+                    {
+                        case ConsoleKey.UpArrow:
+                            choice = Choices.Scissors;
+                            validInput = true;
+                            break;
+                        case ConsoleKey.LeftArrow:
+                            choice = Choices.Rock;
+                            validInput = true; 
+                            break;
+                        case ConsoleKey.RightArrow:
+                            choice = Choices.Paper;
+                            validInput = true; 
+                            break;
+                        default:
+                            validInput = false;
+                            break;
+                    }
+                }
+                else
+                {
+#pragma warning disable CS0162
                     string temp = Console.ReadLine();
                     if (temp == "q" || temp == "quit")
                     {
@@ -133,28 +161,34 @@ namespace HelloWorld
                     }
                     switch (temp)
                     {
-                    case "rock":
-                    case "r":
-                    case "1":
-                        choice = Choices.Rock;
-                        validInput = true;
-                        break;
-                    case "paper":
-                    case "p":
-                    case "2":
-                        choice = Choices.Paper;
-                        validInput = true;
-                        break;
-                    case "scissors":
-                    case "s":
-                    case "3":
-                        choice = Choices.Scissors;
-                        validInput = true;
+                        case "rock":
+                        case "r":
+                        case "1":
+                            choice = Choices.Rock;
+                            validInput = true;
+                            break;
+                        case "paper":
+                        case "p":
+                        case "2":
+                            choice = Choices.Paper;
+                            validInput = true;
+                            break;
+                        case "scissors":
+                        case "s":
+                        case "3":
+                            choice = Choices.Scissors;
+                            validInput = true;
                             break;
                         default:
-                        validInput = false;
+                            validInput = false;
                             break;
+#pragma warning restore CS0162
                     }
+
+
+                }
+                Console.Write("You picked " + choice + "!\n");
+
 
             } while (!validInput);
             return choice;
