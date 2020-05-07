@@ -369,6 +369,12 @@ namespace HelloNamespace
                         PrintArray(Sorter.items, Sorter.values);
                     }
                     break;
+                case "rpsls":
+                case "spock":
+                    RPSLS RPSPlus = new RPSLS();
+                    RPSPlus.Play();
+                    break;
+
                 default:
                     Console.Write("Unknown Input. ");
                     MainMenu(true);
