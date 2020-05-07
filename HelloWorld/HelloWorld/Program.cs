@@ -374,6 +374,10 @@ namespace HelloNamespace
                     RPSLS RPSPlus = new RPSLS();
                     RPSPlus.Play();
                     break;
+                case "snake":
+                    Snake snek = new Snake();
+                    snek.Draw();
+                    break;
 
                 default:
                     Console.Write("Unknown Input. ");
@@ -1161,7 +1165,11 @@ namespace HelloNamespace
             {
                 return;
             }
-            Console.WriteLine("Hello, " + name + "!");
+            Console.Write("Hello ");
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.Write(name);
+            Console.ResetColor();
+            Console.WriteLine("!");
             UserName = name;
             Console.ReadLine();
         }
