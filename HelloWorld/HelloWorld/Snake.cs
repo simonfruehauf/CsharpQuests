@@ -73,19 +73,31 @@ namespace HelloNamespace
         }
 
 
-        public void Play()
+        public void Play(bool useFullscreen = false)
         {
             food = nextFoodPos();
-            snake.Add(0, new Position (gm.x / 2, gm.y / 2));
+            snake.Add(0, useFullscreen ? new Position(Console.WindowWidth/2, Console.WindowHeight/2) : new Position (gm.x / 2, gm.y / 2));
             Console.Clear();
-            for (int i = 0; i <= gm.x; i++)
+            for (int i = 0; i <= (useFullscreen ? Console.WindowWidth : gm.x); i++)
             {
-                for (int j = 0; j <= gm.y; j++)
+                for (int j = 0; j <= (useFullscreen ? Console.WindowHeight : gm.y); j++)
                 {
-                    if (j <= 2 | i >= gm.x | i <= 1 | j >= gm.y)
+                    if (j <= 2 | i >= (useFullscreen ? (Console.WindowWidth - Console.WindowWidth/10)  : gm.x) | i <= 1 | j >= (useFullscreen ? (Console.WindowHeight - Console.WindowHeight / 10) : gm.y))
                     {
-                        Console.SetCursorPosition(i, j);
-                        Console.Write(borderchar);
+                        if (i == Console.WindowWidth | j == Console.WindowHeight)
+                        {
+
+                        }
+                        else
+                        {
+                            Console.BackgroundColor = ConsoleColor.White;
+                            Console.ForegroundColor = ConsoleColor.White;
+                            Console.SetCursorPosition(i, j);
+                            Console.Write(borderchar);
+                            Console.ResetColor();
+
+                        }
+
                     }
                 }
             }
@@ -163,17 +175,17 @@ namespace HelloNamespace
                         Console.ForegroundColor = ConsoleColor.Green;
                         snake[i] = new Position(temp.x + dx, temp.y + dy);
                         temp = snake[i];
-                        if (snake[i].x > gm.x - 1)
+                        if (snake[i].x > (useFullscreen? (Console.WindowWidth - Console.WindowWidth / 10) : gm.x) - 1)
                             snake[i] = new Position(3, temp.y + dy);
                         if (snake[i].x < 2)
-                            snake[i] = new Position(gm.x - 1, temp.y + dy);
+                            snake[i] = new Position((useFullscreen ? (Console.WindowWidth - Console.WindowWidth / 10) : gm.x)- 1, temp.y + dy);
                         temp = snake[i];
 
-                        if (snake[i].y > gm.y-1)
+                        if (snake[i].y > (useFullscreen ? (Console.WindowHeight - Console.WindowHeight / 10) : gm.y) -1)
                             snake[i] = new Position(temp.x + dx, 3);
 
                         if (snake[i].y < 3)
-                            snake[i] = new Position(temp.x + dx, gm.y - 1);
+                            snake[i] = new Position(temp.x + dx, (useFullscreen ? (Console.WindowHeight - Console.WindowHeight / 10) : gm.y) - 1);
                         //keep snake in the square
 
                         // write the character in the new position
@@ -229,9 +241,9 @@ namespace HelloNamespace
 
                 }
 
-                Console.SetCursorPosition(gm.x, gm.y);
+                Console.SetCursorPosition(useFullscreen ? Console.WindowWidth-1 : gm.x, useFullscreen ? Console.WindowHeight-1 : gm.y);
                 // pause to allow eyeballs to keep up
-                Thread.Sleep(speed);
+                Thread.Sleep(useFullscreen ? speed/8 : speed);
 
             } while (running);
 
@@ -268,10 +280,10 @@ namespace HelloNamespace
         {
             string text = "Game over. You have a score of " + snake.Count() + "!";
 
-            Console.SetCursorPosition(gm.x - (text.Length / 2), gm.y / 2);
+            Console.SetCursorPosition(0, Console.WindowHeight / 2);
             Console.Write(text);
 
-            Console.SetCursorPosition(0, gm.y + 2);
+            Console.SetCursorPosition(0, Console.WindowHeight-2);
         }
     }
 }

@@ -376,7 +376,7 @@ namespace HelloNamespace
                     break;
                 case "snake":
                     Snake snek = new Snake();
-                    snek.Play();
+                    snek.Play(false);
                     break;
 
                 default:
