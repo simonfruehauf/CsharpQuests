@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -16,6 +17,18 @@ namespace HelloNamespace
         bool running = true;
         ConsoleKeyInfo consoleKey;
         Dictionary<int, Position> snake = new Dictionary<int, Position>();
+
+        List<ConsoleColor> snakeColors = new List<ConsoleColor>() {
+        ConsoleColor.Green,
+        ConsoleColor.Yellow,
+        ConsoleColor.Blue,
+        ConsoleColor.Magenta,
+        ConsoleColor.Cyan,
+        ConsoleColor.Red
+        };
+
+        int colorIndex = 0;
+        
 
         struct Bodypart
         {
@@ -73,7 +86,7 @@ namespace HelloNamespace
         }
 
 
-        public void Play(bool useFullscreen = false)
+        public void Play(bool rainbow = false, bool useFullscreen = false)
         {
             food = nextFoodPos();
             snake.Add(0, useFullscreen ? new Position(Console.WindowWidth/2, Console.WindowHeight/2) : new Position (gm.x / 2, gm.y / 2));
@@ -172,7 +185,7 @@ namespace HelloNamespace
                     if (i == 0)
                     {
                         last = snake[i];
-                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.ForegroundColor = snakeColors[colorIndex];
                         snake[i] = new Position(temp.x + dx, temp.y + dy);
                         temp = snake[i];
                         if (snake[i].x > (useFullscreen? (Console.WindowWidth - Console.WindowWidth / 10) : gm.x) - 1)
@@ -196,6 +209,10 @@ namespace HelloNamespace
                     }
                     else if (i !=0)
                     {
+                        if (rainbow)
+                        {
+                            Console.ForegroundColor = snakeColors[colorIndex];
+                        }
                         Position last_t = snake[i];
                         snake[i] = new Position(last.x, last.y);
                         if (i == 1)
@@ -205,6 +222,11 @@ namespace HelloNamespace
                         Console.SetCursorPosition(snake[i].x, snake[i].y);
                         Console.Write(snakechar);
                         last = last_t;
+                        if (rainbow)
+                        {
+                            Console.ResetColor();
+
+                        }
                     }
                     
 
@@ -226,6 +248,10 @@ namespace HelloNamespace
                     {
                         //eat
                         food = nextFoodPos();
+                        if (rainbow)
+                        {
+                            colorIndex = (colorIndex + 1) % snakeColors.Count();
+                        }
                         AddBodypart();
                     }
                 }
@@ -278,12 +304,195 @@ namespace HelloNamespace
 
         void PrintScore()
         {
-            string text = "Game over. You have a score of " + snake.Count() + "!";
-
+            int score = snake.Count();
+            string text = "Game over. You have a score of " + score + "!";
             Console.SetCursorPosition(0, Console.WindowHeight / 2);
             Console.Write(text);
+            Console.WriteLine("Please enter your name!");
 
-            Console.SetCursorPosition(0, Console.WindowHeight-2);
+            string name = Console.ReadLine();
+            if (name == "" && name != "b" && name != "back" && name != "q" && name != "quit")
+            {
+                Console.WriteLine("Not saving the score.");
+                goto skip;
+            }
+            else if (name == "back" || name == "b" || name == "q" || name == "quit")
+            {
+                return;
+            }
+            Console.WriteLine("Saved your score, " + name + ".");
+            List<string> scores = new List<string>();
+            if (new FileInfo("files\\snake.txt").Length != 0)
+            {
+                //file not empty
+                scores = new List<string>(File.ReadAllLines("files\\snake.txt"));
+                
+            }
+            scores.Add(name + "-" + score);
+            File.WriteAllLines("files\\snake.txt", scores);
+        skip:
+            Console.SetCursorPosition(0, Console.WindowHeight - 2);
         }
+    }
+    class SnakeMenu
+    {
+        List<Tuple<string, int>> Highscores;
+        private int index = 0;
+        struct firstIndex
+        {
+            public int x;
+            public int y;
+            public firstIndex(int xpos, int ypos)
+            {
+                x = xpos;
+                y = ypos;
+            }
+        }
+        string arrow = "<--";
+        public static string highscoreFile = "files\\snake.txt";
+
+        public SnakeMenu(bool firstrun)
+        {
+            if (!Directory.Exists("files"))
+            {
+                Directory.CreateDirectory("files");
+            }
+            if (!File.Exists(highscoreFile))
+            {
+                File.Create(highscoreFile);
+            }
+            if(firstrun)
+                Console.WriteLine("-------------------\nWelcome to the snake menu. Select your option: ");
+            firstIndex firstIndex_m = new firstIndex(0, 0);
+            Console.WriteLine("- play     ");
+            Console.WriteLine("- higscores");
+            Console.WriteLine("- credits  ");
+            Console.Write("- quit     ");
+            Console.SetCursorPosition(Console.CursorLeft, Console.CursorTop - 3);
+            firstIndex_m = new firstIndex(Console.CursorLeft, Console.CursorTop);
+            
+            index = 0;
+            backtomenu:
+            Console.SetCursorPosition(firstIndex_m.x, firstIndex_m.y + index);
+            Console.Write(arrow);
+
+            bool exit = false;
+            do
+            {
+                
+                ConsoleKeyInfo input = Console.ReadKey(true);
+                switch (input.Key)
+                {
+                    case ConsoleKey.Enter:
+                        exit = true;
+                        break;
+                    case ConsoleKey.UpArrow:
+                        index = ((index - 1) % 4 + 4) % 4; // keeps it between 0 and 3 and not -3 and 3
+                        break;
+                    case ConsoleKey.DownArrow:
+                        index = (index + 1) % 4;
+                        break;
+                    default:
+                        break;
+                }
+                //delete current arrow
+                Console.SetCursorPosition(Console.CursorLeft - 3, Console.CursorTop);
+                Console.Write("   ");
+                //redraw arrow at index
+                Console.SetCursorPosition(firstIndex_m.x, firstIndex_m.y + index);
+                Console.Write(arrow);
+
+            } while (!exit);
+
+            switch (index)
+            {
+                case 0: // play
+                    this.Play(true, false);
+                    break;
+                case 1: // highscore
+                    Score(firstIndex_m);
+                    Console.SetCursorPosition(firstIndex_m.x, firstIndex_m.y + index);
+                    Console.Write("   ");
+                    goto backtomenu;
+                case 2: // credits
+                    Credits(firstIndex_m);
+                    Console.SetCursorPosition(firstIndex_m.x, firstIndex_m.y + index);
+                    Console.Write("   ");
+                    goto backtomenu;
+                    
+                case 3: // quit
+                    Quit();
+                    break;
+                default:
+                    break;
+            }
+
+        }
+        public void Play(bool rainbow, bool fullscreen)
+        {
+            Snake snek = new Snake();
+            snek.Play(rainbow, fullscreen);
+        }
+        void Score(firstIndex x)
+        {
+            Console.SetCursorPosition(0, x.y + 3);
+            Console.WriteLine();
+            Console.Write("\r" + new string(' ', Console.WindowWidth - 1) + "\r");
+
+            if (File.Exists(highscoreFile))
+            {
+                Console.SetCursorPosition(0, x.y + 4);
+                List<string> highscores = new List<string>(File.ReadAllLines(highscoreFile));
+
+                List<Tuple<int, string>> hscore = new List<Tuple<int, string>>();
+                foreach (var item in highscores)
+                {
+                    List<string> v = new List<string>(item.Split('-'));
+                    hscore.Add(new Tuple<int, string>(Convert.ToInt32(v[1]), v[0]));
+                }
+                hscore.Sort();
+                hscore.Reverse(); //otherwise 0 is highest
+                int maxscores = 10;
+                int counter = 0;
+                foreach (Tuple<int,string> score in hscore)
+                {   
+                    counter++;
+                    Console.WriteLine(score.Item1 + " - " + score.Item2);
+                    if (counter >= maxscores)
+                    {
+                        break;
+                    }
+                }
+            }
+
+            else
+            {
+                Console.WriteLine("No scores found.");
+            }
+        }
+
+        void Credits(firstIndex x)
+        {
+            Console.SetCursorPosition(0, x.y + 3);
+            Console.WriteLine();
+            Console.Write("\r" + new string(' ', Console.WindowWidth - 1) + "\r");
+            Console.WriteLine("----- Created by Simon Frühauf.");
+
+            for (int i = 0; i < 9; i++)
+            {
+                Console.Write("\r" + new string(' ', Console.WindowWidth - 1) + "\r");
+                Console.WriteLine();
+
+
+            }
+        }
+
+        void Quit()
+        {
+            Console.Clear();
+            Console.WriteLine();
+
+        }
+
     }
 }

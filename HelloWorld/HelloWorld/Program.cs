@@ -375,8 +375,8 @@ namespace HelloNamespace
                     RPSPlus.Play();
                     break;
                 case "snake":
-                    Snake snek = new Snake();
-                    snek.Play(false);
+                    SnakeMenu snm = new SnakeMenu(true);
+                    
                     break;
 
                 default:

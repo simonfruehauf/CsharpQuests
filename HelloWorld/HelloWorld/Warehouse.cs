@@ -99,10 +99,7 @@ namespace HelloNamespace
             }
 
         }
-        public static void WriteFile(string directoryfile = "files\\warehouse.txt")
-        {
 
-        }
         public static void DisplayAmountOfProducts(int[] products)
         {
             Console.WriteLine("There are " + products.Length + " items in the warehouse.");
