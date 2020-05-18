@@ -107,7 +107,6 @@ namespace HelloNamespace
 
         };
         #endregion
-
         public enum Axis
         {
             x,
@@ -469,36 +468,39 @@ namespace HelloNamespace
                     moveto = new Program.Point2D(position.x, position.y);
                     break;
             }
-
-            Tile goal = map[(int)moveto.x, (int)moveto.y];
-
-            if (!ignorewalls && (map[(int)moveto.x, (int)moveto.y].type == TileType.Floor || map[(int)moveto.x, (int)moveto.y].type == TileType.Item))
+            if (!(moveto.x > map.GetLength(0)-1 || moveto.x < 1 || moveto.y > map.GetLength(1)-1 || moveto.y < 1)) //borders
             {
-                Console.SetCursorPosition((int)position.x, (int)position.y); //select self
-                map[(int)position.x, (int)position.y] = standingOn; //set tile beneath to standing on
-                Console.ForegroundColor = map[(int)position.x, (int)position.y].color; //set color of tile
-                Console.Write(map[(int)position.x, (int)position.y].symbol); //draw tile beneath
-                Console.ResetColor();
+                Tile goal = map[(int)moveto.x, (int)moveto.y];
 
-                standingOn = map[(int)moveto.x, (int)moveto.y]; //set tile beneath to goal
-                if (goal.type == TileType.Item && type == TileType.Player)
+                if (!ignorewalls && (map[(int)moveto.x, (int)moveto.y].type == TileType.Floor || map[(int)moveto.x, (int)moveto.y].type == TileType.Item))
                 {
-                    map[(int)position.x, (int)position.y].item.Pickup(player); //pickup if we are player & goal is item
+                    Console.SetCursorPosition((int)position.x, (int)position.y); //select self
+                    map[(int)position.x, (int)position.y] = standingOn; //set tile beneath to standing on
+                    Console.ForegroundColor = map[(int)position.x, (int)position.y].color; //set color of tile
+                    Console.Write(map[(int)position.x, (int)position.y].symbol); //draw tile beneath
+                    Console.ResetColor();
+
+                    standingOn = map[(int)moveto.x, (int)moveto.y]; //set tile beneath to goal
+                    if (goal.type == TileType.Item && type == TileType.Player)
+                    {
+                        map[(int)position.x, (int)position.y].item.Pickup(player); //pickup if we are player & goal is item
+                    }
+
+                    map[(int)moveto.x, (int)moveto.y] = this; //move ourselves on map
+
+                    position = moveto; //update our own position
+                    Console.ForegroundColor = color;
+                    Console.SetCursorPosition((int)moveto.x, (int)moveto.y); //draw ourselves
+                    Console.Write(symbol);
+                    Console.ResetColor();
                 }
+                else
+                {
 
-                map[(int)moveto.x, (int)moveto.y] = this; //move ourselves on map
-
-                position = moveto; //update our own position
-                Console.ForegroundColor = color;
-                Console.SetCursorPosition((int)moveto.x, (int)moveto.y); //draw ourselves
-                Console.Write(symbol);
-                Console.ResetColor();
+                }
+                Console.SetCursorPosition(0, 0);
             }
-            else
-            {
-
-            }
-            Console.SetCursorPosition(0, 0);
+            
 
         }
 
