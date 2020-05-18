@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+
 namespace HelloNamespace
 {
 
@@ -12,9 +13,10 @@ namespace HelloNamespace
         public const string folder = "files";
         Random rnd = new Random();
         public int[,] Map;
+        public Tile[,] TileMap;
         public dynamic ReadMap(string filename, bool asInt = false)
         {
-          
+
             if (!Directory.Exists(folder))
             {
                 Directory.CreateDirectory(folder);
@@ -26,11 +28,11 @@ namespace HelloNamespace
             string[,] t_map_string = new string[length.Length, CountLinesInFile(folder + "\\" + filename + ".txt")];
             int[,] t_map = new int[length.Length, CountLinesInFile(folder + "\\" + filename + ".txt")];
             for (int i = 0; i < File.ReadLines(folder + "\\" + filename + ".txt").Count(); i++)
+            {
+                line = File.ReadLines(folder + "\\" + filename + ".txt").Skip(i).Take(1).First();
+                int c = 0;
+                foreach (string item in line.Split('.'))
                 {
-                    line = File.ReadLines(folder + "\\" + filename + ".txt").Skip(i).Take(1).First();
-                    int c = 0;
-                    foreach (string item in line.Split('.'))
-                    {
                     if (asInt)
                     {
                         try
@@ -42,7 +44,7 @@ namespace HelloNamespace
                             Console.WriteLine("Error. Could not parse file.");
                             return new object[0, 0];
                         }
-                        
+
                     }
                     else
                     {
@@ -62,7 +64,7 @@ namespace HelloNamespace
             {
                 return t_map_string;
             }
-           
+
 
 
         }
@@ -90,7 +92,7 @@ namespace HelloNamespace
                 var t_file = File.Create(folder + "\\" + filename + ".txt");
                 t_file.Close();
             }
-                using (TextWriter tw = new StreamWriter(folder + "\\" + filename + ".txt"))
+            using (TextWriter tw = new StreamWriter(folder + "\\" + filename + ".txt"))
             {
                 int x_size = map.GetLength(0);
                 int y_size = map.GetLength(1);
@@ -112,10 +114,10 @@ namespace HelloNamespace
                         }
                     }
                 }
-                
+
             }
         }
-        public int[,] CreateCave(int size_x, int size_y, int probability, int iterations = 300, bool old = false, float deathLimit = 5, float birthLimit =7)
+        public int[,] CreateCave(int size_x, int size_y, int probability, int iterations = 300, bool old = false, float deathLimit = 5, float birthLimit = 7)
         {
             Map = new int[size_x, size_y];
 
@@ -135,9 +137,38 @@ namespace HelloNamespace
             {
                 Map = doSimulationStep(Map, deathLimit, birthLimit);
             }
-           
-            
+
+
             return blowUpArray(Map);
+        }
+        public Tile[,] CreateCave(Program.Point2D size, int probability, int iterations = 300)
+        {
+
+            TileMap = new Tile[(int)size.x, (int)size.y];
+
+            //go through each cell and use the specified probability to determine if it's open
+            for (int x = 0; x < TileMap.GetLength(0); x++)
+            {
+                for (int y = 0; y < TileMap.GetLength(1); y++)
+                {
+                    if (rnd.Next(0, 100) < probability)
+                    {
+                        TileMap[x, y] = new Tile('X', new Program.Point2D(x, y), Tile.TileType.Wall);
+                    }
+                    else
+                    {
+                        TileMap[x, y] = new Tile(' ', new Program.Point2D(x, y), Tile.TileType.Floor);
+                    }
+
+                }
+            }
+
+            for (int i = 0; i <= iterations; i++)
+            {
+                TileMap = doSimulationStep(TileMap, 5, 6);
+            }
+
+            return TileMap;
         }
         public int[,] iterateCave(int[,] map, int iterations, float deathLimit = 5, float birthLimit = 7)
         {
@@ -171,8 +202,64 @@ namespace HelloNamespace
             return t_map;
 
         }
+        public Tile[,] doSimulationStep(Tile[,] map, float deathLimit = 5, float birthLimit = 7)
+        {
+            Tile[,] t_map = map;
+            for (int x = 0; x < t_map.GetLength(0); x++)
+            {
+                for (int y = 0; y < t_map.GetLength(1); y++)
+                {
+                    if (examineNeighbours(map, x, y) < deathLimit)
+                    {
+                        t_map[x, y].TileDie(); //dies
+                    }
 
+                    else if (examineNeighbours(map, x, y) > birthLimit)
+                    {
+                        t_map[x, y].TileBorn(); //gets born
+                    }
+
+                }
+            }
+
+            return t_map;
+
+        }
+
+        public Tile[,] invertMap(Tile[,] map)
+        {
+            foreach (Tile item in map)
+            {
+                if (item.type == Tile.TileType.Floor)
+                {
+                    item.type = Tile.TileType.Wall;
+                    item.symbol = 'X';
+                }
+                else if (item.type == Tile.TileType.Wall)
+                {
+                    item.type = Tile.TileType.Floor;
+                    item.symbol = ' ';
+                }
+            }
+
+            return map;
+        }
         int examineNeighbours(int[,] map, int xVal, int yVal)
+        {
+            int count = 0;
+
+            for (int x = -1; x < 2; x++)
+            {
+                for (int y = -1; y < 2; y++)
+                {
+                    if (checkCell(map, xVal + x, yVal + y) == true)
+                        count += 1;
+                }
+            }
+
+            return count;
+        }
+        int examineNeighbours(Tile[,] map, int xVal, int yVal)
         {
             int count = 0;
 
@@ -195,6 +282,22 @@ namespace HelloNamespace
                 y >= 0 & y < map.GetLength(1))
             {
                 if (map[x, y] > 0)
+                    return true;
+                else
+                    return false;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        Boolean checkCell(Tile[,] map, int x, int y)
+        {
+            if (x >= 0 & x < map.GetLength(0) &
+                y >= 0 & y < map.GetLength(1))
+            {
+                if (map[x, y].type == Tile.TileType.Wall)
                     return true;
                 else
                     return false;
@@ -319,6 +422,83 @@ namespace HelloNamespace
 
             }
         }
+        public Program.Point2D findEmptyCell(Tile[,] m_array, bool middle = true, int empty = 1)
+        {
+            if (middle == false)
+            {
+
+                for (int x = 0; x < m_array.GetLength(0); x++)
+                {
+                    for (int y = 0; y < m_array.GetLength(1); y++)
+                    {
+                        if (m_array[x, y].type == Tile.TileType.Floor)
+                        {
+
+                            return new Program.Point2D(x,y);
+
+                        }
+                    }
+                }
+                return new Program.Point2D(0, 0); //technically an error
+            }
+            else
+            {
+                //doing a spiral
+                int x = 0;
+                int y = 0;
+
+                //get center
+                x = (int)Math.Floor((m_array.GetLength(0) / 2.0f) - 1.0f);
+                y = (int)Math.Floor((m_array.GetLength(1) / 2.0f) - 1.0f);
+
+                int d = 0; //direction
+                int c = 1; //current chain size
+
+                for (int k = 0; k <= (m_array.GetLength(0)); k++)
+                {
+                    for (int j = 0; j < (m_array.GetLength(1)); j++)
+                    {
+                        for (int l = 0; l < c; l++)
+                        {
+
+                            //current tile: m_array[x,y]
+                            try
+                            {
+                                if (m_array[x, y].type == Tile.TileType.Floor)
+                                {
+                                    return new Program.Point2D(x, y);
+                                }
+                            }
+                            catch
+                            {
+                                Console.WriteLine("Cannot find an empty tile in the middle.");
+                                return new Program.Point2D(404, 404);
+                            }
+                            switch (d)
+                            {
+                                case 0:
+                                    y++;
+                                    break;
+                                case 1:
+                                    x++;
+                                    break;
+                                case 2:
+                                    y--;
+                                    break;
+                                case 3:
+                                    x--;
+                                    break;
+
+                            }
+                        }
+                        d = (d + 1) % 4; //switch directions
+                    }
+                    c++;
+                }
+                return new Program.Point2D(0, 0);
+            }
+        }
+
         public void printSpiral(int n)
         {
             for (int i = 0; i < n; i++)

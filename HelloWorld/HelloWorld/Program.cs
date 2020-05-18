@@ -112,7 +112,7 @@ namespace HelloNamespace
         }
     }
 
-    class Program
+    public class Program
     {
 
         #region randomvars
@@ -378,7 +378,9 @@ namespace HelloNamespace
                     SnakeMenu snm = new SnakeMenu(true);
                     
                     break;
-
+                case "roguelike":
+                    Roguelike rgl = new Roguelike();
+                    break;
                 default:
                     Console.Write("Unknown Input. ");
                     MainMenu(true);
@@ -639,6 +641,7 @@ namespace HelloNamespace
                 }
             }
         }
+
         public static void IteratorTests()
         {
             foreach (int number in EvenNumbers(25, 40))

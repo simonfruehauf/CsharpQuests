@@ -44,13 +44,14 @@
   <ItemGroup>
     <Compile Include="CaveGenerator.cs" />
     <Compile Include="BuildMenu.cs" />
+    <Compile Include="Roguelike.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RandomStatGenerator.cs" />
-    <Compile Include="Roguelite.cs" />
     <Compile Include="RPS.cs" />
     <Compile Include="Snake.cs" />
     <Compile Include="Warehouse.cs" />
+    <Compile Include="WordMaker.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
