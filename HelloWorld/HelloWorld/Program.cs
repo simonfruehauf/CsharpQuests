@@ -8,7 +8,7 @@ using System.IO;
 #pragma warning disable IDE0060 //unused parameter
 namespace HelloNamespace
 {
-    class Read
+    public class Read
     {
         public static readonly string ConsoleIndicator = "\n> ";
         static bool valid = false;
@@ -109,6 +109,22 @@ namespace HelloNamespace
                 }
             } while (!valid);
             return yes;
+        }
+    }
+
+    public class Write
+    {
+        public static void TypeLine(string line, int delay = 100, bool linebreak = false)
+        {
+            for (int i = 0; i < line.Length; i++)
+            {
+                Console.Write(line[i]);
+                System.Threading.Thread.Sleep(delay);
+            }
+            if (linebreak)
+            {
+                Console.WriteLine();
+            }
         }
     }
 
@@ -380,6 +396,10 @@ namespace HelloNamespace
                     break;
                 case "roguelike":
                     Roguelike rgl = new Roguelike();
+                    break;
+                case "pokemon":
+                    Cisharpmon csm = new Cisharpmon();
+                    csm.Play();
                     break;
                 default:
                     Console.Write("Unknown Input. ");
