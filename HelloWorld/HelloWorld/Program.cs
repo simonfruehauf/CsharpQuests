@@ -114,7 +114,7 @@ namespace HelloNamespace
 
     public class Write
     {
-        public static void TypeLine(string line, int delay = 100, bool linebreak = false)
+        public static void TypeLine(string line, int delay = 50, bool linebreak = false)
         {
             for (int i = 0; i < line.Length; i++)
             {

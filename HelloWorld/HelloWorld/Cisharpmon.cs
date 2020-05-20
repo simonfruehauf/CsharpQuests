@@ -27,6 +27,16 @@ namespace HelloNamespace
 
             Console.Clear();
             DrawScreen();
+
+            Console.SetCursorPosition(GetMiddle("Hello.", x - 2), 5);
+            Write.TypeLine("Hello.");
+            System.Threading.Thread.Sleep(200);
+            Console.WriteLine();
+
+            Console.SetCursorPosition(GetMiddle("Welcome to Cisharpmon.", x - 2), 6);
+            Write.TypeLine("Welcome to Cisharpmon.", 60);
+            System.Threading.Thread.Sleep(500);
+
             switch (ReadMonsterFile())
             {
                 case 0:
@@ -48,7 +58,7 @@ namespace HelloNamespace
                     {
                         SaveMonster(RandomMonster());
                     }
-                    break;
+                    goto case 0;
             }
             switch (ReadSavefile())
             {
@@ -70,13 +80,13 @@ namespace HelloNamespace
             Console.SetCursorPosition(GetMiddle("It seems you are new...", x - 2), 7);
             Write.TypeLine("It seems you are new");
             Write.TypeLine("...", 400);
-            System.Threading.Thread.Sleep(200); 
+            System.Threading.Thread.Sleep(200);
             Console.SetCursorPosition(GetMiddle("Creating a new save file for you...", x - 2), 8);
             Write.TypeLine("Creating a new save file for you");
             Write.TypeLine("...", 400);
             System.Threading.Thread.Sleep(200);
             bool retry = false;
-            retrying:
+        retrying:
             Console.SetCursorPosition(GetMiddle(retry ? "Well, what is your name then?" : "What's your name?", x - 2), 9);
             Write.TypeLine(retry ? "Well, what is your name then?" : "What's your name?");
             Console.SetCursorPosition(GetMiddle("What's your name?", x - 2), 10);
@@ -84,7 +94,7 @@ namespace HelloNamespace
             Console.SetCursorPosition(GetMiddle("Ah, " + name + ", is that correct? Y/N", x - 2), 11);
             Write.TypeLine("Ah, " + name + ", is that correct? Y/N");
 
-            retryinput:
+        retryinput:
             ConsoleKey input = Console.ReadKey(true).Key;
             switch (input)
             {
@@ -93,7 +103,7 @@ namespace HelloNamespace
                 case ConsoleKey.N:
                     //delete previous lines
                     Console.SetCursorPosition(2, 9);
-                    for (int i = 1; i < x-2; i++)
+                    for (int i = 1; i < x - 2; i++)
                     {
                         Console.Write(" ");
                     }
@@ -113,13 +123,84 @@ namespace HelloNamespace
                     goto retryinput;
             }
 
+            Console.Clear();
             DrawScreen();
             currentplayer = new Player(name, null, 0);
             Save(currentplayer);
+            SelectStarter();
+            Save(currentplayer);
+            }
+
+        void SelectStarter()
+        {
+            DrawScreen();
 
 
+            //display starters...
+
+            Console.SetCursorPosition(GetMiddle("You can adopt one of these three starter cisharpmons!", x - 2), 4);
+            Write.TypeLine("You can adopt one of these three starter cisharpmons!");
+            string starter0 = starters[0].name + ", a " + starters[0].type.main + " / " + starters[0].type.secondary + " monster.";
+            string starter1 = starters[1].name + ", a " + starters[1].type.main + " / " + starters[1].type.secondary + " monster.";
+            string starter2 = starters[2].name + ", a " + starters[2].type.main + " / " + starters[2].type.secondary + " monster.";
+
+            Console.SetCursorPosition(GetMiddle(starter0 , x - 2), 5);
+            Write.TypeLine(starter0, 50);
+
+            Console.SetCursorPosition(GetMiddle(starter0, x - 2), 6);
+            Write.TypeLine(starter1, 50);
+
+            Console.SetCursorPosition(GetMiddle(starter0, x - 2), 7);
+            Write.TypeLine(starter2, 50);
 
 
+        retrying:
+            bool retry = false;
+            Console.SetCursorPosition(GetMiddle(retry ? "Try again." : "Which one of them do you want to adopt?", x - 2), 9);
+            Write.TypeLine(retry ? "Try again." : "Which one of them do you want to adopt?");
+            Console.SetCursorPosition(GetMiddle("          ", x - 2), 10);
+            string name = Console.ReadLine();
+            if (name != starters[0].name && name != starters[1].name && name != starters[2].name)
+            {
+                retry = true;
+                goto retrying;
+            }
+            Console.SetCursorPosition(GetMiddle("Oh, the " + name + ", is that correct? Y/N", x - 2), 11);
+            Write.TypeLine("Oh, the " + name + ", is that correct? Y/N");
+        retryinput:
+            ConsoleKey input = Console.ReadKey(true).Key;
+            switch (input)
+            {
+                case ConsoleKey.Y:
+                    break;
+                case ConsoleKey.N:
+                    //delete previous lines
+                    Console.SetCursorPosition(2, 9);
+                    for (int i = 1; i < x - 2; i++)
+                    {
+                        Console.Write(" ");
+                    }
+                    Console.SetCursorPosition(2, 10);
+                    for (int i = 1; i < x - 2; i++)
+                    {
+                        Console.Write(" ");
+                    }
+                    Console.SetCursorPosition(2, 11);
+                    for (int i = 1; i < x - 2; i++)
+                    {
+                        Console.Write(" ");
+                    }
+                    retry = true;
+                    goto retrying;
+                default:
+                    goto retryinput;
+            }
+
+            currentplayer.Roster = new List<Monster>() { (LoadMonster(name)) };
+            Console.SetCursorPosition(GetMiddle("Added " + name + " to your roster.", x - 2), 12);
+            Write.TypeLine("Added " + name + " to your roster.");
+            System.Threading.Thread.Sleep(200);
+            Console.Clear();
         }
 
 
@@ -228,14 +309,6 @@ namespace HelloNamespace
             Console.ResetColor();
             #endregion
 
-            Console.SetCursorPosition(GetMiddle("Hello.", x - 2), 5);
-            Write.TypeLine("Hello.");
-            System.Threading.Thread.Sleep(200);
-            Console.WriteLine();
-
-            Console.SetCursorPosition(GetMiddle("Welcome to Cisharpmon.", x - 2), 6);
-            Write.TypeLine("Welcome to Cisharpmon.", 60);
-            System.Threading.Thread.Sleep(500);
         }
 
         int GetMiddle(string input, int space) //from left
@@ -285,12 +358,14 @@ namespace HelloNamespace
             if (!Directory.Exists(folder))
             {
                 Directory.CreateDirectory(folder);
-                File.Create(folder + "\\" + savefile);
+                var f = File.Create(folder + "\\" + savefile);
+                f.Close();
                 return 1;
             }
             else if (!File.Exists(folder + "\\" + savefile))
             {
-                File.Create(folder + "\\" + savefile);
+                var f = File.Create(folder + "\\" + savefile);
+                f.Close();
                 return 1;
             }
             else if (File.Exists(folder + "\\" + savefile))
@@ -323,16 +398,24 @@ namespace HelloNamespace
         void Save(Player p)
         {
             string playersave = p.name; //first is name, then defeated monsters, index 2+ is monster roster names up to 7
-            playersave += stop + p.defeatedMonsters;
-            foreach (Monster m in p.Roster)
+            playersave = playersave + stop + p.defeatedMonsters;
+            if (p.Roster != null)
             {
-                playersave += stop + m.name;
-            }
-            File.AppendText(savefile).WriteLine();
+                foreach (Monster m in p.Roster)
+                {
+                    playersave = playersave + stop + m.name;
+                }
 
-            foreach (Monster monster in p.Roster)
+
+
+                foreach (Monster monster in p.Roster)
+                {
+                    SaveMonster(monster);
+                }
+            }
+            using (TextWriter tw = File.CreateText(folder + "\\" + savefile))
             {
-                SaveMonster(monster);
+                tw.WriteLine(playersave);
             }
         }
         void SaveMonster(Monster m)
