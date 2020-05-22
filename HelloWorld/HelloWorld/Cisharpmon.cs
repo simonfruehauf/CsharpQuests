@@ -15,26 +15,41 @@ namespace HelloNamespace
         private const char stop = '#';
         private string[] saveinfo;
         private int saveLength;
+        private int currentline = 0;
         Player currentplayer;
         int x;
         int y;
         bool debug = true;
         Random rnd = new Random();
         List<Monster> starters;
+        List<Tuple<int, int>> AttackPos = new List<Tuple<int, int>>();
+        int selectIndex;
+        string arrow = "<--";
+        string healthString = "█";
+        Monster enemy;
+        enum HitResult
+        {
+            hitdamage,
+            hitdamageheal,
+            hitheal,
+            hitdamageacc,
+            hitdamagedef,
+            miss
+        }
 
         public void Play()
         {
 
             Console.Clear();
-            DrawScreen();
+            DrawScreen(true);
 
-            Console.SetCursorPosition(GetMiddle("Hello.", x - 2), 5);
-            Write.TypeLine("Hello.");
-            System.Threading.Thread.Sleep(200);
-            Console.WriteLine();
 
-            Console.SetCursorPosition(GetMiddle("Welcome to Cisharpmon.", x - 2), 6);
-            Write.TypeLine("Welcome to Cisharpmon.", 60);
+
+
+
+            currentline = 5;
+            WriteText("Hello.", true, currentline, false);
+            WriteText("Welcome to Cisharpmon.", true, currentline, false);
             System.Threading.Thread.Sleep(500);
 
             switch (ReadMonsterFile())
@@ -63,7 +78,11 @@ namespace HelloNamespace
             switch (ReadSavefile())
             {
                 case 0: //load
-                    LoadPlayer(saveinfo);
+                    currentplayer = LoadPlayer(saveinfo);
+                    currentplayer.activeMonster = currentplayer.Roster[0];
+                    enemy = RandomMonster();
+                    DeleteLinesUp(3, true);
+                    Combat();
                     break;
                 case 1: //no save or empty
                     NewPlayer();
@@ -74,25 +93,449 @@ namespace HelloNamespace
                     break;
             }
 
+
+
+        }
+        void Combat()
+        {
+            int turn = 0;
+            bool endcombat = false;
+            while (!endcombat)
+            {
+                turn++;
+                DrawScreen();
+                DrawHealth(currentplayer.activeMonster, false);
+                DrawHealth(enemy, true);
+                DrawAttacks(currentplayer.activeMonster);
+                Attack a = AttackSelector();
+                ClearAttackScreen();
+                WriteUsingAttack(currentplayer.activeMonster, a);
+                WaitEnter();
+                WriteResult(currentplayer.activeMonster.TryAttack(a, enemy), currentplayer.activeMonster);
+                WaitEnter();
+               
+                a = enemy.SelectAttack();
+                ClearAttackScreen();
+
+                WriteUsingAttack(enemy, a, true);
+                WaitEnter();
+                WriteResult(enemy.TryAttack(a, currentplayer.activeMonster), enemy);
+                WaitEnter();
+                ClearAttackScreen();
+                if (enemy.health <= 0 || currentplayer.activeMonster.health <= 0)
+                {
+                    endcombat = true;
+                }
+            }
+            if (currentplayer.activeMonster.health <= 0)
+            {
+                ClearAttackScreen();
+                Console.SetCursorPosition(3, AttackSpace(2));
+                WriteText("Your cisharpmon died...", false, 0, false);
+            }
+            else
+            {
+                ClearAttackScreen();
+                Console.SetCursorPosition(3, AttackSpace(2));
+                WriteText("You defeated the enemy and your monster gained some experience!", true, 0, false);
+                currentplayer.defeatedMonsters++;
+                SaveMonster(currentplayer.activeMonster);
+                Save(currentplayer);
+                System.Threading.Thread.Sleep(3000);
+            #region fightagain
+                retrying:
+                WriteText("Would you like to fight again? Y/N", true, currentline, true, 100);
+
+                retryinput:
+                ConsoleKey input = Console.ReadKey(true).Key;
+                switch (input)
+                {
+                    case ConsoleKey.Y:
+                        enemy = RandomMonster();
+                        enemy.ScaleToLevel(currentplayer.activeMonster.level);
+                        Console.Clear();
+                        Combat();
+                        break;
+                    case ConsoleKey.N:
+                        Console.Clear();
+                        break;
+                    default:
+                        goto retryinput;
+                }
+                #endregion
+            }
+        }
+        void WaitEnter()
+        {
+            ConsoleKeyInfo input = Console.ReadKey(true);
+            switch (input.Key)
+            {
+                case ConsoleKey.Enter:
+                    break;
+                default:
+                    WaitEnter();
+                    break;
+            }
+        }
+        void WriteUsingAttack(Monster m, Attack a, bool isenemy = false)
+        {
+            string text = "";
+            if (isenemy)
+            {
+                text = "The enemy ";
+            }
+            text += m.name + " is trying to use " + a.name + "!";
+            ClearAttackScreen();
+            Console.SetCursorPosition(3, AttackSpace(2));
+            WriteText(text, false, 0, false);
+        }
+        void WriteResult(HitResult r, Monster m)
+        {
+            DrawHealth(currentplayer.activeMonster, false);
+            DrawHealth(enemy, true);
+            string text = "Nothing happened";
+            ClearAttackScreen();
+            Console.SetCursorPosition(3, AttackSpace(2));
+            switch (r)
+            {
+                case HitResult.hitdamage:
+                    text = m.name + " hit the attack and dealt some damage!";
+                    break;
+                case HitResult.hitdamageheal:
+                    text = m.name + " healed itself and dealt damage at the same time!";
+                    break;
+                case HitResult.hitheal:
+                    text = m.name + " played it safe and recovered some health.";
+                    break;
+                case HitResult.hitdamageacc:
+                    text = m.name + " dealt damage and boosted its accuracy!";
+                    break;
+                case HitResult.hitdamagedef:
+                    text = m.name + " dealt damage and bolstered its defense!";
+                    break;
+                case HitResult.miss:
+                    text = m.name + " failed to attack...";
+                    break;
+                default:
+                    break;
+            }
+            WriteText(text, false, 0, false);
+        }
+        void DrawHealth(Monster m, bool enemy)
+        {
+            int barlength = 30;
+            string hlong = m.health + " / " + m.healthTop;
+
+            if (enemy) //then set cursor top left
+            {
+                hlong = hlong + "   " + m.name + " LVL " + m.level;
+                Console.SetCursorPosition(4, 3);
+                Console.Write("                 ");
+                Console.SetCursorPosition(4, 3);
+            }
+            else //bottom right
+            {
+                hlong = "LVL " + m.level + " "+ m.name + "   " + hlong;
+
+                Console.SetCursorPosition(x - 1 - hlong.Length - 10, AttackSpace(-3));
+                Console.Write("                  ");
+
+                Console.SetCursorPosition(x-1-hlong.Length - 3, AttackSpace(-3));
+            }
+            Console.Write(hlong);
+
+
+            if (enemy) //then set cursor top left
+            {
+                Console.SetCursorPosition(2, 2);
+            }
+            else //bottom right
+            {
+                Console.SetCursorPosition(x-1- barlength - 3, AttackSpace(-2));
+            }
+            
+            //20 length, left to right. calculate missing health, draw empty, then draw full
+                       
+            int missing = m.healthTop - m.health;
+            missing = missing * barlength / m.healthTop; //normalize to 0-20 range, missing out of 20 are empty
+            Console.Write("|");
+            if (enemy)
+            {
+                missing = barlength - missing;
+            }
+            for (int i = 0; i < barlength; i++)
+            {
+                if (enemy)
+                {
+                    if (i > missing)
+                    {
+                        Console.Write(" ");
+                    }
+                    else
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.Write(healthString);
+                        Console.ResetColor();
+                    }
+                }
+                else
+                {
+                    if (i < missing)
+                    {
+                        Console.Write(" ");
+                    }
+                    else
+                    {
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.Write(healthString);
+                        Console.ResetColor();
+                    }
+                }
+            }
+            Console.Write("|");
+        }
+        void FightMonster(Monster m)
+        {
+            Console.Clear();
+            DrawScreen(true);
+
+            x = Console.WindowWidth;  //120, attacks are from 0+3 to x-3
+            y = Console.WindowHeight; //30, inventory is from y-1 to y/6+1
+        }
+
+        void ClearAttackScreen()
+        {
+            int size = (y - 1) - (((y / 3) * 2 + 1)); // in our case 8
+            for (int i = 0; i < size; i++)
+            {
+                Console.SetCursorPosition(1, ((y / 3) * 2) + 1 +i);
+                for (int j = 0; j < x-2; j++)
+                {
+                    Console.Write(" ");
+
+                }
+            }
+        }
+        Attack DrawAttacks(Monster m)
+        {
+            x = Console.WindowWidth;  //120, attacks are from 0+3 to x-3
+            y = Console.WindowHeight; //30, inventory is from y-1 to ((y/3)*2)+1, in this case 29 to 19
+
+            //int size = (y - 1) - (((y / 3)*2 + 1)); // in our case 8
+
+            //1
+            //2                             Attacks
+            //3 Text                                                    Text
+            //4 Text                                                    Text
+            //5
+            //6 Text                                                    Text
+            //7 Text                                                    Text
+            //8
+
+
+            //careful, hardcoded numbers following
+            Console.SetCursorPosition(GetMiddle("Attacks", x), AttackSpace(2));
+            Console.Write("Attacks:");
+            int a = 0;
+            AttackPos.Clear();
+            foreach (Attack attack in m.attacks)
+            {
+                switch (a)
+                {
+                    case 0:
+                        Console.SetCursorPosition(GetMiddle("", GetMiddle("", GetMiddle("", x))), AttackSpace(3));
+                        break;
+                    case 1:
+                        Console.SetCursorPosition(GetMiddle("", GetMiddle("", GetMiddle("", x))), AttackSpace(6));
+                        break;
+                    case 2:
+                        Console.SetCursorPosition(x/2+ GetMiddle("", GetMiddle("", GetMiddle("", x))), AttackSpace(3));
+                        break;
+                    case 3:
+                        Console.SetCursorPosition(x/2+ GetMiddle("", GetMiddle("", GetMiddle("", x))), AttackSpace(6));
+                        break;
+                    default:
+                        break;
+                }
+                Console.Write(attack.name);
+                AttackPos.Add(new Tuple<int, int>(Console.CursorLeft + 1, Console.CursorTop));
+                switch (a)
+                {
+                    case 0:
+                        Console.SetCursorPosition(GetMiddle("", GetMiddle("", GetMiddle("", x))), AttackSpace(4));
+                        break;
+                    case 1:
+                        Console.SetCursorPosition(GetMiddle("", GetMiddle("", GetMiddle("", x))), AttackSpace(7));
+                        break;
+                    case 2:
+                        Console.SetCursorPosition(x / 2 + GetMiddle("", GetMiddle("", GetMiddle("", x))), AttackSpace(4));
+                        break;
+                    case 3:
+                        Console.SetCursorPosition(x / 2 + GetMiddle("", GetMiddle("", GetMiddle("", x))), AttackSpace(7));
+                        break;
+                    default:
+                        break;
+                }
+
+                //switch (rnd.Next(0, 6))
+                //{
+                //    case 1:
+                //        healing = damage;
+                //        damage = 0;
+                //        break;
+                //    case 2:
+                //        healing = damage / rnd.Next(2, 3);
+                //        damage = damage / 2;
+                //        break;
+                //    case 3:
+                //        damage = (damage * 2) / 3;
+                //        accuracyboost = rnd.Next(5, 10);
+                //        break;
+                //    case 4:
+                //        damage = rnd.Next(damage / 3, damage);
+                //        defenseboost = rnd.Next(5, 10);
+                //        break;
+                //    default:
+                //        break;
+                //}
+
+                if (attack.damage == 0  && attack.heal != 0)
+                {
+                    Console.Write(UppercaseFirst(attack.type.ToString()) + " type healing move.");
+                }
+                else if (attack.damage != 0 && attack.heal != 0)
+                {
+                    Console.Write(UppercaseFirst(attack.type.ToString()) + " type attack, also heals.");
+                }
+                else if (attack.damage != 0 && attack.accuracyBoost != 0)
+                {
+                    Console.Write(UppercaseFirst(attack.type.ToString()) + " type attack. Raises accuracy.");
+                }
+                else if (attack.damage != 0 && attack.defenseBoost != 0)
+                {
+                    Console.Write(UppercaseFirst(attack.type.ToString()) + " type attack. Raises defense.");
+                }
+                else 
+                {
+                    Console.Write(UppercaseFirst(attack.type.ToString())+ " type attack.");
+                }
+                a++;
+            }
+            return AttackSelector();
+        }
+        int AttackSpace(int linesdown)
+        {
+            return (((y / 3) * 2) + linesdown /*x lines down*/);
+        }
+
+
+        Attack AttackSelector()
+        {
+
+            bool exit = false;
+            do
+            {
+                Console.SetCursorPosition(AttackPos[selectIndex].Item1, AttackPos[selectIndex].Item2);
+                Console.Write(arrow);
+
+                ConsoleKeyInfo input = Console.ReadKey(true);
+                Console.SetCursorPosition(AttackPos[selectIndex].Item1, AttackPos[selectIndex].Item2);
+                Console.Write("   ");
+                switch (input.Key)
+                {
+                    case ConsoleKey.Enter:
+                        exit = true;
+                        break;
+                    case ConsoleKey.UpArrow:
+                        selectIndex = ((selectIndex - 1) % 4 + 4) % 4; // keeps it between 0 and 3 and not -3 and 3
+                        break;
+                    case ConsoleKey.DownArrow:
+                        selectIndex = (selectIndex + 1) % 4;
+                        break;
+                    default:
+                        break;
+                }
+                //redraw arrow at index
+                Console.SetCursorPosition(AttackPos[selectIndex].Item1, AttackPos[selectIndex].Item2);
+                Console.Write(arrow);
+
+            } while (!exit);
+
+            Attack a = SelectAttack(currentplayer.activeMonster);
+            return a;
+            
+        }
+        Monster SelectMonster()
+        {
+            return null;
+        }
+
+        Attack SelectAttack(Monster m, int index = -1)
+        {
+            if (m == null)
+            {
+                return null;
+            }
+            Attack a; 
+            if (index == -1)
+            {
+                try
+                {
+                  a = m.attacks[selectIndex];
+                }
+                catch (Exception)
+                {
+                    a = null;
+                }
+            }
+            else
+            {
+                try
+                {
+                    a = m.attacks[index];
+
+                }
+                catch (Exception)
+                {
+                    a = null;
+                }
+            }
+            return a;
+        }
+
+
+        public void WriteText(string text, bool middle, int line, bool newLine, int sleep = 100, bool increaseline = true)
+        {
+            if (middle)
+            {
+                Console.SetCursorPosition(GetMiddle(text, x - 2), line);
+            }
+            Write.TypeLine(text);
+            System.Threading.Thread.Sleep(sleep);
+            if (newLine)
+            {
+                Console.WriteLine();
+            }
+            if (increaseline)
+            {
+                currentline++;
+            }
         }
         void NewPlayer()
         {
-            Console.SetCursorPosition(GetMiddle("It seems you are new...", x - 2), 7);
-            Write.TypeLine("It seems you are new");
-            Write.TypeLine("...", 400);
+            WriteText("It seems you are new...", true, currentline, true, 100);
             System.Threading.Thread.Sleep(200);
-            Console.SetCursorPosition(GetMiddle("Creating a new save file for you...", x - 2), 8);
-            Write.TypeLine("Creating a new save file for you");
-            Write.TypeLine("...", 400);
+            WriteText("Creating a new save file for you...", true, currentline, true, 100);
             System.Threading.Thread.Sleep(200);
             bool retry = false;
         retrying:
-            Console.SetCursorPosition(GetMiddle(retry ? "Well, what is your name then?" : "What's your name?", x - 2), 9);
-            Write.TypeLine(retry ? "Well, what is your name then?" : "What's your name?");
+            WriteText(retry ? "Well, what is your name then?" : "What's your name?", true, currentline, true, 100);
+
             Console.SetCursorPosition(GetMiddle("What's your name?", x - 2), 10);
             string name = Console.ReadLine();
-            Console.SetCursorPosition(GetMiddle("Ah, " + name + ", is that correct? Y/N", x - 2), 11);
-            Write.TypeLine("Ah, " + name + ", is that correct? Y/N");
+            currentline++;
+
+            WriteText("Ah, " + name + ", is that correct? Y/N", true, currentline, true, 100);
 
         retryinput:
             ConsoleKey input = Console.ReadKey(true).Key;
@@ -102,21 +545,7 @@ namespace HelloNamespace
                     break;
                 case ConsoleKey.N:
                     //delete previous lines
-                    Console.SetCursorPosition(2, 9);
-                    for (int i = 1; i < x - 2; i++)
-                    {
-                        Console.Write(" ");
-                    }
-                    Console.SetCursorPosition(2, 10);
-                    for (int i = 1; i < x - 2; i++)
-                    {
-                        Console.Write(" ");
-                    }
-                    Console.SetCursorPosition(2, 11);
-                    for (int i = 1; i < x - 2; i++)
-                    {
-                        Console.Write(" ");
-                    }
+                    DeleteLinesUp(3, true);
                     retry = true;
                     goto retrying;
                 default:
@@ -130,7 +559,22 @@ namespace HelloNamespace
             SelectStarter();
             Save(currentplayer);
             }
-
+        void DeleteLinesUp(int ex, bool useline)
+        {
+            int cl = currentline;
+            for (int i = cl; i > cl - ex; i--)
+            {
+                Console.SetCursorPosition(2, currentline);
+                for (int j = 1; j < x - 2; j++)
+                {
+                    Console.Write(" ");
+                }
+                if (useline)
+                {
+                    currentline--;
+                }
+            }
+        }
         void SelectStarter()
         {
             DrawScreen();
@@ -250,7 +694,7 @@ namespace HelloNamespace
 
 
 
-            return new Monster(name, rnd.Next(80, 120), rnd.Next(1, 6), rnd.Next(75, 90), 0, 1, new Monster.Type(t, t2), attacks);
+            return new Monster(name, rnd.Next(40, 60), rnd.Next(0, 6), rnd.Next(45, 70), 0, 1, new Monster.Type(t, t2), attacks);
         }
 
         Attack RandomAttack(Types t)
@@ -287,12 +731,12 @@ namespace HelloNamespace
 
             return new Attack(name, t, damage, rnd.Next(60, 70), healing, defenseboost, accuracyboost);
         }
-        void DrawScreen()
+        void DrawScreen(bool drawattacks = false)
         {
 
             #region border
             x = Console.WindowWidth;  //120
-            y = Console.WindowHeight; //30
+            y = Console.WindowHeight; //30, inventory is from y-1 to y/6+1
 
             for (int i = 0; i <= x; i++)
             {
@@ -300,6 +744,14 @@ namespace HelloNamespace
                 {
                     if ((i == 0 || i == x - 1 || j == 0 || j == y - 1) && i != x && j != y)
                     {
+
+                        Console.ForegroundColor = ConsoleColor.White;
+                        Console.SetCursorPosition(i, j);
+                        Console.Write('#');
+                    }
+                    if ((j == y/3*2 && drawattacks) && i != x && j != y)
+                    {
+
                         Console.ForegroundColor = ConsoleColor.White;
                         Console.SetCursorPosition(i, j);
                         Console.Write('#');
@@ -421,23 +873,43 @@ namespace HelloNamespace
         void SaveMonster(Monster m)
         {
             //check if monster exists
+            m.health = m.healthTop;
             ReadMonsterFile();
-            string[] lines = File.ReadAllLines(folder + "\\" + monsterfile);
-
-            foreach (string item in lines)
-            {
-                if (item.Contains(m.name))
-                {
-                    return; //we found the monster already
-                }
-            }
-
             string monstervalues = m.name + stop + m.healthTop + stop + m.defense + stop + m.accuracy + stop + m.experience + stop + m.level + stop + m.type.main + stop + m.type.secondary;
+
             int counter = m.attacks.Count();
             for (int i = 0; i < counter; i++)
             {
                 monstervalues += stop + m.attacks[i].name + stop + m.attacks[i].type + stop + m.attacks[i].damage + stop + m.attacks[i].requiredAccuracy + stop + m.attacks[i].heal + stop + m.attacks[i].defenseBoost + stop + m.attacks[i].accuracyBoost;
             }
+
+
+            string[] lines = File.ReadAllLines(folder + "\\" + monsterfile);
+            int c = 1; //1 based indexing if reading a file line for some reason???
+            foreach (string item in lines)
+            {
+                if (item.Contains(m.name))
+                {
+                    // Write the new data over old data
+                    using (StreamWriter writer = new StreamWriter(folder + "\\" + monsterfile))
+                    {
+                        for (int currentLine = 1; currentLine <= lines.Length; ++currentLine)
+                        {
+                            if (currentLine == c)
+                            {
+                                writer.WriteLine(monstervalues);
+                            }
+                            else
+                            {
+                                writer.WriteLine(lines[currentLine - 1]);
+                            }
+                        }
+                    }
+                    return; //overrode the monster
+                }
+                c++;
+            }
+
             using (TextWriter tw = File.AppendText(folder + "\\" + monsterfile))
             {
                tw.WriteLine(monstervalues);
@@ -494,12 +966,25 @@ namespace HelloNamespace
         {
             protected internal string name;
             protected internal int health, healthTop, defense, accuracy;
+            float damagemod = 1;
             //assuming level 1
             //health:   ~100
             //defense:  ~5, in % reduction
             //accuracy: ~50
-            protected internal int tempDefense, tempAccuracy;
+            protected internal Boost tempDefense, tempAccuracy;
+
+            protected internal struct Boost
+                {
+                public int strength;
+                public int remainingturns;
+                public Boost(int s, int t)
+                {
+                    strength = s;
+                    remainingturns = t;
+                }
+                };
             protected internal int experience;
+            float xp;
             protected internal int level;
 
 
@@ -517,31 +1002,172 @@ namespace HelloNamespace
             protected internal List<Attack> attacks; //max 4
 
 
-            public Monster(string n, int ht, int d, int a, int e, int l, Type t, List<Attack> att)
+            public Monster(string n, int ht, int def, int acc, int e, int l, Type t, List<Attack> att)
             {
                 name = n;
                 health = ht;
                 healthTop = ht;
-                defense = d;
-                accuracy = a;
+                defense = def;
+                accuracy = acc;
                 experience = e;
                 level = l;
                 type = t;
                 attacks = att;
+                xp = 100;
             }
 
-            void ScaleToLevel(int l)
+            public void ScaleToLevel(int l)
             {
+                float scaler = (l / 50) + 1;
 
+                defense = (int)(defense * scaler);
+                healthTop = (int)(healthTop * scaler);
+                accuracy += 5;
+                damagemod = scaler;
             }
-            void TakeDamage(int d)
+            public void CheckTemps()
             {
-                health = (d / 100) * (100 - defense);
+                tempAccuracy.remainingturns--;
+                tempDefense.remainingturns--;
+
+                if (tempAccuracy.remainingturns <= 0)
+                {
+                    tempAccuracy.strength = 0;
+                }
+                if (tempDefense.remainingturns <= 0)
+                {
+                    tempDefense.strength = 0;
+                }
+            }
+            public void TakeDamage(float d, Monster attacker)
+            {
+                health -= (int)((d / 100f) * (100f - (float)defense - (float)tempDefense.strength));
+                if (health <= 0)
+                {
+                    Die(attacker);
+                }
                 //write "took x damage"
             }
+            public void Heal(float h)
+            {
+                health = (int)(health + h);
+                if (health > healthTop)
+                {
+                    health = healthTop;
+                }
+            }
+            void Die(Monster killer)
+            {
+                killer.gainXP(level * 5);
+            }
 
+            public HitResult TryAttack(Attack a, Monster t)
+            {
+                HitResult value;
+                Random r = new Random();
+                int chance = r.Next(0, 50);
+                if (chance + accuracy + tempAccuracy.strength > a.requiredAccuracy)
+                {
+                    if (a.damage != 0 && a.heal != 0)
+                    {
+                        t.TakeDamage(a.damage * damagemod, this);
+                        Heal(a.heal * damagemod);
+                        value = HitResult.hitdamageheal;
+                    }
+                    else if (a.damage == 0 && a.heal != 0)
+                    {
+                        Heal(a.heal * damagemod);
+                        value = HitResult.hitheal;
+                    }
+                    else
+                    {
+                        t.TakeDamage(a.damage * damagemod, this);
+                        value = HitResult.hitdamage;
+                    }
+                    if (a.accuracyBoost != 0)
+                    {
+                        tempAccuracy = new Monster.Boost((int)(a.accuracyBoost *damagemod), 1);
+                        value = HitResult.hitdamageacc;
+
+                    }
+                    if (a.defenseBoost != 0)
+                    {
+                        tempDefense = new Monster.Boost((int)(a.defenseBoost * damagemod), 1);
+                        value = HitResult.hitdamagedef;
+                    }
+
+                }
+                else
+                {
+                    value = HitResult.miss;
+                }
+                return value;
+            }
+            public Attack SelectAttack()
+            {
+                Random r = new Random();
+                bool canheal;
+                List<Attack> healingattacks = new List<Attack>();
+                foreach (Attack item in attacks)
+                {
+                    if (item.heal > 0)
+                    {
+                        healingattacks.Add(item);
+                    }
+                }
+                if (healingattacks.Count > 0)
+                {
+                    canheal = true;
+                }
+                else
+                {
+                    canheal = false;
+                }
+                int healchance = 10;
+                if (health < healthTop/3)
+                {
+                    healchance = 75;
+                }
+                else if (health < health/2)
+                {
+                    healchance = 40;
+                }
+                else if(health == healthTop)
+                {
+                    healchance = 0;
+                }
+
+                if (canheal)
+                {
+                    if (r.Next(0, 100) < healchance)
+                    {
+                        return healingattacks[r.Next(0, healingattacks.Count - 1)];
+                    }
+                    else
+                    {
+                        return attacks[r.Next(0, attacks.Count - 1)];
+                    }
+                }
+                else
+                {
+                    return attacks[r.Next(0, attacks.Count - 1)];
+                }
+            }
+
+            public void gainXP(int x)
+            {
+                health = healthTop;
+                experience += x;
+                if (experience > xp)
+                {
+                    xp *= 1.3f;
+                    experience = 0;
+                    level++;
+                    ScaleToLevel(level);
+                }
+            }
         }
-
+        
         class Attack
         {
             protected internal string name;
@@ -569,6 +1195,7 @@ namespace HelloNamespace
             protected internal string name;
             protected internal List<Monster> Roster;
             protected internal int defeatedMonsters;
+            protected internal Monster activeMonster;
 
             public Player(string n, List<Monster> r, int d)
             {
