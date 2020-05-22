@@ -43,10 +43,6 @@ namespace HelloNamespace
             Console.Clear();
             DrawScreen(true);
 
-
-
-
-
             currentline = 5;
             WriteText("Hello.", true, currentline, false);
             WriteText("Welcome to Cisharpmon.", true, currentline, false);
@@ -86,7 +82,9 @@ namespace HelloNamespace
                     break;
                 case 1: //no save or empty
                     NewPlayer();
-                    break;
+                    Console.Clear();
+                    ReadSavefile();
+                    goto case 0;
                 case 2: //save corrupted
                     break;
                 default:
@@ -107,13 +105,22 @@ namespace HelloNamespace
                 DrawHealth(currentplayer.activeMonster, false);
                 DrawHealth(enemy, true);
                 DrawAttacks(currentplayer.activeMonster);
+                if (enemy.health <= 0 || currentplayer.activeMonster.health <= 0)
+                {
+                    endcombat = true;
+                    break;
+                }
                 Attack a = AttackSelector();
                 ClearAttackScreen();
                 WriteUsingAttack(currentplayer.activeMonster, a);
                 WaitEnter();
                 WriteResult(currentplayer.activeMonster.TryAttack(a, enemy), currentplayer.activeMonster);
                 WaitEnter();
-               
+                if (enemy.health <= 0 || currentplayer.activeMonster.health <= 0)
+                {
+                    endcombat = true;
+                    break;
+                }
                 a = enemy.SelectAttack();
                 ClearAttackScreen();
 
@@ -122,10 +129,7 @@ namespace HelloNamespace
                 WriteResult(enemy.TryAttack(a, currentplayer.activeMonster), enemy);
                 WaitEnter();
                 ClearAttackScreen();
-                if (enemy.health <= 0 || currentplayer.activeMonster.health <= 0)
-                {
-                    endcombat = true;
-                }
+                
             }
             if (currentplayer.activeMonster.health <= 0)
             {
@@ -137,14 +141,14 @@ namespace HelloNamespace
             {
                 ClearAttackScreen();
                 Console.SetCursorPosition(3, AttackSpace(2));
-                WriteText("You defeated the enemy and your monster gained some experience!", true, 0, false);
+                WriteText("You defeated the enemy and your monster gained some experience!", false, 0, false);
                 currentplayer.defeatedMonsters++;
                 SaveMonster(currentplayer.activeMonster);
                 Save(currentplayer);
                 System.Threading.Thread.Sleep(3000);
             #region fightagain
                 retrying:
-                WriteText("Would you like to fight again? Y/N", true, currentline, true, 100);
+                WriteText("Would you like to fight again? Y/N", true, currentline-5, true, 100);
 
                 retryinput:
                 ConsoleKey input = Console.ReadKey(true).Key;
@@ -746,6 +750,7 @@ namespace HelloNamespace
                     {
 
                         Console.ForegroundColor = ConsoleColor.White;
+
                         Console.SetCursorPosition(i, j);
                         Console.Write('#');
                     }
@@ -756,9 +761,12 @@ namespace HelloNamespace
                         Console.SetCursorPosition(i, j);
                         Console.Write('#');
                     }
+                    Console.SetCursorPosition(0, 0);
+                    
                 }
             }
-            Console.ResetColor();
+            Console.SetCursorPosition(0, 0);
+
             #endregion
 
         }
@@ -1013,7 +1021,7 @@ namespace HelloNamespace
                 level = l;
                 type = t;
                 attacks = att;
-                xp = 100;
+                xp = 10;
             }
 
             public void ScaleToLevel(int l)
@@ -1160,7 +1168,7 @@ namespace HelloNamespace
                 experience += x;
                 if (experience > xp)
                 {
-                    xp *= 1.3f;
+                    xp = 5+4*level;
                     experience = 0;
                     level++;
                     ScaleToLevel(level);
