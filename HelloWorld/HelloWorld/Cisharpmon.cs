@@ -27,6 +27,8 @@ namespace HelloNamespace
         string arrow = "<--";
         string healthString = "█";
         Monster enemy;
+        int attacksoffset = 5;
+
         enum HitResult
         {
             hitdamage,
@@ -41,7 +43,7 @@ namespace HelloNamespace
         {
 
             Console.Clear();
-            DrawScreen(true);
+            DrawScreen(2);
 
             currentline = 5;
             WriteText("Hello.", true, currentline, false);
@@ -190,7 +192,8 @@ namespace HelloNamespace
             }
             text += m.name + " is trying to use " + a.name + "!";
             ClearAttackScreen();
-            Console.SetCursorPosition(3, AttackSpace(2));
+            DrawScreen(2);
+            Console.SetCursorPosition((int)GetCursorPosition(0, attacksoffset).x, AttackSpace(2));
             WriteText(text, false, 0, false);
         }
         void WriteResult(HitResult r, Monster m)
@@ -199,11 +202,19 @@ namespace HelloNamespace
             DrawHealth(enemy, true);
             string text = "Nothing happened";
             ClearAttackScreen();
-            Console.SetCursorPosition(3, AttackSpace(2));
+            Console.SetCursorPosition((int)GetCursorPosition(0, attacksoffset).x, AttackSpace(2));
             switch (r)
             {
                 case HitResult.hitdamage:
-                    text = m.name + " hit the attack and dealt some damage!";
+                    switch (rnd.Next(0, 1)) //some variation, can improve
+                    {
+                        case 1:
+                            text = m.name + " hit the attack and dealt some damage!";
+                            break;
+                        default:
+                            text = m.name + " hit the enemy!";
+                            break;
+                    }
                     break;
                 case HitResult.hitdamageheal:
                     text = m.name + " healed itself and dealt damage at the same time!";
@@ -301,7 +312,7 @@ namespace HelloNamespace
         void FightMonster(Monster m)
         {
             Console.Clear();
-            DrawScreen(true);
+            DrawScreen(2);
 
             x = Console.WindowWidth;  //120, attacks are from 0+3 to x-3
             y = Console.WindowHeight; //30, inventory is from y-1 to y/6+1
@@ -309,7 +320,7 @@ namespace HelloNamespace
 
         void ClearAttackScreen()
         {
-            int size = (y - 1) - (((y / 3) * 2 + 1)); // in our case 8
+            int size = (y - 1) - (((y / 3) * 2 + 1)); // in our case usually 8
             for (int i = 0; i < size; i++)
             {
                 Console.SetCursorPosition(1, ((y / 3) * 2) + 1 +i);
@@ -327,111 +338,136 @@ namespace HelloNamespace
 
             //int size = (y - 1) - (((y / 3)*2 + 1)); // in our case 8
 
-            //1
-            //2                             Attacks
+            //1                            
+            //2 Text                                                    Text
             //3 Text                                                    Text
-            //4 Text                                                    Text
+            //4
             //5
             //6 Text                                                    Text
             //7 Text                                                    Text
             //8
 
 
-            //careful, hardcoded numbers following
-            Console.SetCursorPosition(GetMiddle("Attacks", x), AttackSpace(2));
-            Console.Write("Attacks:");
+            //careful, hardcoded numbers
             int a = 0;
             AttackPos.Clear();
             foreach (Attack attack in m.attacks)
             {
-                switch (a)
+                for (int i = 0; i < 2; i++)
                 {
-                    case 0:
-                        Console.SetCursorPosition(GetMiddle("", GetMiddle("", GetMiddle("", x))), AttackSpace(3));
-                        break;
-                    case 1:
-                        Console.SetCursorPosition(GetMiddle("", GetMiddle("", GetMiddle("", x))), AttackSpace(6));
-                        break;
-                    case 2:
-                        Console.SetCursorPosition(x/2+ GetMiddle("", GetMiddle("", GetMiddle("", x))), AttackSpace(3));
-                        break;
-                    case 3:
-                        Console.SetCursorPosition(x/2+ GetMiddle("", GetMiddle("", GetMiddle("", x))), AttackSpace(6));
-                        break;
-                    default:
-                        break;
-                }
-                Console.Write(attack.name);
-                AttackPos.Add(new Tuple<int, int>(Console.CursorLeft + 1, Console.CursorTop));
-                switch (a)
-                {
-                    case 0:
-                        Console.SetCursorPosition(GetMiddle("", GetMiddle("", GetMiddle("", x))), AttackSpace(4));
-                        break;
-                    case 1:
-                        Console.SetCursorPosition(GetMiddle("", GetMiddle("", GetMiddle("", x))), AttackSpace(7));
-                        break;
-                    case 2:
-                        Console.SetCursorPosition(x / 2 + GetMiddle("", GetMiddle("", GetMiddle("", x))), AttackSpace(4));
-                        break;
-                    case 3:
-                        Console.SetCursorPosition(x / 2 + GetMiddle("", GetMiddle("", GetMiddle("", x))), AttackSpace(7));
-                        break;
-                    default:
-                        break;
-                }
+                    if (i == 0) //attack name
+                    {
+                        Console.SetCursorPosition((int)GetCursorPosition(a, attacksoffset, i).x, (int)GetCursorPosition(a, attacksoffset, i).y);
+                        Console.ForegroundColor = ConsoleColor.Cyan;
+                        Console.Write("> " + attack.name);
+                        Console.ResetColor();
+                        AttackPos.Add(new Tuple<int, int>(Console.CursorLeft + 1, Console.CursorTop));
+                    }
+                    if (i == 1) //description
+                    {
+                        //this does not consider getting offscreen, will just write in the next line
 
-                //switch (rnd.Next(0, 6))
-                //{
-                //    case 1:
-                //        healing = damage;
-                //        damage = 0;
-                //        break;
-                //    case 2:
-                //        healing = damage / rnd.Next(2, 3);
-                //        damage = damage / 2;
-                //        break;
-                //    case 3:
-                //        damage = (damage * 2) / 3;
-                //        accuracyboost = rnd.Next(5, 10);
-                //        break;
-                //    case 4:
-                //        damage = rnd.Next(damage / 3, damage);
-                //        defenseboost = rnd.Next(5, 10);
-                //        break;
-                //    default:
-                //        break;
-                //}
+                        List<string> text = new List<string>() { };
+                        if (attack.damage == 0 && attack.heal != 0)
+                        {
+                            text.Add(UppercaseFirst(attack.type.ToString()) + " type healing move.");
+                        }
+                        else if (attack.damage != 0 && attack.heal != 0)
+                        {
+                            text.Add(UppercaseFirst(attack.type.ToString()) + " type healing move, also attacks the enemy.");
+                        }
+                        else if (attack.damage != 0 && attack.accuracyBoost != 0)
+                        {
+                            text.Add(UppercaseFirst(attack.type.ToString()) + " type attack. Raises accuracy.");
+                        }
+                        else if (attack.damage != 0 && attack.defenseBoost != 0)
+                        {
+                            text.Add(UppercaseFirst(attack.type.ToString()) + " type attack. Raises the monsters defense.");
+                        }
+                        else
+                        {
+                            text.Add(UppercaseFirst(attack.type.ToString()) + " type attack.");
+                        }
 
-                if (attack.damage == 0  && attack.heal != 0)
-                {
-                    Console.Write(UppercaseFirst(attack.type.ToString()) + " type healing move.");
+                        if (Console.CursorLeft + text[0].Length > Console.BufferWidth-1 || Console.CursorLeft + text[0].Length > (attacksoffset + x / 2 + GetMiddle("", GetMiddle("", GetMiddle("", x)))))
+                        {
+                            //out of window, need to split into lines
+                            if (a == 2 || a == 3) //right side
+                            {
+                                text = TextWrap(text[0], Console.BufferWidth - Console.CursorLeft);
+                            }
+                            else
+                            {
+                                text = TextWrap(text[0], Console.BufferWidth - Console.CursorLeft - (Console.BufferWidth - (int)GetCursorPosition(2, attacksoffset).x));
+                            }
+
+                        }
+                        for (int j = 0; j < text.Count; j++)
+                        {
+                            Console.SetCursorPosition((int)GetCursorPosition(a, attacksoffset, i+j).x, (int)GetCursorPosition(a, attacksoffset, i+j).y);
+                            Console.Write(text[j]);
+                        }
+
+                        a++;
+                    }
                 }
-                else if (attack.damage != 0 && attack.heal != 0)
-                {
-                    Console.Write(UppercaseFirst(attack.type.ToString()) + " type attack, also heals.");
-                }
-                else if (attack.damage != 0 && attack.accuracyBoost != 0)
-                {
-                    Console.Write(UppercaseFirst(attack.type.ToString()) + " type attack. Raises accuracy.");
-                }
-                else if (attack.damage != 0 && attack.defenseBoost != 0)
-                {
-                    Console.Write(UppercaseFirst(attack.type.ToString()) + " type attack. Raises defense.");
-                }
-                else 
-                {
-                    Console.Write(UppercaseFirst(attack.type.ToString())+ " type attack.");
-                }
-                a++;
             }
             return AttackSelector();
+        }
+        Program.Point2D GetCursorPosition(int a, int offset, int i = 0)
+        {
+            switch (a)
+            {
+                case 0:
+                    return new Program.Point2D(offset + GetMiddle("", GetMiddle("", GetMiddle("", x))), AttackSpace(2 + i));
+                case 1:
+                    return new Program.Point2D(offset + GetMiddle("", GetMiddle("", GetMiddle("", x))), AttackSpace(6 + i));
+                case 2:
+                    return new Program.Point2D(offset + x / 2 + GetMiddle("", GetMiddle("", GetMiddle("", x))), AttackSpace(2 + i));
+
+                case 3:
+                    return new Program.Point2D(offset + x / 2 + GetMiddle("", GetMiddle("", GetMiddle("", x))), AttackSpace(6 + i));
+                default:
+                    return new Program.Point2D(0, 0);
+            }
         }
         int AttackSpace(int linesdown)
         {
             return (((y / 3) * 2) + linesdown /*x lines down*/);
         }
+        List<string> TextWrap(string text, int width, string linebreaker = "")
+        {
+            List<string> wrappedtext = new List<string>();
+            List<string> allwords = new List<string>();
+            allwords.AddRange(text.Split(' '));
+            string current = linebreaker;
+            bool first = true;
+            foreach (string word in allwords)
+            {
+                if (current.Length + (first ? 0:1) + word.Length >= width)
+                {
+                    wrappedtext.Add(current);
+                    current = linebreaker + word;
+                }
+                else
+                {
+                    if (first)
+                    {
+                        current = linebreaker + word;
+                    }
+                    else
+                    {
+                        current += " " + word;
+                    }
 
+                }
+                first = false;
+            }
+            wrappedtext.Add(current);
+
+            return wrappedtext;
+
+        }
 
         Attack AttackSelector()
         {
@@ -456,6 +492,11 @@ namespace HelloNamespace
                     case ConsoleKey.DownArrow:
                         selectIndex = (selectIndex + 1) % 4;
                         break;
+                    case ConsoleKey.E:
+                        //exit
+                        break;
+                    case ConsoleKey.H:
+                        //help
                     default:
                         break;
                 }
@@ -735,7 +776,7 @@ namespace HelloNamespace
 
             return new Attack(name, t, damage, rnd.Next(60, 70), healing, defenseboost, accuracyboost);
         }
-        void DrawScreen(bool drawattacks = false)
+        void DrawScreen(int index = 0) //1 == attackscreen, 2 == attack & help
         {
 
             #region border
@@ -754,12 +795,23 @@ namespace HelloNamespace
                         Console.SetCursorPosition(i, j);
                         Console.Write('#');
                     }
-                    if ((j == y/3*2 && drawattacks) && i != x && j != y)
+                    if ((j == y/3*2 && (index == 1 || index == 2)) && i != x && j != y)
                     {
 
                         Console.ForegroundColor = ConsoleColor.White;
                         Console.SetCursorPosition(i, j);
                         Console.Write('#');
+                    }
+
+                    if (index == 2)
+                    {
+                        int test = GetMiddle("", GetMiddle("", GetMiddle("", x)))+1;
+                        if (i == test && j >= y / 3 * 2)
+                        {
+                            Console.SetCursorPosition(i, j);
+                            Console.Write("#");
+                        }
+
                     }
                     Console.SetCursorPosition(0, 0);
                     
@@ -769,8 +821,52 @@ namespace HelloNamespace
 
             #endregion
 
+            if (index == 2)
+            {
+                DrawHelp();
+            }
         }
 
+        void DrawHelp()
+        {
+            string title = "Commands";
+            int test = GetMiddle("", GetMiddle("", GetMiddle("", x))) + 1;
+            //if (i == test && j >= y / 3 * 2)
+            //{
+            //    Console.SetCursorPosition(i, j);
+            //    Console.Write("#");
+            //}
+            int line = 2;
+            List<string> commands = new List<string>()
+            {
+                "Commands",
+                "(h)elp",
+                "(e)xit"
+            };
+            foreach (string item in commands)
+            {
+                Console.SetCursorPosition((test / 2) - title.Length / 2, y / 3 * 2 + line);
+                if (line == 2)
+                {
+                    //title
+                    Console.ForegroundColor = ConsoleColor.Green;
+                }
+                Console.Write(item);
+                Console.ResetColor();
+                line++;
+
+            }
+
+
+
+        }
+
+
+        void DrawRoster()
+        {
+            ClearAttackScreen();
+
+        }
         int GetMiddle(string input, int space) //from left
         {
 
@@ -1176,6 +1272,9 @@ namespace HelloNamespace
             }
         }
         
+
+
+
         class Attack
         {
             protected internal string name;
@@ -1185,6 +1284,8 @@ namespace HelloNamespace
             //average required accuracy = 70
 
             //monster rolls 1d100 + its accuracy, needs to be higher than req. accuracy
+
+            protected internal string description;
             public Attack(string n, Types t, int d, int ar, int h, int db, int ab)
             {
                 name = n;
