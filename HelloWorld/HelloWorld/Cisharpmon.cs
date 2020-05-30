@@ -103,7 +103,7 @@ namespace HelloNamespace
             while (!endcombat)
             {
                 turn++;
-                DrawScreen();
+                DrawScreen(2);
                 DrawHealth(currentplayer.activeMonster, false);
                 DrawHealth(enemy, true);
                 DrawAttacks(currentplayer.activeMonster);
@@ -202,6 +202,7 @@ namespace HelloNamespace
             DrawHealth(enemy, true);
             string text = "Nothing happened";
             ClearAttackScreen();
+            DrawScreen(2);
             Console.SetCursorPosition((int)GetCursorPosition(0, attacksoffset).x, AttackSpace(2));
             switch (r)
             {

@@ -139,6 +139,7 @@ namespace HelloNamespace
         public static string UserName;
         public static int UserAge;
         static bool MainMenuOpened;
+        int selector;
         public enum ReturnType
         {
             valid,
@@ -225,6 +226,10 @@ namespace HelloNamespace
             MainMenu();
         }
         public const string divider = "----------------------------";
+        void Menu()
+        {
+
+        }
         public static void DrawDivider(string a_divider = divider)
         {
             Console.WriteLine(a_divider);
