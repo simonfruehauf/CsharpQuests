@@ -22,14 +22,14 @@ namespace HelloNamespace
                 {
                     if (Console.ReadKey().Key == ConsoleKey.Escape)
                     {
-                        Program.MainMenu();
+                        Program.Menu();
                         return 0;
                     }
                     Console.Write(ConsoleText + ConsoleIndicator);
                     string temp = Console.ReadLine();
                     if (temp == "q" || temp == "quit")
                     {
-                        Program.MainMenu();
+                        Program.Menu();
                         return 0;
                     }
                     integer = Convert.ToInt32(temp);
@@ -55,7 +55,7 @@ namespace HelloNamespace
                     string temp = Console.ReadLine();
                     if (temp == "q" || temp == "quit")
                     {
-                        Program.MainMenu();
+                        Program.Menu();
                         return 0;
                     }
                     floatnumber = float.Parse(temp);
@@ -89,7 +89,7 @@ namespace HelloNamespace
                 Console.WriteLine();
                 if (input == ConsoleKey.Q)
                 {
-                    Program.MainMenu();
+                    Program.Menu();
                     return false;
                 }
                 else if (input == ConsoleKey.Y)
@@ -111,7 +111,6 @@ namespace HelloNamespace
             return yes;
         }
     }
-
     public class Write
     {
         public static void TypeLine(string line, int delay = 50, bool linebreak = false)
@@ -127,7 +126,6 @@ namespace HelloNamespace
             }
         }
     }
-
     public class Program
     {
 
@@ -139,7 +137,44 @@ namespace HelloNamespace
         public static string UserName;
         public static int UserAge;
         static bool MainMenuOpened;
-        int selector;
+        #region Menu
+        static int selector;
+        static string arrow = "<--";
+        enum MenuItems
+        {
+            age,
+            ai,
+            arraystuff,
+            calculator,
+            calendar,
+            cave,
+            chessboard,
+            cisharpmon,
+            credits,
+            guessinggame,
+            iterator,
+            name,
+            negative,
+            potionseller,
+            randomnumber,
+            readmap,
+            remindme,
+            roguelike,
+            roots,
+            rps,
+            snake,
+            sorter,
+            spiral,
+            spock,
+            storefront,
+            warehouse,
+            weirdmenu,
+            //a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,
+            quit
+
+        };
+        #endregion
+
         public enum ReturnType
         {
             valid,
@@ -223,12 +258,318 @@ namespace HelloNamespace
         static int guessingNumber = 0;
         static void Main()
         {
-            MainMenu();
+            Menu();
         }
         public const string divider = "----------------------------";
-        void Menu()
+        public static void Menu()
         {
+            //write Title
+            Console.Clear();
+            string title = "Hello. Welcome to my program.";
+            Console.BackgroundColor = ConsoleColor.DarkGray;
+            Console.SetCursorPosition(Console.WindowWidth / 2 - title.Length / 2, 0);
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.Write(title);
+            Console.ResetColor();
 
+
+            int menuoptions = Enum.GetNames(typeof(MenuItems)).Length;
+            bool exit = false;
+            List<Point2D> positions = new List<Point2D>();
+            int j = 0;
+            int k = 0;
+            int startbuffer = 5;
+            int maxwordlength = 15;
+            int buffer = 3;
+            int maxperrow = ((Console.WindowHeight - 2) / 2);
+            for (int i = 0; i < menuoptions; i++)
+            {
+                if (k*2 >= Console.WindowHeight-5)
+                {
+
+                    positions.Add(new Point2D(startbuffer + j * (maxwordlength + buffer + arrow.Length), 2+k * 2));
+                    j++;
+                    k = 0;
+                }
+                else
+                {
+                    positions.Add(new Point2D(startbuffer + j * (maxwordlength + buffer + arrow.Length), 2 + k * 2));
+                    k++;
+                }
+            }
+            int v = 0;
+            foreach (Point2D item in positions)
+            {
+                Console.SetCursorPosition((int)item.x, (int)item.y);
+                MenuItems menuItem = (MenuItems)v;
+                Console.Write(menuItem.ToString());
+                v++;
+            }
+            //return;
+            do
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.SetCursorPosition((int)positions[selector].x + maxwordlength, (int)positions[selector].y); //current position
+                Console.Write(arrow);
+                Console.ResetColor();
+
+
+                ConsoleKeyInfo input = Console.ReadKey(true);
+                switch (input.Key)
+                {
+                    case ConsoleKey.Enter:
+                        exit = true;
+                        break;
+                    case ConsoleKey.UpArrow:
+
+                        if ((selector % maxperrow) - 1 < 0)
+                        {
+                            selector = selector + (maxperrow - 1);
+                            
+                            if (selector >= menuoptions)
+                            {
+                                selector = menuoptions - 1;
+                            }
+                        }
+                        else
+                        {
+                            selector = ((selector - 1) % menuoptions + menuoptions) % menuoptions; // keeps it between 0 and x and not -x and x
+                        }
+                        break;
+                    case ConsoleKey.DownArrow:
+                        if (selector + 1 >= menuoptions)
+                        {
+                            int l = (int)Math.Round((float)menuoptions / (float)maxperrow);
+                            l = menuoptions - l;
+                            selector = l;
+                        }
+                        else if (selector%maxperrow +1 >= maxperrow)
+                        {
+                            selector = selector - (maxperrow-1);
+                        }
+                        
+                        else
+                        {
+                            selector = (selector + 1) % menuoptions;
+                        }
+                        break;
+                    case ConsoleKey.LeftArrow:
+                        if (selector - maxperrow < 0)
+                        {
+                            int l = (menuoptions-1) / maxperrow;
+                            if (selector + l*maxperrow >= menuoptions)
+                            {
+                                l--;
+                            }
+                            else
+                            {
+                                
+                            }
+                            l *= maxperrow;
+                            selector += l;
+                        }
+                        else
+                        {
+                            selector = ((selector - maxperrow) % menuoptions + menuoptions) % menuoptions;
+                        }
+                        break;
+                    case ConsoleKey.RightArrow:
+                        if (selector + maxperrow >= menuoptions)
+                        {
+
+                            selector = (selector - maxperrow) % maxperrow;
+                        }
+                        else
+                        {
+                            selector = ((selector + maxperrow) % menuoptions + menuoptions) % menuoptions;
+                        }
+                        break;
+                    case ConsoleKey.Q:
+                    case ConsoleKey.Escape:
+                        //exit
+                        selector = menuoptions-1;
+                        exit = true;
+                        break;
+                    case ConsoleKey.H:
+                        string helptext = "Press up & down to move the cursor, and enter to select.";
+                        Console.SetCursorPosition(Console.WindowWidth / 2 - helptext.Length / 2, 1);
+                        Console.Write(helptext);
+                        Console.SetCursorPosition((int)positions[selector].x + maxwordlength, (int)positions[selector].y); //current position
+                        break;
+                    //help
+                    default:
+                        break;
+                }
+                //redraw arrow at index
+                Console.SetCursorPosition(Console.CursorLeft - arrow.Length, Console.CursorTop);
+                for (int i = 0; i < arrow.Length; i++)
+                {
+                    Console.Write(" ");
+                }
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.SetCursorPosition((int)positions[selector].x + maxwordlength, (int)positions[selector].y); //current position
+                Console.Write(arrow);
+                Console.ResetColor();
+
+
+            } while (!exit);
+
+            Console.Clear();
+            SelectMenuItem(selector);
+
+
+        }
+
+        static void SelectMenuItem(int i)
+        {
+            SelectMenuItem((MenuItems)i);
+        }
+        static void SelectMenuItem(MenuItems m)
+        {
+            switch (m)
+            {
+                case MenuItems.credits:
+                    Console.WriteLine("Made by Simon Frühauf for the Minerva C# Quests hosted by Simon Renger.");
+                    Console.ReadKey();
+                    break;
+                case MenuItems.potionseller:
+                    Gambling.Game();
+                    break;
+                case MenuItems.calendar:
+                    DrawMonth();
+                    break;
+                case MenuItems.ai:
+                    SuperSmartAI();
+                    break;
+                case MenuItems.calculator:
+                    Calculator();
+                    break;
+                case MenuItems.age:
+                    Age();
+                    break;
+                case MenuItems.name:
+                    Name();
+                    break;
+                case MenuItems.randomnumber:
+                    GenerateRandomNumberBetween();
+                    Console.ReadKey();
+                    break;
+                case MenuItems.guessinggame:
+                    GuessingGame(1, 5);
+                    break;
+                case MenuItems.remindme:
+                    RemindMe();
+                    break;
+                case MenuItems.arraystuff:
+                    ArrayStuff();
+                    break;
+                case MenuItems.warehouse:
+                    Warehouse.MainWarehouse();
+                    break;
+                case MenuItems.chessboard:
+                    Vector2D vector = new Vector2D(0, 0, 20, 20);
+                    CheckerBoard(20, 20, vector);
+                    break;
+                case MenuItems.iterator:
+                    IteratorTests();
+                    break;
+                case MenuItems.cave:
+                    CaveGenerator CG = new CaveGenerator();
+                    int[,] map = CG.CreateCave(15, 10, 70, 2);
+                    map = CG.iterateCave(map, 2, 5, 5);
+                    //Print2dIntArray(map);
+                    CG.WriteMap(map, "test");
+                    Console.WriteLine();
+                    int[,] error = new int[400, 400];
+                    int[,] start = CG.findEmptyCell(map, true);
+                    if (start == error)
+                    {
+                        //error
+                    }
+                    else
+                    {
+                        Print2dIntArray(map, true, start.GetLength(0), start.GetLength(1));
+                    }
+                    Console.WriteLine(start.GetLength(0) + " " + start.GetLength(1)); 
+                    Console.ReadKey();
+
+                    break;
+                case MenuItems.rps:
+                    RPS RockPaperScissors = new RPS();
+                    RockPaperScissors.Play();
+                    Console.ReadKey();
+
+                    break;
+                case MenuItems.readmap:
+                    CaveGenerator CG2 = new CaveGenerator();
+                    string[,] thisMap = CG2.ReadMap("test");
+                    Print2dArray(thisMap);
+                    Console.WriteLine();
+                    Console.WriteLine("This was the read map.");
+                    Console.WriteLine();
+                    Console.ReadKey();
+
+                    break;
+                case MenuItems.weirdmenu:
+                    BuildMenu bm = new BuildMenu();
+                    bool running = true;
+                    while (running)
+                    {
+                        running = BuildMenu.Build();
+                    }
+                    break;
+                case MenuItems.roots:
+                    PrintRoots(new int[] { 5, 23, 55, -3, 0, 5, 323, 65, -5 });
+                    Console.ReadKey();
+                    break;
+                case MenuItems.negative:
+                    Console.WriteLine(findFirstNegative(new int[] { 5, 23, 55, -3, 0, 5, 323, 65, -5 }));
+                    Console.ReadKey();
+                    break;
+                case MenuItems.spiral:
+                    CaveGenerator CG3 = new CaveGenerator();
+                    CG3.printSpiral(10);
+                    Console.ReadKey();
+                    break;
+                case MenuItems.storefront:
+                    Warehouse WH = new Warehouse();
+                    Warehouse.LookAtInventory(WH.Inventory); 
+                    Console.ReadKey();
+                    break;
+                case MenuItems.sorter:
+                    int e = Sorter.ReadFile();
+                    if (e == 0)
+                    {
+                        Sorter.Sort(Sorter.items, Sorter.values, true);
+                        PrintArray(Sorter.items, Sorter.values);
+                    }
+                    Console.ReadKey();
+                    break;
+                case MenuItems.spock:
+                    RPSLS RPSPlus = new RPSLS();
+                    RPSPlus.Play();
+                    Console.ReadKey();
+                    break;
+                case MenuItems.snake:
+                    SnakeMenu snm = new SnakeMenu(true);
+                    Console.ReadKey();
+                    break;
+                case MenuItems.roguelike:
+                    Roguelike rgl = new Roguelike();
+                    Console.ReadKey();
+                    break;
+                case MenuItems.cisharpmon:
+                    Cisharpmon csm = new Cisharpmon();
+                    csm.Play();
+                    Console.ReadKey();
+                    break;
+                case MenuItems.quit:
+                    Environment.Exit(1);
+                    break;
+                default:
+                    break;
+            }
+            Menu();
         }
         public static void DrawDivider(string a_divider = divider)
         {
@@ -259,160 +600,166 @@ namespace HelloNamespace
         {
             return (float)Math.Sqrt(((a_x - b_x) * (a_x - b_x)) + ((a_y - b_y) * (a_y - b_y)));
         }
-        public static void MainMenu(bool unknownInput = false)
-        {
-            if (!unknownInput)
-            {
-                Console.WriteLine("Welcome " + ((MainMenuOpened == true) ? "back " : "") + "to the Main Menu.");
-            }
-            MainMenuOpened = true;
-            string input = Read.String("Please input your command.");
-            switch (input)
-            {
-                case "potion game":
-                case "potion seller":
-                case "potion":
-                case "p":
-                    Gambling.Game();
-                    return;
-                case "help":
-                case "h":
-                    Console.WriteLine("Here a list of available commands. ()Brackets indicate shortcuts. \n> help \n> calendar \n> guessing game \n> super smart (ai) \n> (c)alculator \n> name \n> age \n> random number \n> (e)xit or (q)uit");
-                    break;
-                case "calendar":
-                    DrawMonth();
-                    break;
-                case "q":
-                case "quit":
-                case "exit":
-                case "e":
-                    Environment.Exit(1);
-                    break;
-                case "super smart ai":
-                case "super smart AI":
-                case "AI":
-                case "ai":
-                    SuperSmartAI();
-                    break;
-                case "calculator":
-                case "calc":
-                case "c":
-                    Calculator();
-                    break;
-                case "name":
-                    Name();
-                    break;
-                case "age":
-                    Age();
-                    break;
-                case "random number":
-                    GenerateRandomNumberBetween();
-                    break;
-                case "guessing game":
-                    GuessingGame(1, 5);
-                    break;
-                case "remindme":
-                    RemindMe();
-                    break;
-                case "arraystuff":
-                    ArrayStuff();
-                    break;
-                case "warehouse":
-                    Warehouse.MainWarehouse();
-                    break;
-                case "chess":
-                case "checker":
-                    Vector2D vector = new Vector2D(0, 0, 20, 20);
-                    CheckerBoard(20, 20, vector);
-                    break;
-                case "iterator":
-                    IteratorTests();
-                    break;
-                case "cave":
-                    CaveGenerator CG = new CaveGenerator();
-                    int[,] map = CG.CreateCave(15, 10, 70, 2);
-                    map = CG.iterateCave(map, 2, 5, 5);
-                    //Print2dIntArray(map);
-                    CG.WriteMap(map, "test");
-                    Console.WriteLine();
-                    int[,] error = new int[400, 400];
-                    int[,] start = CG.findEmptyCell(map, true);
-                    if (start == error)
-                    {
-                        //error
-                    }
-                    else
-                    {
-                        Print2dIntArray(map, true, start.GetLength(0), start.GetLength(1));
-                    }
-                    Console.WriteLine(start.GetLength(0)+ " " + start.GetLength(1));
-                    break;
-                case "rps":
-                case "rock paper scissors":
-                    RPS RockPaperScissors = new RPS();
-                    RockPaperScissors.Play();
-                    break;
-                case "read map":
-                    CaveGenerator CG2 = new CaveGenerator();
-                    string[,] thisMap = CG2.ReadMap("test");
-                    Print2dArray(thisMap);
-                    Console.WriteLine();
-                    Console.WriteLine("This was the read map.");
-                    Console.WriteLine();
-                    break;
-                case "weird menu":
-                    BuildMenu bm = new BuildMenu();
-                    bool running = true;
-                    while (running)
-                    {
-                        running = BuildMenu.Build();
-                    }
-                    break;
-                case "roots":
-                    PrintRoots(new int[] { 5, 23, 55, -3, 0, 5, 323, 65, -5 });
-                    break;
-                case "negative":
-                    Console.WriteLine(findFirstNegative(new int[] { 5, 23, 55, -3, 0, 5, 323, 65, -5 }));
-                    break;
-                case "printspiral":
-                    CaveGenerator CG3 = new CaveGenerator();
-                    CG3.printSpiral(10);
-                    break;
-                case "storefront":
-                    Warehouse WH = new Warehouse();
-                    Warehouse.LookAtInventory(WH.Inventory);
-                    break;
-                case "sorter":
-                    int e = Sorter.ReadFile();
-                    if (e == 0)
-                    {
-                        Sorter.Sort(Sorter.items, Sorter.values, true);
-                        PrintArray(Sorter.items, Sorter.values);
-                    }
-                    break;
-                case "rpsls":
-                case "spock":
-                    RPSLS RPSPlus = new RPSLS();
-                    RPSPlus.Play();
-                    break;
-                case "snake":
-                    SnakeMenu snm = new SnakeMenu(true);
-                    
-                    break;
-                case "roguelike":
-                    Roguelike rgl = new Roguelike();
-                    break;
-                case "pokemon":
-                    Cisharpmon csm = new Cisharpmon();
-                    csm.Play();
-                    break;
-                default:
-                    Console.Write("Unknown Input. ");
-                    MainMenu(true);
-                    break;
-            }
-            MainMenu();
-        }
+
+        //// Old Main Menu
+        //public static void MainMenu(bool unknownInput = false)
+        //{
+        //    if (!unknownInput)
+        //    {
+        //        Console.WriteLine("Welcome " + ((MainMenuOpened == true) ? "back " : "") + "to the Main Menu.");
+        //    }
+        //    MainMenuOpened = true;
+        //    string input = Read.String("Please input your command.");
+        //    switch (input)
+        //    {
+        //        case "potion game":
+        //        case "potion seller":
+        //        case "potion":
+        //        case "p":
+        //            Gambling.Game();
+        //            return;
+        //        case "help":
+        //        case "h":
+        //            Console.WriteLine("Here a list of available commands. ()Brackets indicate shortcuts. \n> help \n> calendar \n> guessing game \n> super smart (ai) \n> (c)alculator \n> name \n> age \n> random number \n> (e)xit or (q)uit");
+        //            break;
+        //        case "calendar":
+        //            DrawMonth();
+        //            break;
+        //        case "q":
+        //        case "quit":
+        //        case "exit":
+        //        case "e":
+        //            Environment.Exit(1);
+        //            break;
+        //        case "super smart ai":
+        //        case "super smart AI":
+        //        case "AI":
+        //        case "ai":
+        //            SuperSmartAI();
+        //            break;
+        //        case "calculator":
+        //        case "calc":
+        //        case "c":
+        //            Calculator();
+        //            break;
+        //        case "name":
+        //            Name();
+        //            break;
+        //        case "age":
+        //            Age();
+        //            break;
+        //        case "random number":
+        //            GenerateRandomNumberBetween();
+        //            break;
+        //        case "guessing game":
+        //            GuessingGame(1, 5);
+        //            break;
+        //        case "remindme":
+        //            RemindMe();
+        //            break;
+        //        case "arraystuff":
+        //            ArrayStuff();
+        //            break;
+        //        case "warehouse":
+        //            Warehouse.MainWarehouse();
+        //            break;
+        //        case "chess":
+        //        case "checker":
+        //            Vector2D vector = new Vector2D(0, 0, 20, 20);
+        //            CheckerBoard(20, 20, vector);
+        //            break;
+        //        case "iterator":
+        //            IteratorTests();
+        //            break;
+        //        case "cave":
+        //            CaveGenerator CG = new CaveGenerator();
+        //            int[,] map = CG.CreateCave(15, 10, 70, 2);
+        //            map = CG.iterateCave(map, 2, 5, 5);
+        //            //Print2dIntArray(map);
+        //            CG.WriteMap(map, "test");
+        //            Console.WriteLine();
+        //            int[,] error = new int[400, 400];
+        //            int[,] start = CG.findEmptyCell(map, true);
+        //            if (start == error)
+        //            {
+        //                //error
+        //            }
+        //            else
+        //            {
+        //                Print2dIntArray(map, true, start.GetLength(0), start.GetLength(1));
+        //            }
+        //            Console.WriteLine(start.GetLength(0)+ " " + start.GetLength(1));
+        //            break;
+        //        case "rps":
+        //        case "rock paper scissors":
+        //            RPS RockPaperScissors = new RPS();
+        //            RockPaperScissors.Play();
+        //            break;
+        //        case "read map":
+        //            CaveGenerator CG2 = new CaveGenerator();
+        //            string[,] thisMap = CG2.ReadMap("test");
+        //            Print2dArray(thisMap);
+        //            Console.WriteLine();
+        //            Console.WriteLine("This was the read map.");
+        //            Console.WriteLine();
+        //            break;
+        //        case "weird menu":
+        //            BuildMenu bm = new BuildMenu();
+        //            bool running = true;
+        //            while (running)
+        //            {
+        //                running = BuildMenu.Build();
+        //            }
+        //            break;
+        //        case "roots":
+        //            PrintRoots(new int[] { 5, 23, 55, -3, 0, 5, 323, 65, -5 });
+        //            break;
+        //        case "negative":
+        //            Console.WriteLine(findFirstNegative(new int[] { 5, 23, 55, -3, 0, 5, 323, 65, -5 }));
+        //            break;
+        //        case "printspiral":
+        //            CaveGenerator CG3 = new CaveGenerator();
+        //            CG3.printSpiral(10);
+        //            break;
+        //        case "storefront":
+        //            Warehouse WH = new Warehouse();
+        //            Warehouse.LookAtInventory(WH.Inventory);
+        //            break;
+        //        case "sorter":
+        //            int e = Sorter.ReadFile();
+        //            if (e == 0)
+        //            {
+        //                Sorter.Sort(Sorter.items, Sorter.values, true);
+        //                PrintArray(Sorter.items, Sorter.values);
+        //            }
+        //            break;
+        //        case "rpsls":
+        //        case "spock":
+        //            RPSLS RPSPlus = new RPSLS();
+        //            RPSPlus.Play();
+        //            break;
+        //        case "snake":
+        //            SnakeMenu snm = new SnakeMenu(true);
+
+        //            break;
+        //        case "roguelike":
+        //            Roguelike rgl = new Roguelike();
+        //            break;
+        //        case "pokemon":
+        //            Cisharpmon csm = new Cisharpmon();
+        //            csm.Play();
+        //            break;
+        //        case "mainmenu":
+        //            Menu();
+        //            break;
+        //        default:
+        //            Console.Write("Unknown Input. ");
+        //            MainMenu(true);
+        //            break;
+        //    }
+        //    MainMenu();
+        //}
+
         static void PrintRoots(List<int> list)
         {
             foreach (int number in list)
@@ -571,6 +918,7 @@ namespace HelloNamespace
                 }
             }
             Console.WriteLine();
+            Console.ReadKey();
         }
         static public void PrintArray(dynamic array)
         {
@@ -743,7 +1091,7 @@ namespace HelloNamespace
                 Console.WriteLine(item);
             }
             inputList.Clear();  // not needed, but a good practice for me to 
-                                // remember doing in case the variable is 
+            Console.ReadKey();  // remember doing in case the variable is 
                                 // declared outside of the scope
         }
         void LoopThroughFor(string[] m_array)
@@ -798,6 +1146,7 @@ namespace HelloNamespace
             {
                 Console.Write("ERROR."); //shouldn't be able to reach this code
             }
+            Console.ReadKey();
         }
         static void DrawMonth()
         {
@@ -904,6 +1253,7 @@ namespace HelloNamespace
             calendarHasMonth = false;
             calendarHasYear = false;
             #endregion
+            Console.ReadKey();
         }
         static double GenerateRandomNumberBetween(bool floatnumbers = false)
         {
@@ -1429,7 +1779,7 @@ namespace HelloNamespace
         {
             Console.WriteLine("<Congratulations on drinking " + score + " potions.>\n<Going back to the main menu.>");
             Program.DrawDivider();
-            Program.MainMenu();
+            Program.Menu();
         }
         static PotionEvents GetEvent(PotionTypes a_potionToCheck)
         {

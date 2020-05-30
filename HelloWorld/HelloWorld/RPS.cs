@@ -162,7 +162,7 @@ namespace HelloNamespace
                     string temp = Console.ReadLine();
                     if (temp == "q" || temp == "quit")
                     {
-                        Program.MainMenu();
+                        Program.Menu();
                         return 0;
                     }
                     switch (temp)
@@ -194,7 +194,6 @@ namespace HelloNamespace
 
                 }
                 Console.Write("You picked " + choice + "!\n");
-
 
             } while (!validInput);
             return choice;
@@ -313,7 +312,7 @@ namespace HelloNamespace
                     string temp = Console.ReadLine();
                     if (temp == "q" || temp == "quit")
                     {
-                        Program.MainMenu();
+                        Program.Menu();
                         return 0;
                     }
                     switch (temp)

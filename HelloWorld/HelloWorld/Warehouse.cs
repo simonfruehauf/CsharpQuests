@@ -25,17 +25,18 @@ namespace HelloNamespace
         static string file = "files\\warehouse.txt";
         public static void MainWarehouse()
         {
-            //int a = 0;
-            //DisplayAmountOfProducts(products);
-            //foreach (int item in products)
-            //{
-            //    DisplayItemValue(products, money_value, a);
-            //    a++;
-            //}
-            //DisplayTotalValue(products, money_value);
-            //FindHighestOfArray(warehouseItems);
+            int a = 0;
+            DisplayAmountOfProducts(products);
+            foreach (int item in products)
+            {
+                DisplayItemValue(products, money_value, a);
+                a++;
+            }
+            DisplayTotalValue(products, money_value);
+            FindHighestOfArray(warehouseItems);
 
             ReadFile();
+            Console.ReadKey();
         }
         public static void LookAtInventory(Dictionary<string, float> Inv)
         {
