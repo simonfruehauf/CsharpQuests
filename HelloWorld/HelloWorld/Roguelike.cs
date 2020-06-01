@@ -11,6 +11,7 @@ namespace HelloNamespace
    public class Roguelike
     {
         string inv = "Inventory";
+        string sts = "Stats";
         string titleScreen = "Welcome to the world of";
         string worldName;
         Tile[,] map;
@@ -20,6 +21,14 @@ namespace HelloNamespace
         ConsoleKeyInfo currentInput;
         public Tile player;
         static Random rnd = new Random();
+        enum SidePanel
+        {
+            Inventory,
+            Stats
+        }
+        SidePanel sidePanel;
+        int sidePanelPage;
+        bool lastpage = false;
         public Roguelike()
         {
             WordMaker wm = new WordMaker();
@@ -30,6 +39,12 @@ namespace HelloNamespace
             Console.Clear();
             DrawScreen();
             DrawMap(cvg, true, true);
+            sidePanel = SidePanel.Inventory;
+            for (int i = 0; i < 100; i++)
+            {
+                Item item = Artefacts[rnd.Next(0, Artefacts.Count - 1)];
+                item.Pickup(player.player);
+            }
             Play();
         }
 
@@ -45,8 +60,36 @@ namespace HelloNamespace
                 currentInput = Console.ReadKey(true);
                 switch (currentInput.Key)
                 {
-                    case ConsoleKey.I:
-                        //inventory
+                    case ConsoleKey.F:
+                        //DEBUG
+                        player.player.inventory.Add(Artefacts[rnd.Next(0, Artefacts.Count-1)]);
+                        //redraw inventory if open
+                        if (sidePanel == SidePanel.Inventory && lastpage)
+                        {
+                            DrawPanel(sidePanel);
+                        }
+                        break;
+                    case ConsoleKey.Tab:
+                        sidePanel = (SidePanel)((int)(sidePanel +1) % Enum.GetNames(typeof(SidePanel)).Length);
+                        DrawPanel(sidePanel);
+                        break;
+                    case ConsoleKey.J: //next page
+                        if (sidePanel == SidePanel.Stats)
+                        {
+
+                        }
+                        else if (!lastpage)
+                        {
+                            sidePanelPage++;
+                            DrawPanel(sidePanel);
+                        }
+                        break;
+                    case ConsoleKey.K: //prev page
+                        if (!(sidePanelPage-1 < 0))
+                        {
+                            sidePanelPage--;
+                            DrawPanel(sidePanel);
+                        }
                         break;
                     case ConsoleKey.UpArrow: //UP
                     case ConsoleKey.W:
@@ -97,7 +140,12 @@ namespace HelloNamespace
         public List<Item> Artefacts = new List<Item>()
         {
             new Weapon("Demonslayer", "A weapon of great power.", 19, 100, 20, 1),
-            new Weapon("Bow of Ages", "A bow wielded by heroes.", 19, 60, 20, 2)
+            new Weapon("Bow of Ages", "A bow wielded by heroes.", 19, 60, 20, 2),
+            new Weapon("Potato Cannon", "", 19, 60, 20, 2),
+            new Weapon("Bananabread", "", 19, 60, 20, 2),
+            new Weapon("Yellow Boat", "", 19, 60, 20, 2),
+            new Weapon("Bag of Holding", "", 19, 60, 20, 2),
+            new Weapon("Filler Object", "", 19, 60, 20, 2),
         };
 
         public List<Enemy> enemies = new List<Enemy>()
@@ -137,61 +185,142 @@ namespace HelloNamespace
                 max = maxsize;
             }
         }
-        void DrawScreen()
+        void DrawScreen(bool sleep = true)
         {
             int x = Console.WindowWidth;  //120
             int y = Console.WindowHeight; //30
             mapsize = new Map(new Position(1, 1), new Position(((2 * x) / 3) - 1, y - 1));
             inventorysize = new Map(new Position(((2 * x) / 3) + 1, 1), new Position(x - 1, y - 1));
 
-            #region drawborder
-            for (int i = 0; i <= x; i++)
-            {
-                for (int j = 0; j <= y; j++)
+
+                #region drawborder
+                for (int i = 0; i <= x; i++)
                 {
-                    if ((i == 0 || i == x - 1 || j == 0 || j == y - 1) && i != x && j != y)
+                    for (int j = 0; j <= y; j++)
                     {
-                        Console.ForegroundColor = ConsoleColor.Blue;
-                        Console.SetCursorPosition(i, j);
-                        Console.Write('#');
-                    }
-                    if (i == 2 * x / 3 && j < y)
-                    {
-                        Console.SetCursorPosition(i, j);
-                        Console.Write('#');
+                        if ((i == 0 || i == x - 1 || j == 0 || j == y - 1) && i != x && j != y)
+                        {
+                            Console.ForegroundColor = ConsoleColor.Blue;
+                            Console.SetCursorPosition(i, j);
+                            Console.Write('#');
+                        }
+                        if (i == 2 * x / 3 && j < y)
+                        {
+                            Console.SetCursorPosition(i, j);
+                            Console.Write('#');
+                        }
                     }
                 }
-            }
-            Console.ResetColor();
-            #endregion
+                Console.ResetColor();
+                #endregion
 
 
 
-            //Console.SetCursorPosition(mapsize.min.x + 2, mapsize.min.y + 2);
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.SetCursorPosition(GetMiddle(titleScreen, mapsize, Axis.x).x, GetMiddle("", mapsize, Axis.y).x-1);
-            Console.Write(titleScreen);
-            Console.ResetColor();
+                //Console.SetCursorPosition(mapsize.min.x + 2, mapsize.min.y + 2);
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.SetCursorPosition(GetMiddle(titleScreen, mapsize, Axis.x).x, GetMiddle("", mapsize, Axis.y).x - 1);
+                Console.Write(titleScreen);
+                Console.ResetColor();
 
-            #region inventory
-            for (int i = inventorysize.min.x; i < inventorysize.max.x; i++)
-            {
-                for (int j = inventorysize.min.y; j < inventorysize.max.y; j++)
-                {
-                    Console.SetCursorPosition(i, j);
-                    Console.Write('.');
-
-                }
-            }
-
-            Position titlepos = GetMiddle(inv, inventorysize, Axis.x);
-            Console.SetCursorPosition(titlepos.x, 2);
-            Console.Write(inv);
-            #endregion
-
+                
             Console.SetCursorPosition(0, 0);
+            if (sleep)
+            {
+                Thread.Sleep(200);
+            }
+        }
+        void DrawPanel(SidePanel panel = SidePanel.Inventory)
+        {
+            int x = Console.WindowWidth;  //120
+            int y = Console.WindowHeight; //30
+            mapsize = new Map(new Position(1, 1), new Position(((2 * x) / 3) - 1, y - 1));
+            inventorysize = new Map(new Position(((2 * x) / 3) + 1, 1), new Position(x - 1, y - 1));
+            switch (panel)
+            {
+                case SidePanel.Inventory:
+                    for (int i = inventorysize.min.x; i < inventorysize.max.x; i++)
+                    {
+                        for (int j = inventorysize.min.y; j < inventorysize.max.y; j++)
+                        {
+                            Console.BackgroundColor = ConsoleColor.DarkGray;
+                            Console.SetCursorPosition(i, j);
+                            Console.Write(' ');
+                            Console.ResetColor();
+                        }
+                    }
+                    Position titlepos = GetMiddle(inv, inventorysize, Axis.x);
+                    Console.SetCursorPosition(titlepos.x, 2);
+                    Console.BackgroundColor = ConsoleColor.DarkGray;
+                    Console.ForegroundColor = ConsoleColor.DarkBlue;
+                    Console.Write(inv);
+                    Console.ResetColor();
+                    //display all items
 
-            Thread.Sleep(200);
+                    int freeLines = (inventorysize.max.y - inventorysize.min.y) / 2 - 2;
+
+                    List<Program.Point2D> positions = new List<Program.Point2D>();
+                    for (int i = 0; i < freeLines; i++)
+                    {
+                        positions.Add(new Program.Point2D(inventorysize.min.x + 2, inventorysize.min.y + 2 + i * 2));
+                    }
+                    int v = 0;
+                    foreach (Program.Point2D item in positions)
+                    {
+                        int m_item = v + sidePanelPage * freeLines;
+                        Console.SetCursorPosition((int)item.x, (int)item.y);
+                        string text = "";
+                        if (m_item > player.player.inventory.Count-1)
+                        {
+                            lastpage = true;
+                            break;
+                        }
+                        else
+                        {
+                            lastpage = false;
+                            text = player.player.inventory[v + (sidePanelPage * freeLines)].name;
+                            Console.BackgroundColor = ConsoleColor.DarkGray;
+                            Console.Write(text);
+                            Console.ResetColor();
+                        }
+                        
+                        v++;
+                    }
+                    //items end
+                    //write page
+                    Console.BackgroundColor = ConsoleColor.DarkGray;
+                    if (sidePanelPage+1 < 10)
+                    {
+                        Console.SetCursorPosition(inventorysize.max.x - 1, inventorysize.max.y - 1);
+                        Console.Write(sidePanelPage + 1);
+                    }
+                    else
+                    {
+                        Console.SetCursorPosition(inventorysize.max.x - 2, inventorysize.max.y - 1);
+                        Console.Write(sidePanelPage + 1);
+                    }
+
+                    Console.ResetColor();
+                    //page end
+                    break;
+                case SidePanel.Stats:
+                default:
+                    for (int i = inventorysize.min.x; i < inventorysize.max.x; i++)
+                    {
+                        for (int j = inventorysize.min.y; j < inventorysize.max.y; j++)
+                        {
+                            Console.BackgroundColor = ConsoleColor.DarkBlue;
+                            Console.SetCursorPosition(i, j);
+                            Console.Write(' ');
+                            Console.ResetColor();
+                        }
+                    }
+                    Position titlepos2 = GetMiddle(sts, inventorysize, Axis.x);
+                    Console.SetCursorPosition(titlepos2.x, 2);
+                    Console.BackgroundColor = ConsoleColor.DarkBlue;
+                    Console.ForegroundColor = ConsoleColor.DarkGray;
+                    Console.Write(sts);
+                    break;
+            }
         }
 
         void DrawMap(CaveGenerator c, bool replaceempty = false, bool drawplayer = false)
@@ -211,7 +340,7 @@ namespace HelloNamespace
             //Program.Print2dIntArray(map, true, start.GetLength(0), start.GetLength(1));
             map[(int)start.x, (int)start.y] = new Tile('@', new Program.Point2D((int)start.x, (int)start.y), Tile.TileType.Player, ConsoleColor.Red);
             map[(int)start.x, (int)start.y].standingOn = new Tile(' ', new Program.Point2D((int)start.x, (int)start.y), Tile.TileType.Floor);
-            map[(int)start.x, (int)start.y].player = new Player(10);
+            map[(int)start.x, (int)start.y].player = new Player(8,8,8);
             player = map[(int)start.x, (int)start.y];
             for (int i = mapsize.min.x; i <= mapsize.max.x; i++)
             {
@@ -526,14 +655,23 @@ namespace HelloNamespace
         // 23           pouch
         // 24           backpack
         // -1           filler slot
-        public Player(int h)
-        {
-            health = h;
-            maxHealth = h;
-        }
         #endregion
+        public Player(int s, int w, int c)
+        {
+           
+            str = s;
+            wis = w;
+            con = c;
+            health = (int)(con * hmod);
+            maxHealth = health;
+            inventory = new List<Item>();
+        }
+        
+
         int maxHealth;
         int health;
+        int str, wis, con;
+        private float hmod = 1.2f;
         public List<Item> inventory;
         
         void Drop(Item i)

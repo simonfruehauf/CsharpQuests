@@ -418,7 +418,6 @@ namespace HelloNamespace
             Console.Clear();
             SelectMenuItem(selector);
 
-
         }
 
         static void SelectMenuItem(int i)
