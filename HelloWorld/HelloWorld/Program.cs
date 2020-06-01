@@ -153,6 +153,7 @@ namespace HelloNamespace
             credits,
             guessinggame,
             iterator,
+            map,
             name,
             negative,
             potionseller,
@@ -169,7 +170,7 @@ namespace HelloNamespace
             storefront,
             warehouse,
             weirdmenu,
-            //a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,
+            a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,
             quit
 
         };
@@ -473,9 +474,12 @@ namespace HelloNamespace
                 case MenuItems.iterator:
                     IteratorTests();
                     break;
+                case MenuItems.map:
+                    ReadMap();
+                    break;                    
                 case MenuItems.cave:
                     CaveGenerator CG = new CaveGenerator();
-                    int[,] map = CG.CreateCave(15, 10, 70, 2);
+                    int[,] map = CG.CreateCave(30, 30, 70, 2);
                     map = CG.iterateCave(map, 2, 5, 5);
                     //Print2dIntArray(map);
                     CG.WriteMap(map, "test");
@@ -490,7 +494,7 @@ namespace HelloNamespace
                     {
                         Print2dIntArray(map, true, start.GetLength(0), start.GetLength(1));
                     }
-                    Console.WriteLine(start.GetLength(0) + " " + start.GetLength(1)); 
+                    //Console.WriteLine(start.GetLength(0) + " " + start.GetLength(1)); 
                     Console.ReadKey();
 
                     break;
@@ -570,6 +574,22 @@ namespace HelloNamespace
                     break;
             }
             Menu();
+        }
+        static void ReadMap()
+        {
+            MapReader MP = new MapReader();
+            string map = Read.String("Input the map to read: ");
+            int[,] m = MP.Read(map);
+            if (m == null)
+            {
+                Console.WriteLine("Empty file.");
+                Console.ReadLine();
+                return;
+            }
+            //MP.Write(m);
+            MP.Draw(m);
+            MP.Blink(m, new Point2D(4, 4), m[4, 4], 2, 20); 
+            Console.ReadKey(true);
         }
         public static void DrawDivider(string a_divider = divider)
         {
