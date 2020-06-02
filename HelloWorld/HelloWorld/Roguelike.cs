@@ -24,11 +24,19 @@ namespace HelloNamespace
         enum SidePanel
         {
             Inventory,
-            Stats
+            Stats,
+            Help
         }
         SidePanel sidePanel;
         int sidePanelPage;
         bool lastpage = false;
+        List<string> helpText = new List<string>()
+        {
+            "W A S D to move",
+            "TAB to swap panel",
+            "J K to swap page",
+            "H for help"
+        };
         public Roguelike()
         {
             WordMaker wm = new WordMaker();
@@ -60,8 +68,7 @@ namespace HelloNamespace
                 currentInput = Console.ReadKey(true);
                 switch (currentInput.Key)
                 {
-                    case ConsoleKey.F:
-                        //DEBUG
+                    case ConsoleKey.F:                        //DEBUG
                         player.player.inventory.Add(Artefacts[rnd.Next(0, Artefacts.Count-1)]);
                         //redraw inventory if open
                         if (sidePanel == SidePanel.Inventory && lastpage)
@@ -70,7 +77,9 @@ namespace HelloNamespace
                         }
                         break;
                     case ConsoleKey.Tab:
-                        sidePanel = (SidePanel)((int)(sidePanel +1) % Enum.GetNames(typeof(SidePanel)).Length);
+                        int panels = (Enum.GetNames(typeof(SidePanel)).Length);
+                        sidePanel = (SidePanel)((int)(sidePanel + 1) % (panels-1)); //-1 because last is help panel
+                        sidePanelPage = 0; //reset pages
                         DrawPanel(sidePanel);
                         break;
                     case ConsoleKey.J: //next page
@@ -90,6 +99,9 @@ namespace HelloNamespace
                             sidePanelPage--;
                             DrawPanel(sidePanel);
                         }
+                        break;
+                    case ConsoleKey.H: //help
+                        DrawPanel(SidePanel.Help);
                         break;
                     case ConsoleKey.UpArrow: //UP
                     case ConsoleKey.W:
@@ -237,6 +249,42 @@ namespace HelloNamespace
             inventorysize = new Map(new Position(((2 * x) / 3) + 1, 1), new Position(x - 1, y - 1));
             switch (panel)
             {
+                case SidePanel.Help:
+                    for (int i = inventorysize.min.x; i < inventorysize.max.x; i++)
+                    {
+                        for (int j = inventorysize.min.y; j < inventorysize.max.y; j++)
+                        {
+                            Console.BackgroundColor = ConsoleColor.Black;
+                            Console.SetCursorPosition(i, j);
+                            Console.Write(' ');
+                            Console.ResetColor();
+                        }
+                    }
+                    Position helppos = GetMiddle("Help", inventorysize, Axis.x);
+                    Console.SetCursorPosition(helppos.x, 2);
+                    Console.BackgroundColor = ConsoleColor.Black;
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.Write("Help");
+                    Console.ResetColor();
+
+                    //help lines
+
+                    int helpLines = helpText.Count;
+                    List<Program.Point2D> helpPoints = new List<Program.Point2D>();
+                    for (int i = 0; i < helpLines; i++)
+                    {
+                        helpPoints.Add(new Program.Point2D(inventorysize.min.x + 3, inventorysize.min.y + 2 + i * 2));
+                    }
+                    int l = 0;
+                    foreach (Program.Point2D item in helpPoints)
+                    {
+                        Console.SetCursorPosition((int)item.x, (int)item.y);
+                        Console.Write(helpText[l]);
+                        l++;
+                    }
+                    //help lines end
+
+                    break;
                 case SidePanel.Inventory:
                     for (int i = inventorysize.min.x; i < inventorysize.max.x; i++)
                     {
@@ -261,7 +309,7 @@ namespace HelloNamespace
                     List<Program.Point2D> positions = new List<Program.Point2D>();
                     for (int i = 0; i < freeLines; i++)
                     {
-                        positions.Add(new Program.Point2D(inventorysize.min.x + 2, inventorysize.min.y + 2 + i * 2));
+                        positions.Add(new Program.Point2D(inventorysize.min.x + 3, inventorysize.min.y + 2 + i * 2));
                     }
                     int v = 0;
                     foreach (Program.Point2D item in positions)
