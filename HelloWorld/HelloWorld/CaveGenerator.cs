@@ -117,7 +117,7 @@ namespace HelloNamespace
 
             }
         }
-        public int[,] CreateCave(int size_x, int size_y, int probability, int iterations = 300, bool old = false, float deathLimit = 5, float birthLimit = 7)
+        public int[,] CreateCave(int size_x, int size_y, int probability, int iterations = 300, bool old = false, float deathLimit = 5, float birthLimit = 7, bool showprogress = false)
         {
             Map = new int[size_x, size_y];
 
@@ -136,6 +136,12 @@ namespace HelloNamespace
             for (int i = 0; i <= iterations; i++)
             {
                 Map = doSimulationStep(Map, deathLimit, birthLimit);
+                if (showprogress)
+                {
+                    Console.Clear();
+                    Program.Print2dIntArray(blowUpArray(Map));
+                    System.Threading.Thread.Sleep(100);
+                }
             }
 
 
@@ -170,12 +176,18 @@ namespace HelloNamespace
 
             return TileMap;
         }
-        public int[,] iterateCave(int[,] map, int iterations, float deathLimit = 5, float birthLimit = 7)
+        public int[,] iterateCave(int[,] map, int iterations, float deathLimit = 5, float birthLimit = 7, bool showSteps = false)
         {
             int[,] t_map = map;
             for (int i = 1; i <= iterations; i++)
             {
                 t_map = doSimulationStep(map, deathLimit, birthLimit);
+                if (showSteps)
+                {
+                    Console.Clear();
+                    Program.Print2dIntArray(blowUpArray(Map));
+                    System.Threading.Thread.Sleep(100);
+                }
             }
             return t_map;
         }

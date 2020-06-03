@@ -482,8 +482,8 @@ namespace HelloNamespace
                     break;                    
                 case MenuItems.cave:
                     CaveGenerator CG = new CaveGenerator();
-                    int[,] map = CG.CreateCave(30, 30, 70, 2);
-                    map = CG.iterateCave(map, 2, 5, 5);
+                    int[,] map = CG.CreateCave(30, 15, 75, 2, false, 5, 7, true);
+                    map = CG.iterateCave(map, 5, 5, 5, true);
                     //Print2dIntArray(map);
                     CG.WriteMap(map, "test");
                     Console.WriteLine();
