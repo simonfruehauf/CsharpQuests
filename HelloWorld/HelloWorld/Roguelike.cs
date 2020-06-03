@@ -21,6 +21,7 @@ namespace HelloNamespace
         ConsoleKeyInfo currentInput;
         public Tile player;
         static Random rnd = new Random();
+        List<Enemy> enemies = new List<Enemy>();
         enum SidePanel
         {
             Inventory,
@@ -68,13 +69,25 @@ namespace HelloNamespace
                 currentInput = Console.ReadKey(true);
                 switch (currentInput.Key)
                 {
-                    case ConsoleKey.F:                        //DEBUG
-                        player.player.inventory.Add(Artefacts[rnd.Next(0, Artefacts.Count-1)]);
-                        //redraw inventory if open
-                        if (sidePanel == SidePanel.Inventory && lastpage)
-                        {
-                            DrawPanel(sidePanel);
-                        }
+                    case ConsoleKey.F:  //DEBUG
+
+
+                        SpawnRandomEnemy();
+                        //Pathfinder pf = new Pathfinder();
+                        //Tile target = map[player.standingOn.position.intx+7, player.standingOn.position.inty + 1];
+                        //List<Program.Point2D> line = pf.bresenham(player, target);
+                        //foreach (Program.Point2D point in line)
+                        //{
+                        //    Console.SetCursorPosition(point.intx, point.inty);
+                        //    Console.Write("Ö");
+                        //}
+                        //List<Program.Point2D> path = new List<Program.Point2D>();
+                        //path = pf.FindPath(player.standingOn.position, new Program.Point2D(player.standingOn.position.intx, player.standingOn.position.inty + 5), pf.makeWalkable(map, target));
+                        //foreach (Program.Point2D item in path)
+                        //{
+                        //    Console.SetCursorPosition(item.intx, item.inty);
+                        //    Console.Write("Ö");
+                        //}
                         break;
                     case ConsoleKey.Tab:
                         int panels = (Enum.GetNames(typeof(SidePanel)).Length);
@@ -123,6 +136,9 @@ namespace HelloNamespace
                         player.Move(map, Direction.w, false);
                         endround = true;
                         break;
+                    case ConsoleKey.Spacebar: // SKIP
+                        endround = true;
+                        break;
                     case ConsoleKey.Escape:
                         running = false;
                         Console.Clear();
@@ -134,19 +150,70 @@ namespace HelloNamespace
                 if (endround)
                 {
                     //do AI
+                    if (enemies != null)
+                    {
+                        Pathfinder pf = new Pathfinder();
+                        foreach (Enemy enemy in enemies)
+                        {
+                            if (pf.distance(enemy.tile, player) < enemy.sightRadius)
+                            {
+                                enemy.target = player;
+                                //sees player
+                            }
+                            else if (pf.distance(enemy.tile, player) > enemy.sightRadius*2)
+                            {
+                                enemy.target = null;
+                                //lost player
+                            }
+                            if (enemy.target != null)
+                            {
+                                Random rnd = new Random();
+                                int chance = rnd.Next(10, 100);
+                                if (chance <= enemy.speed *100) //walk tick
+                                {
+                                    enemy.MoveTowards(map, enemy.target);
+                                    int i = 1;
+                                    while (enemy.speed * 100 - chance*i > 100) 
+                                    {
+                                        enemy.MoveTowards(map, enemy.target);
+                                        i++;
+                                    }
+                                }
+                            }
+                            Thread.Sleep(10);
+                        }
+                    }
                     Thread.Sleep(10);
                 }
             } while (running);
         }
         public void SpawnEnemy(Enemy e)
         {
-
+            Tile enemy = new Tile('Q', new Program.Point2D(0, 0), Tile.TileType.Character, ConsoleColor.Red);
+            enemy.enemy = e;
+            enemy.enemy.tile = enemy;
+            enemies.Add(enemy.enemy);
         }
 
         public void SpawnRandomEnemy()
         {
-            Tile enemy = new Tile('Q', new Program.Point2D(0, 0), Tile.TileType.Character, ConsoleColor.Red);
-            enemy.enemy = enemies[rnd.Next(0, enemies.Count())];
+            int x, y;
+            x = rnd.Next(player.position.intx - 10, player.position.intx + 20);
+            y = rnd.Next(player.position.inty - 10, player.position.inty + 20);
+            if (Pathfinder.IsValidCoord(x, y, map) && (x != player.position.intx && y != player.position.inty))
+            {
+                SpawnRandomEnemy(new Program.Point2D(x, y));
+            }
+        }
+        public void SpawnRandomEnemy(Program.Point2D p)
+        {
+            Tile thisEnemy = new Tile('Q', p, Tile.TileType.Character, ConsoleColor.Red);
+            thisEnemy.enemy = pregenEnemies[rnd.Next(0, pregenEnemies.Count())];
+            thisEnemy.enemy.tile = thisEnemy;
+            enemies.Add(thisEnemy.enemy);
+            thisEnemy.enemy.tile.standingOn = map[thisEnemy.enemy.tile.position.intx, thisEnemy.enemy.tile.position.inty];
+            map[thisEnemy.enemy.tile.position.intx, thisEnemy.enemy.tile.position.inty] = thisEnemy.enemy.tile;
+            thisEnemy.DrawSelf(map);
         }
         #region Pregen
         public List<Item> Artefacts = new List<Item>()
@@ -160,9 +227,12 @@ namespace HelloNamespace
             new Weapon("Filler Object", "", 19, 60, 20, 2),
         };
 
-        public List<Enemy> enemies = new List<Enemy>()
+        public List<Enemy> pregenEnemies = new List<Enemy>()
         {
             new Enemy("Skeleton", 3, 2, 3, 3, null, null, Enemy.Types.melee),
+            new Enemy("Ghoul", 3, 2, 3, 3, null, null, Enemy.Types.melee),
+            new Enemy("Goblin", 3, 2, 3, 3, null, null, Enemy.Types.melee),           
+            new Enemy("Ghost", 3, 2, 3, 3, null, null, Enemy.Types.melee),
             new Enemy("Zombie", 5, 1, 2, rnd.Next(1,3), null, null, Enemy.Types.melee)
 
         };
@@ -603,7 +673,7 @@ namespace HelloNamespace
             Item,  //can be picked up
             Object //can be interacted with
         }
-        Program.Point2D position;
+        public Program.Point2D position;
         public TileType type;
 
         public void TileDie()
@@ -624,6 +694,67 @@ namespace HelloNamespace
         }
 
         public Tile standingOn;
+        public void MoveTeleport(Tile[,] map, Tile target, bool ignorewalls = false)
+        {
+            MoveTeleport(map, new Program.Point2D(target.position.intx, target.position.inty), ignorewalls);
+        }
+        public void MoveTeleport(Tile[,] map, Program.Point2D point, bool ignorewalls = false) //teleport
+        {
+            Program.Point2D moveto = point;
+            if (!(moveto.x > map.GetLength(0) - 1 || moveto.x < 1 || moveto.y > map.GetLength(1) - 1 || moveto.y < 1)) //borders
+            {
+                Tile goal = map[(int)moveto.x, (int)moveto.y];
+
+                if (!ignorewalls && (map[(int)moveto.x, (int)moveto.y].type == TileType.Floor || map[(int)moveto.x, (int)moveto.y].type == TileType.Item))
+                {
+                    Console.SetCursorPosition((int)position.x, (int)position.y); //select self
+                    map[(int)position.x, (int)position.y] = standingOn; //set tile beneath to standing on
+                    if (map[(int)position.x, (int)position.y].color != null)
+                    {
+                        Console.ForegroundColor = map[(int)position.x, (int)position.y].color; //set color of tile
+
+                    }
+                    Console.Write(map[(int)position.x, (int)position.y].symbol); //draw tile beneath
+                    Console.ResetColor();
+
+                    standingOn = map[(int)moveto.x, (int)moveto.y]; //set tile beneath to goal
+                    if (goal.type == TileType.Item && type == TileType.Player)
+                    {
+                        map[(int)position.x, (int)position.y].item.Pickup(player); //pickup if we are player & goal is item
+                    }
+
+                    map[(int)moveto.x, (int)moveto.y] = this; //move ourselves on map
+                    if (this.player != null)
+                    {
+                        map[(int)moveto.x, (int)moveto.y].player = this.player; //move player?
+
+                    }
+
+                    position = moveto; //update our own position
+                    Console.ForegroundColor = color;
+                    Console.SetCursorPosition((int)moveto.x, (int)moveto.y); //draw ourselves
+                    Console.Write(symbol);
+                    Console.ResetColor();
+                }
+                else if (map[(int)moveto.x, (int)moveto.y].player != null )
+                {
+                    //TODO
+
+                    //melee player
+                    map[(int)moveto.x, (int)moveto.y].player.Damage(0, this);
+                    Console.Beep();
+                }
+                Console.SetCursorPosition(0, 0);
+            }
+
+        }
+        public void DrawSelf(Tile[,] map)
+        {
+            Console.ForegroundColor = map[(int)position.x, (int)position.y].color;
+            Console.SetCursorPosition((int)position.x, (int)position.y);
+            Console.Write(map[(int)position.x, (int)position.y].symbol);
+            Console.ResetColor();
+        }
         public void Move(Tile[,] map, Roguelike.Direction dir, bool ignorewalls = false)
         {
             Program.Point2D moveto;
@@ -664,21 +795,25 @@ namespace HelloNamespace
                     }
 
                     map[(int)moveto.x, (int)moveto.y] = this; //move ourselves on map
-
+                    if (this.player != null)
+                    {
+                        map[(int)moveto.x, (int)moveto.y].player = this.player; //move player?
+                    }
                     position = moveto; //update our own position
                     Console.ForegroundColor = color;
                     Console.SetCursorPosition((int)moveto.x, (int)moveto.y); //draw ourselves
                     Console.Write(symbol);
                     Console.ResetColor();
                 }
-                else
+                else if (map[(int)moveto.x, (int)moveto.y].enemy != null)
                 {
-
+                    //TODO
+                    //melee enemy
+                    map[(int)moveto.x, (int)moveto.y].enemy.Damage(0, this);
+                    Console.Beep();
                 }
                 Console.SetCursorPosition(0, 0);
             }
-            
-
         }
 
     }
@@ -744,7 +879,7 @@ namespace HelloNamespace
 
         }
 
-        void Damage(int d, Tile attacker)
+        public void Damage(int d, Tile attacker)
         {
             if (health - d <= 0)
             {
@@ -788,22 +923,28 @@ namespace HelloNamespace
 
     public class Enemy
     {
-        string name;
-        int damage;
-        int maxHealth;
-        int health;
+        internal Tile tile { get; set; }
+        internal string name;
+        internal int damage;
+        internal int maxHealth;
+        internal int health;
         public List<Item> drops; //for material drops
-        Item loot; //for direct drop, e.g. weapon
-        int expdrop;
+        internal Item loot; //for direct drop, e.g. weapon
+        internal int expdrop;
         public int golddrop;
+        internal Tile target;
+        internal List<Program.Point2D> path;
+        //internal List<Roguelike.Direction> path = new List<Roguelike.Direction>();
+        public int sightRadius;
+        public float speed; //tiles or attacks per tick, 1 == 1 tile, 3 == 3 tiles
         public enum Types
         {
             ranged, 
             melee,
             other
         }
-        Types type;
-        public Enemy(string n, int h, int da, int xp, int g, List<Item> d = null, Item l = null, Types t = Types.melee)
+        internal Types type;
+        public Enemy(string n, int h, int da, int xp, int g, List<Item> d = null, Item l = null, Types t = Types.melee, Tile tl = null, int sr = 5, float sp = 0.75f)
         {
             damage = da;
             name = n;
@@ -814,8 +955,11 @@ namespace HelloNamespace
             expdrop = xp;
             golddrop = g;
             type = t;
+            tile = tl;
+            sightRadius = sr;
+            speed = sp;
         }
-        void Damage(int d, Tile attacker)
+        public void Damage(int d, Tile attacker)
         {
             if (health - d <= 0)
             {
@@ -826,7 +970,7 @@ namespace HelloNamespace
                 health -= d;
             }
         }
-        void Heal(int h, Tile healer)
+        public void Heal(int h, Tile healer)
         {
 
             if (health + h > maxHealth)
@@ -839,7 +983,7 @@ namespace HelloNamespace
             }
 
         }
-        void Die(Tile killer = null)
+        public void Die(Tile killer = null)
         {
             if (killer != null && killer.player != null)
             {
@@ -847,7 +991,70 @@ namespace HelloNamespace
                 killer.player.GainLoot(this);
             }
         }
-
+        void SetTarget(Tile t)
+        {
+            target = t;
+        }
+        void SetTarget(Enemy e)
+        {
+            target = e.tile;
+        }
+        void PlanPath(Tile[,] m, Tile t = null)
+        {
+            if (t == null)
+            {
+                t = target;
+            }
+            Pathfinder pf = new Pathfinder();
+            path = pf.FindPath(new Program.Point2D(tile.position.x, tile.position.y), new Program.Point2D(t.position.x, t.position.y), pf.makeWalkable(m, t));
+            if (path != null)
+            {
+                path = path.Distinct().ToList();
+            }
+        }
+        public void MoveTowards(Tile[,] m, Tile target)
+        {
+            Pathfinder pf = new Pathfinder();
+            PlanPath(m, target);
+            if (path != null)
+            {
+                tile.MoveTeleport(m, path[0]);
+                path.RemoveAt(0);
+            }
+            
+        }
+    }
+    public class Boss : Enemy
+    {
+        public Boss(string n, int h, int da, int xp, int g, List<Item> d = null, Item l = null, Types t = Types.melee) : base(n,h,da,xp,g,d,l,t)
+        {
+            damage = da;
+            name = n;
+            maxHealth = h;
+            health = h;
+            loot = l;
+            drops = d;
+            expdrop = xp;
+            golddrop = g;
+            type = t;
+        }
     }
 
+    public class Minion : Enemy
+    {
+        Enemy owner; //owning enemy
+        public Minion(string n, int h, int da, int xp, int g, List<Item> d = null, Item l = null, Types t = Types.melee, Enemy boss = null) : base(n, h, da, xp, g, d, l, t)
+        {
+            damage = da;
+            name = n;
+            maxHealth = h;
+            health = h;
+            loot = l;
+            drops = d;
+            expdrop = xp;
+            golddrop = g;
+            type = t;
+            owner = boss;
+        }
+    }
 }

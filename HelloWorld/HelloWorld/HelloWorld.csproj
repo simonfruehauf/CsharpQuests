@@ -46,6 +46,7 @@
     <Compile Include="BuildMenu.cs" />
     <Compile Include="Cisharpmon.cs" />
     <Compile Include="MapReader.cs" />
+    <Compile Include="Pathfinder.cs" />
     <Compile Include="Roguelike.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

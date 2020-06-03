@@ -227,10 +227,13 @@ namespace HelloNamespace
         public struct Point2D
         {
             public float x, y;
+            public int intx, inty;
             public Point2D(float x_value, float y_value)
             {
                 x = x_value;
                 y = y_value;
+                intx = (int)x;
+                inty = (int)y;
             }
         }
         public struct Vector2D
