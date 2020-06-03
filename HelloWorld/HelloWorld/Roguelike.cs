@@ -944,7 +944,7 @@ namespace HelloNamespace
             other
         }
         internal Types type;
-        public Enemy(string n, int h, int da, int xp, int g, List<Item> d = null, Item l = null, Types t = Types.melee, Tile tl = null, int sr = 5, float sp = 0.75f)
+        public Enemy(string n, int h, int da, int xp, int g, List<Item> d = null, Item l = null, Types t = Types.melee, Tile tl = null, int sr = 5                                                                                                                                                                                                                                                                                                                             , float sp = 0.75f)
         {
             damage = da;
             name = n;

@@ -16,7 +16,9 @@ namespace HelloNamespace
             int counter = 1;
             List<Tuple<Point2D, int>> points = new List<Tuple<Point2D, int>>();
             points.Add(new Tuple<Point2D, int>(new Point2D(to.intx, to.inty), counter));
-
+            //Console.SetCursorPosition(points[0].Item1.intx, points[0].Item1.inty);
+            
+            //Console.Write(points[0].Item2);
             while (!pathfound)
             {
                 //create list of adjacent cells (from goal) + counter
@@ -25,6 +27,7 @@ namespace HelloNamespace
                 Point2D[] valid = ValidMovements(diagonal);
                 List<Tuple<Point2D, int>> t_points = new List<Tuple<Point2D, int>>();
                 t_points = points;
+                int max = 50 * map.Length;
                 foreach (Tuple<Point2D, int> tuplepoint in t_points.ToList())
                 {
                     foreach (Point2D p in valid.ToList())
@@ -37,7 +40,7 @@ namespace HelloNamespace
 
                             foreach (Tuple<Point2D, int> px in points)
                             {
-                                if (points.Count > 1000)
+                                if (points.Count > max)
                                 {
                                     return null;
                                 }
@@ -55,7 +58,7 @@ namespace HelloNamespace
                                 }
                                 //Console.SetCursorPosition(tuplepoint.Item1.intx, tuplepoint.Item1.inty);
                                 //Console.Write(tuplepoint.Item2);
-                                if (counter > 15)
+                                if (counter > max)
                                 {
                                     return null;
                                 }
@@ -66,6 +69,11 @@ namespace HelloNamespace
                     }
                 }
                 t_points = points;
+                
+                if (counter >max)
+                {
+                    return null;
+                }
                 foreach (Tuple<Point2D, int> item in t_points.ToList())
                 {
                     if (IsValidCoord(item.Item1.intx, item.Item1.inty, map))
@@ -94,12 +102,12 @@ namespace HelloNamespace
                 }
 
 
-                //foreach (Tuple<Point2D, int> item in points)
-                //{
-                //    Console.SetCursorPosition(item.Item1.intx, item.Item1.inty);
-                //    Console.Write(item.Item2);
-                //    System.Threading.Thread.Sleep(10);
-                //}
+                foreach (Tuple<Point2D, int> item in points)
+                {
+                    //Console.SetCursorPosition(item.Item1.intx, item.Item1.inty);
+                    //Console.Write(item.Item2);
+                    //System.Threading.Thread.Sleep(10);
+                }
             }
 
             //go through points and put them in paths as a single list
@@ -141,14 +149,18 @@ namespace HelloNamespace
                 }
                 foreach (Point2D p in valid2.ToList())
                 {
-                    int test = m_map[current.Item1.intx + p.intx, current.Item1.inty + p.inty];
-                    //Console.SetCursorPosition(current.Item1.intx + p.intx, current.Item1.inty + p.inty);
-                    //Console.Write(":");
-                    if (current.Item2 > test && test != 0)
+                    if (IsValidCoord(current.Item1.intx + p.intx, current.Item1.inty + p.inty, map))
                     {
-                        t_current = new Tuple<Point2D, int>(new Point2D(current.Item1.intx + p.intx, current.Item1.inty + p.inty), m_map[current.Item1.intx + p.intx, current.Item1.inty + p.inty]);
+                        int test = m_map[current.Item1.intx + p.intx, current.Item1.inty + p.inty];
+                        //Console.SetCursorPosition(current.Item1.intx + p.intx, current.Item1.inty + p.inty);
+                        //Console.Write(":");
+                        if (current.Item2 >= test && test != 0)
+                        {
+                            t_current = new Tuple<Point2D, int>(new Point2D(current.Item1.intx + p.intx, current.Item1.inty + p.inty), m_map[current.Item1.intx + p.intx, current.Item1.inty + p.inty]);
 
+                        }
                     }
+                    
 
                 }
 

@@ -156,6 +156,7 @@ namespace HelloNamespace
             map,
             name,
             negative,
+            pathfinder,
             potionseller,
             randomnumber,
             readmap,
@@ -569,6 +570,42 @@ namespace HelloNamespace
                     csm.Play();
                     Console.ReadKey();
                     break;
+                case MenuItems.pathfinder:
+                    Pathfinder pf = new Pathfinder();
+                    Console.ReadLine();
+                    int[,] m_map = ReadMap();
+                    if (m_map == null)
+                    {
+                        return;
+                    }
+                    Console.ReadLine();
+                    MapReader MP = new MapReader();
+                    Console.Clear();
+                    bool[,] b_map = pf.makeWalkable(m_map, new List<int>() { 0 });
+                    MP.Draw(b_map);
+                    Console.SetCursorPosition(0, 0);
+                    Console.Write("S"); 
+                    Console.SetCursorPosition(b_map.GetLength(0)-1, b_map.GetLength(1)-1);
+                    Console.Write("G");
+
+                    List<Point2D> path = pf.FindPath(new Point2D(0, 0), new Point2D(b_map.GetLength(0)-1, b_map.GetLength(1)-1), b_map);
+                    System.Threading.Thread.Sleep(100);
+                    if (path == null)   
+                    {
+                        Console.WriteLine();
+                        Console.WriteLine("No Path.");
+                    }
+                    else
+                    {
+                        foreach (Point2D point in path)
+                        {
+                            Console.SetCursorPosition(point.inty, point.intx);
+                            Console.Write(".");
+                            System.Threading.Thread.Sleep(100);
+                        }
+                    }
+                    Console.Read();
+                    break;
                 case MenuItems.quit:
                     Environment.Exit(1);
                     break;
@@ -577,7 +614,7 @@ namespace HelloNamespace
             }
             Menu();
         }
-        static void ReadMap()
+        static int[,] ReadMap()
         {
             MapReader MP = new MapReader();
             string map = Read.String("Input the map to read: ");
@@ -586,12 +623,15 @@ namespace HelloNamespace
             {
                 Console.WriteLine("Empty file.");
                 Console.ReadLine();
-                return;
+                return null;
             }
             //MP.Write(m);
+            Console.Clear();
+            Console.SetCursorPosition(0, 0);
             MP.Draw(m);
-            MP.Blink(m, new Point2D(4, 4), m[4, 4], 2, 20); 
+            //MP.Blink(m, new Point2D(4, 4), m[4, 4], 2, 20); 
             Console.ReadKey(true);
+            return m;
         }
         public static void DrawDivider(string a_divider = divider)
         {
@@ -1681,7 +1721,7 @@ namespace HelloNamespace
                 RedrawArrow(itemIndex);
                 do
                 {
-                    keyinfo = Console.ReadKey().Key;
+                    keyinfo = Console.ReadKey(true).Key;
                     switch (keyinfo)
                     {
                         case ConsoleKey.LeftArrow:

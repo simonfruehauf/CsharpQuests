@@ -117,10 +117,28 @@ namespace HelloNamespace
                 flip = !flip;
             }
         }
+        public void Draw(bool[,] map)
+        {
+            int counter = 0;
+            for (int i = 0; i < map.GetLength(0); i++)
+            {
+                for (int j = 0; j < map.GetLength(1); j++)
+                {
+                    if (counter >= map.GetLength(1)) //check if we wrote a whole row
+                    {
+                        Console.WriteLine();
+                        counter = 0;
+                    }
+                    counter++;
 
+                    Console.Write((map[i, j] ? " " : "#"));
+                }
+            }
+
+
+        }
         public void Draw(int[,] map)
         {
-            Console.WriteLine();
             int counter = 0;
             for (int i = 0; i < map.GetLength(0); i++)
             {
