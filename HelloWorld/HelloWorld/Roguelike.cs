@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
-
+using static HelloNamespace.RoguelikeSaver;
 
 namespace HelloNamespace
 {
@@ -12,22 +12,36 @@ namespace HelloNamespace
     {
         string inv = "Inventory";
         string sts = "Stats";
+        string pse = "Game Paused";
         string titleScreen = "Welcome to the world of";
+        char borderchar = '▓';
         string worldName;
+
         Tile[,] map;
         Map mapsize;
+        Map pausesize;
         Map inventorysize;
         bool running = true;
         ConsoleKeyInfo currentInput;
         public Tile player;
         static Random rnd = new Random();
         List<Enemy> enemies = new List<Enemy>();
+        CaveGenerator cvg = new CaveGenerator();
+
         enum SidePanel
         {
             Inventory,
             Stats,
             Help
         }
+        enum PauseOptions
+        {
+            Resume,
+            Other,
+            Quit,
+
+        }
+        int pauseSelector;
         SidePanel sidePanel;
         int sidePanelPage;
         bool lastpage = false;
@@ -40,14 +54,68 @@ namespace HelloNamespace
         };
         public Roguelike()
         {
-            WordMaker wm = new WordMaker();
-            worldName = UppercaseFirst(wm.WordFinder(rnd.Next(3, 10)));
-            worldName.ToUpperInvariant();
-            titleScreen += " " + worldName + "!";
-            CaveGenerator cvg = new CaveGenerator();
-            Console.Clear();
-            DrawScreen();
-            DrawMap(cvg, true, true);
+            if (System.IO.Directory.Exists(RoguelikeSaver.savefiles))
+            {
+                int count = System.IO.Directory.GetFiles(RoguelikeSaver.savefiles).Length;
+                if (count > 0)
+                {
+                    string toread = System.IO.Directory.GetFiles(RoguelikeSaver.savefiles).First();
+                    worldName = toread.Split('-')[1].Split('.').First();
+                    map = ReadMap(worldName);
+                    //find player
+                    titleScreen += " " + worldName + "!";
+                    foreach (Tile item in map)
+                    {
+                        if (item.player != null)
+                        {
+                            player = item;
+                            
+                        }
+                        if (item.enemy != null)
+                        {
+                            item.enemy.tile = item;
+                            enemies.Add(item.enemy);
+                        }
+                    }
+                    //end find player
+                    Console.Clear();
+                    DrawScreen();
+                    DrawMap(map, true, true);
+                }
+                else
+                {
+                    WordMaker wm = new WordMaker();
+
+                    worldName = UppercaseFirst(wm.WordFinder(rnd.Next(4, 10)));
+                    worldName.ToUpperInvariant();
+                    if (rnd.Next(0, 10) > 8)
+                    {
+                        worldName += " " + UppercaseFirst(wm.WordFinder(rnd.Next(3, 4)));
+                    }
+                    titleScreen += " " + worldName + "!";
+
+                    Console.Clear();
+                    DrawScreen();
+                    DrawMap(cvg, true, true);
+                }
+            }
+            else
+            {
+                WordMaker wm = new WordMaker();
+
+                worldName = UppercaseFirst(wm.WordFinder(rnd.Next(4, 10)));
+                worldName.ToUpperInvariant();
+                if (rnd.Next(0, 10) > 8)
+                {
+                    worldName += " " + UppercaseFirst(wm.WordFinder(rnd.Next(3, 4)));
+                }
+                titleScreen += " " + worldName + "!";
+
+                Console.Clear();
+                DrawScreen();
+                DrawMap(cvg, true, true);
+            }
+            
             sidePanel = SidePanel.Inventory;
             for (int i = 0; i < 100; i++)
             {
@@ -140,8 +208,23 @@ namespace HelloNamespace
                         endround = true;
                         break;
                     case ConsoleKey.Escape:
-                        running = false;
-                        Console.Clear();
+                        //display pause
+
+                        switch (Pause())
+                        {
+                            case PauseOptions.Other: //???
+                            case PauseOptions.Resume: //resume
+                                DrawMap(map, true, true);
+                                break;
+                            case PauseOptions.Quit: //exit
+                                running = false;
+                                RoguelikeSaver.SaveMap(map, worldName);
+                                Console.Clear();
+                                break;
+                            default:
+                                break;
+                        }
+                        
                         break;
                     default:
                         break;
@@ -186,6 +269,113 @@ namespace HelloNamespace
                     Thread.Sleep(10);
                 }
             } while (running);
+        }
+        PauseOptions Pause()
+        {
+            //draw box
+            DrawPause();
+            //select stuff
+            return SelectPause();
+            
+
+            
+        }
+        PauseOptions SelectPause()
+        {
+            int pauseOptions = Enum.GetNames(typeof(PauseOptions)).Length;
+            bool exit = false;
+            //draw
+            List<Program.Point2D> positions = new List<Program.Point2D>();
+            string arrow = "<<<";
+            int j = pausesize.min.x;
+            int k = pausesize.min.y;
+            int maxwordlength = 13;
+            int topbuffer = 5;
+            int arrowbuffer = 3;
+            int titlex = (j + (pausesize.max.x - j)/2) - pse.Length/2;
+            positions.Add(new Program.Point2D(titlex, k+1)); //title
+
+            for (int i = 1; i < pauseOptions+1; i++)
+            {
+                if (i*2 < pausesize.max.x)
+                {
+                    positions.Add(new Program.Point2D(j+topbuffer, k + 2*i ));
+                }
+            }
+            int v = 0;
+
+            foreach (Program.Point2D item in positions)
+            {
+
+                Console.SetCursorPosition((int)item.x, (int)item.y);
+                if (v != 0)
+                {
+                    PauseOptions pauseItem = (PauseOptions)v - 1;
+                    Console.Write(pauseItem.ToString());
+                }
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.Write(pse);
+                    Console.ResetColor();
+                }
+                v++;
+            }
+            positions.RemoveAt(0);
+            //select
+
+            do
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.SetCursorPosition((int)positions[pauseSelector].x + arrowbuffer + maxwordlength, (int)positions[pauseSelector].y); //current position
+                Console.Write(arrow);
+                Console.ResetColor();
+
+
+                ConsoleKeyInfo input = Console.ReadKey(true);
+                switch (input.Key)
+                {
+                    case ConsoleKey.UpArrow:
+                        if ((pauseSelector % pauseOptions) - 1 < 0)
+                        {
+                            pauseSelector = pauseSelector + (pauseOptions - 1);
+
+                            if (pauseSelector >= pauseOptions)
+                            {
+                                pauseSelector = pauseOptions - 1;
+                            }
+                        }
+                        else
+                        {
+                            pauseSelector = ((pauseSelector - 1) % pauseOptions + pauseOptions) % pauseOptions; // keeps it between 0 and x and not -x and x
+                        }
+                        break;
+                    case ConsoleKey.DownArrow:
+                        if (pauseSelector + 1 >= pauseOptions)
+                        {
+
+                            pauseSelector = 0;
+                        }
+                        else
+                        {
+                            pauseSelector = (pauseSelector + 1) % pauseOptions;
+                        }
+                        break;
+                    case ConsoleKey.Enter:
+                        exit = true;
+                        break;
+                }
+                Console.SetCursorPosition(Console.CursorLeft - arrow.Length, Console.CursorTop);
+                for (int i = 0; i < arrow.Length; i++)
+                {
+                    Console.Write(" ");
+                }
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.SetCursorPosition((int)positions[pauseSelector].x + arrowbuffer + maxwordlength, (int)positions[pauseSelector].y); //current position
+                Console.Write(arrow);
+                Console.ResetColor();
+            } while (!exit);
+            return (PauseOptions)pauseSelector;
         }
         public void SpawnEnemy(Enemy e)
         {
@@ -284,12 +474,12 @@ namespace HelloNamespace
                         {
                             Console.ForegroundColor = ConsoleColor.Blue;
                             Console.SetCursorPosition(i, j);
-                            Console.Write('#');
+                            Console.Write(borderchar);
                         }
                         if (i == 2 * x / 3 && j < y)
                         {
                             Console.SetCursorPosition(i, j);
-                            Console.Write('#');
+                            Console.Write(borderchar);
                         }
                     }
                 }
@@ -308,7 +498,51 @@ namespace HelloNamespace
             Console.SetCursorPosition(0, 0);
             if (sleep)
             {
-                Thread.Sleep(200);
+                Thread.Sleep(100);
+            }
+        }
+        void DrawPause()
+        {
+            int x = Console.WindowWidth;  //120
+            int y = Console.WindowHeight; //30#            
+            mapsize = new Map(new Position(1, 1), new Position(((2 * x) / 3) - 1, y - 1));
+            pausesize = new Map(new Position(mapsize.min.x+ (mapsize.max.x/3), mapsize.min.y + (mapsize.max.y / 3)), new Position(mapsize.max.x - (mapsize.max.x / 3), mapsize.max.y - (mapsize.max.y / 3)));
+            for (int i = pausesize.min.x; i <= pausesize.max.x; i++)
+            {
+                for (int j = pausesize.min.y; j <= pausesize.max.y; j++)
+                {
+                    Console.BackgroundColor = ConsoleColor.Yellow;
+                    Console.ForegroundColor = ConsoleColor.Black;
+                    Console.SetCursorPosition(i, j);
+                    if (i == pausesize.min.x)
+                    {
+                        if (j == pausesize.min.y)
+                            Console.Write('┌');
+                        else if (j == pausesize.max.y)
+                            Console.Write("└");
+                        else
+                            Console.Write("│");
+                    }
+                    else if (i == pausesize.max.x)
+                    {
+                        if (j == pausesize.min.y)
+                            Console.Write("┐");
+                        else if (j == pausesize.max.y)
+                            Console.Write("┘");
+                        else
+                            Console.Write("│");
+                    }
+                    else if (j == pausesize.min.y || j == pausesize.max.y)
+                    {
+                        Console.Write('─');
+                    }
+                    else
+                    {
+                        Console.BackgroundColor = ConsoleColor.Black;
+                        Console.Write(" ");
+                    }
+                    Console.ResetColor();
+                }
             }
         }
         void DrawPanel(SidePanel panel = SidePanel.Inventory)
@@ -440,7 +674,6 @@ namespace HelloNamespace
                     break;
             }
         }
-
         void DrawMap(CaveGenerator c, bool replaceempty = false, bool drawplayer = false)
         {
 
@@ -469,7 +702,7 @@ namespace HelloNamespace
                     {
                         Console.SetCursorPosition(i, j);
                         Console.Write(map[i, j].symbol);
-                        Thread.Sleep(1);
+                        //Thread.Sleep(1);
                     }
                     if (drawplayer && map[i, j].type == Tile.TileType.Player)
                     {
@@ -486,8 +719,46 @@ namespace HelloNamespace
                 }
             }
 
-            //set player
 
+        }
+        void DrawMap(Tile[,] map, bool replaceempty = false, bool drawplayer = false)
+        {
+            Position titlepos = GetMiddle(worldName, mapsize, Axis.x);
+            Console.SetCursorPosition(titlepos.x, 0);
+            Console.BackgroundColor = ConsoleColor.White;
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.Write(worldName);
+            for (int i = mapsize.min.x; i <= mapsize.max.x; i++)
+            {
+                for (int j = mapsize.min.y; j < mapsize.max.y; j++)
+                {
+                    Console.ForegroundColor = map[i, j].color;
+                    if (map[i, j].type == Tile.TileType.Wall)
+                    {
+                        Console.SetCursorPosition(i, j);
+                        Console.Write(map[i, j].symbol);
+                        //Thread.Sleep(1);
+                    }
+                    if (drawplayer && map[i, j].type == Tile.TileType.Player)
+                    {
+                        Console.SetCursorPosition(i, j);
+                        Console.Write(map[i, j].symbol);
+                    }
+                    if (replaceempty && map[i, j].type == Tile.TileType.Floor)
+                    {
+                        Console.SetCursorPosition(i, j);
+
+                        Console.Write(map[i, j].symbol);
+                    }
+                    else
+                    {
+                        Console.SetCursorPosition(i, j);
+
+                        Console.Write(map[i, j].symbol);
+                    }
+                    Console.ResetColor();
+                }
+            }
         }
         int GetDistance(Map map_m, Axis ax)
         {
@@ -536,8 +807,9 @@ namespace HelloNamespace
             // Return char and concat substring.
             return char.ToUpper(s[0]) + s.Substring(1);
         }
-    }
 
+    }
+    [Serializable]
     public abstract class Item
     {
         public enum ItemType
@@ -568,14 +840,14 @@ namespace HelloNamespace
             p.inventory.Add(this);
         }
     }
-
+    [Serializable]
     public class Weapon : Item
     {
         int damage;
         int range;
         public Weapon(string n, string d, int slot, int dam, int slot2 = -1, int abilityindex = 0, int r = 0)
         {
-            if (slot2 !=-1)
+            if (slot2 != -1)
             {
                 equip = new Equipment(slot, slot2);
             }
@@ -589,8 +861,11 @@ namespace HelloNamespace
             if (r != 0)
             {
                 range = r;
-            } 
+            }
         }
+
+        private Weapon() //for XML
+        { }
         void Ability(int index)
         {
             switch (index)
@@ -632,9 +907,13 @@ namespace HelloNamespace
 
         }
     }
-
+    [Serializable]
     public class Tile
     {
+        private Tile() //for XML
+        {
+
+        }
 
         public Tile(char s, Program.Point2D pos, TileType t, ConsoleColor col = ConsoleColor.White)
         {
@@ -655,7 +934,7 @@ namespace HelloNamespace
             public possibleStatus name;
             public int length;
         }
-
+        
         public Item item;
         public Player player;
         public Enemy enemy;
@@ -849,7 +1128,8 @@ namespace HelloNamespace
             maxHealth = health;
             inventory = new List<Item>();
         }
-        
+        private Player() //for XML
+        { }
 
         int maxHealth;
         int health;
@@ -958,6 +1238,10 @@ namespace HelloNamespace
             tile = tl;
             sightRadius = sr;
             speed = sp;
+        }
+        private Enemy()
+        {
+
         }
         public void Damage(int d, Tile attacker)
         {
