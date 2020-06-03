@@ -689,7 +689,7 @@ namespace HelloNamespace
             map = c.invertMap(map);
             Program.Point2D start = c.findEmptyCell(map, true);
             //Program.Print2dIntArray(map, true, start.GetLength(0), start.GetLength(1));
-            map[(int)start.x, (int)start.y] = new Tile('@', new Program.Point2D((int)start.x, (int)start.y), Tile.TileType.Player, ConsoleColor.Red);
+            map[(int)start.x, (int)start.y] = new Tile('@', new Program.Point2D((int)start.x, (int)start.y), Tile.TileType.Player, ConsoleColor.Blue);
             map[(int)start.x, (int)start.y].standingOn = new Tile(' ', new Program.Point2D((int)start.x, (int)start.y), Tile.TileType.Floor);
             map[(int)start.x, (int)start.y].player = new Player(8,8,8);
             player = map[(int)start.x, (int)start.y];
