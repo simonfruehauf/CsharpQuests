@@ -44,6 +44,12 @@ namespace HelloNamespace
         int pauseSelector;
         SidePanel sidePanel;
         int sidePanelPage;
+        enum PlayerStats
+        {
+            Wisdom,
+            Strength,
+            Constitution
+        }
         bool lastpage = false;
         List<string> helpText = new List<string>()
         {
@@ -117,11 +123,11 @@ namespace HelloNamespace
             }
             
             sidePanel = SidePanel.Inventory;
-            for (int i = 0; i < 100; i++)
-            {
-                Item item = Artefacts[rnd.Next(0, Artefacts.Count - 1)];
-                item.Pickup(player.player);
-            }
+            //for (int i = 0; i < 100; i++) //Debug to populate player inventory
+            //{
+            //    Item item = Artefacts[rnd.Next(0, Artefacts.Count - 1)];
+            //    item.Pickup(player.player);
+            //}
             Play();
         }
 
@@ -236,29 +242,29 @@ namespace HelloNamespace
                     if (enemies != null)
                     {
                         Pathfinder pf = new Pathfinder();
-                        foreach (Enemy enemy in enemies)
+                        foreach (Enemy m_enemy in enemies)
                         {
-                            if (pf.distance(enemy.tile, player) < enemy.sightRadius)
+                            if (pf.distance(m_enemy.tile, player) < m_enemy.sightRadius)
                             {
-                                enemy.target = player;
+                                m_enemy.target = player;
                                 //sees player
                             }
-                            else if (pf.distance(enemy.tile, player) > enemy.sightRadius*2)
+                            else if (pf.distance(m_enemy.tile, player) > m_enemy.sightRadius*2)
                             {
-                                enemy.target = null;
+                                m_enemy.target = null;
                                 //lost player
                             }
-                            if (enemy.target != null)
+                            if (m_enemy.target != null)
                             {
                                 Random rnd = new Random();
                                 int chance = rnd.Next(10, 100);
-                                if (chance <= enemy.speed *100) //walk tick
+                                if (chance <= m_enemy.speed *100) //walk tick
                                 {
-                                    enemy.MoveTowards(map, enemy.target);
+                                    m_enemy.MoveTowards(map, m_enemy.target);
                                     int i = 1;
-                                    while (enemy.speed * 100 - chance*i > 100) 
+                                    while (m_enemy.speed * 100 - chance*i > 100) 
                                     {
-                                        enemy.MoveTowards(map, enemy.target);
+                                        m_enemy.MoveTowards(map, m_enemy.target);
                                         i++;
                                     }
                                 }
@@ -671,6 +677,69 @@ namespace HelloNamespace
                     Console.BackgroundColor = ConsoleColor.DarkBlue;
                     Console.ForegroundColor = ConsoleColor.DarkGray;
                     Console.Write(sts);
+                    int statLines = (inventorysize.max.y - inventorysize.min.y) / 2 - 2;
+                    int maxwordlength = 12;
+                    List<Program.Point2D> statPos = new List<Program.Point2D>();
+                    for (int i = 0; i < statLines; i++)
+                    {
+                        statPos.Add(new Program.Point2D(inventorysize.min.x + 8, inventorysize.min.y + 4 + i * 2));
+                    }
+                    int v2 = 0;
+                    foreach (Program.Point2D item in statPos)
+                    {
+                        int m_item = v2 * statLines;
+                        Console.SetCursorPosition((int)item.x, (int)item.y);
+                        string text = "";
+                        switch (v2)
+                        {
+                            case 0:
+                                if (player.player.str > 9)
+                                {
+                                    text = "Strength:     " + player.player.str;
+                                }
+                                else
+                                {
+                                    text = "Strength:      " + player.player.str;
+
+                                }
+                                Console.ForegroundColor = ConsoleColor.DarkRed;
+                                break;
+                            case 1:
+                                if (player.player.str > 9)
+                                {
+                                    text = "Constitution: " + player.player.str;
+                                }
+                                else
+                                {
+                                    text = "Constitution:  " + player.player.str;
+
+                                }
+                                Console.ForegroundColor = ConsoleColor.DarkGreen;
+                                break;
+                            case 2:
+                                if (player.player.str > 9)
+                                {
+                                    text = "Wisdom:       " + player.player.str;
+                                }
+                                else
+                                {
+                                    text = "Wisdom:        " + player.player.str;
+
+                                }
+                                Console.ForegroundColor = ConsoleColor.Black;
+                                break;
+                            default:
+                                text = "";
+                                break;
+                        }
+                            //Console.BackgroundColor = ConsoleColor.DarkGray;
+                            Console.Write(text);
+                        
+
+                        v2++;
+                    }
+                    Console.ResetColor();
+
                     break;
             }
         }
@@ -1133,7 +1202,7 @@ namespace HelloNamespace
 
         int maxHealth;
         int health;
-        int str, wis, con;
+        public int str, wis, con;
         private float hmod = 1.2f;
         public List<Item> inventory;
         
@@ -1201,13 +1270,14 @@ namespace HelloNamespace
         }
     }
 
+    [Serializable]
     public class Enemy
     {
         internal Tile tile { get; set; }
-        internal string name;
+        public string name;
         internal int damage;
         internal int maxHealth;
-        internal int health;
+        public int health;
         public List<Item> drops; //for material drops
         internal Item loot; //for direct drop, e.g. weapon
         internal int expdrop;

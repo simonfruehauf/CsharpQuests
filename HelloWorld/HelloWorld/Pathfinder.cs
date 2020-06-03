@@ -28,6 +28,10 @@ namespace HelloNamespace
                 List<Tuple<Point2D, int>> t_points = new List<Tuple<Point2D, int>>();
                 t_points = points;
                 int max = 50 * map.Length;
+                if (max > 1500)
+                {
+                    max = 1500;
+                }
                 foreach (Tuple<Point2D, int> tuplepoint in t_points.ToList())
                 {
                     foreach (Point2D p in valid.ToList())
@@ -40,7 +44,7 @@ namespace HelloNamespace
 
                             foreach (Tuple<Point2D, int> px in points)
                             {
-                                if (points.Count > max)
+                                if (points.Count > max/10)
                                 {
                                     return null;
                                 }
