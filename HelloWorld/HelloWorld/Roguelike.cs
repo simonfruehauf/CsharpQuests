@@ -15,7 +15,9 @@ namespace HelloNamespace
         string pse = "Game Paused";
         string titleScreen = "Welcome to the world of";
         char borderchar = '▓';
+        char barchar = '█';
         string worldName;
+        int healthbarsize = 1;
 
         Tile[,] map;
         Map mapsize;
@@ -34,6 +36,11 @@ namespace HelloNamespace
             Stats,
             Help
         }
+        enum Bars
+        {
+            Mana,
+            Health
+        }
         enum PauseOptions
         {
             Resume,
@@ -48,7 +55,10 @@ namespace HelloNamespace
         {
             Wisdom,
             Strength,
-            Constitution
+            Constitution,
+            Null,
+            Health,
+            Mana
         }
         bool lastpage = false;
         List<string> helpText = new List<string>()
@@ -122,23 +132,24 @@ namespace HelloNamespace
             Console.Clear();
             DrawScreen();
             DrawMap(cvg, true, true, true);
+
         }
         public void Play()
         {
-            Thread.Sleep(10);
-
+            Thread.Sleep(100);
+            DrawBars(Bars.Health);
+            DrawBars(Bars.Mana);
             do
             {
                 bool endround = false;
-
-                
                 currentInput = Console.ReadKey(true);
                 switch (currentInput.Key)
                 {
-                    case ConsoleKey.F:  //DEBUG
+                case ConsoleKey.F:  //DEBUG
+
+                        //SpawnRandomEnemy();
 
 
-                        SpawnRandomEnemy();
                         //Pathfinder pf = new Pathfinder();
                         //Tile target = map[player.standingOn.position.intx+7, player.standingOn.position.inty + 1];
                         //List<Program.Point2D> line = pf.bresenham(player, target);
@@ -230,6 +241,8 @@ namespace HelloNamespace
                 Thread.Sleep(10);
                 if (endround)
                 {
+                    DrawBars(Bars.Health);
+                    DrawBars(Bars.Mana);
                     //AI
                     if (enemies != null)
                     {
@@ -266,6 +279,7 @@ namespace HelloNamespace
                     }
                     Thread.Sleep(10);
                 }
+                player.player.EndOfRound();
             } while (running);
         }
         PauseOptions Pause()
@@ -334,6 +348,7 @@ namespace HelloNamespace
                 switch (input.Key)
                 {
                     case ConsoleKey.UpArrow:
+                    case ConsoleKey.W:
                         if ((pauseSelector % pauseOptions) - 1 < 0)
                         {
                             pauseSelector = pauseSelector + (pauseOptions - 1);
@@ -349,6 +364,7 @@ namespace HelloNamespace
                         }
                         break;
                     case ConsoleKey.DownArrow:
+                    case ConsoleKey.S:
                         if (pauseSelector + 1 >= pauseOptions)
                         {
 
@@ -459,51 +475,156 @@ namespace HelloNamespace
         {
             int x = Console.WindowWidth;  //120
             int y = Console.WindowHeight; //30
-            mapsize = new Map(new Position(1, 1), new Position(((2 * x) / 3) - 1, y - 1));
+            GetMapSize();
             inventorysize = new Map(new Position(((2 * x) / 3) + 1, 1), new Position(x - 1, y - 1));
 
 
-                #region drawborder
-                for (int i = 0; i <= x; i++)
+            #region drawborder
+            for (int i = 0; i <= x; i++)
+            {
+                for (int j = 0; j <= y; j++)
                 {
-                    for (int j = 0; j <= y; j++)
+                    if ((i == 0 || i == x - 1 || j == 0 || j == y - 1 || (j == y - 3 && i < inventorysize.min.x /*Bars*/)) && i != x && j != y)
                     {
-                        if ((i == 0 || i == x - 1 || j == 0 || j == y - 1) && i != x && j != y)
+                        Console.ForegroundColor = ConsoleColor.Blue;
+                        Console.SetCursorPosition(i, j);
+                        Console.Write(borderchar);
+                    }
+                    if (i == 2 * x / 3 && j < y) //sidebar line
+                    {
+                        Console.ForegroundColor = ConsoleColor.Blue;
+                        Console.SetCursorPosition(i, j);
+                        Console.Write(borderchar);
+                    }
+                    if (!isEven(mapsize.max.x / 2))
+                    {
+                        if ((i == mapsize.max.x / 2 || i == (mapsize.max.x / 2)-1) && j == mapsize.max.y + healthbarsize) //middle bottom
                         {
                             Console.ForegroundColor = ConsoleColor.Blue;
                             Console.SetCursorPosition(i, j);
                             Console.Write(borderchar);
                         }
-                        if (i == 2 * x / 3 && j < y)
+                    }
+                    else
+                    {
+                        if (i == mapsize.max.x / 2 && j == mapsize.max.y + healthbarsize) //middle bottom
                         {
+                            Console.ForegroundColor = ConsoleColor.Blue;
                             Console.SetCursorPosition(i, j);
                             Console.Write(borderchar);
                         }
                     }
+                    
                 }
-                Console.ResetColor();
-                #endregion
+            }
+            Console.ResetColor();
+            #endregion
 
 
 
-                //Console.SetCursorPosition(mapsize.min.x + 2, mapsize.min.y + 2);
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.SetCursorPosition(GetMiddle(titleScreen, mapsize, Axis.x).x, GetMiddle("", mapsize, Axis.y).x - 1);
-                Console.Write(titleScreen);
-                Console.ResetColor();
+            //Console.SetCursorPosition(mapsize.min.x + 2, mapsize.min.y + 2);
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.SetCursorPosition(GetMiddle(titleScreen, mapsize, Axis.x).x, GetMiddle("", mapsize, Axis.y).x - 1);
+            Console.Write(titleScreen);
+            Console.ResetColor();
 
-                
+
             Console.SetCursorPosition(0, 0);
             if (sleep)
             {
                 Thread.Sleep(100);
             }
         }
+        bool isEven(int i)
+        {
+            return i % 2 == 0;
+        }
+        void DrawBars(Bars bar)
+        {
+            List<int> lines = new List<int>(); //acts as y
+            for (int i = 1; i <= healthbarsize; i++)
+            {
+                lines.Add(mapsize.max.y + i);
+            }
+            ConsoleColor c;
+
+            int startx = 0;
+            int endx = 0; //acts as from to x
+            int current = 0;
+            int max = 0;
+            if (bar == Bars.Health)
+            {
+                startx = mapsize.min.x;
+                endx = isEven(mapsize.max.x / 2) ? (mapsize.max.x / 2) - 2 : (mapsize.max.x / 2) - 1;
+                c = ConsoleColor.DarkRed;
+                current = player.player.health;
+                max = player.player.maxHealth;
+            }
+            else
+            {
+                c = ConsoleColor.DarkBlue;
+                startx = isEven(mapsize.max.x / 2) ? (mapsize.max.x / 2) + 2 : (mapsize.max.x / 2) +1 ;
+                endx = mapsize.max.x + 1;
+                current = player.player.mana;
+                max = player.player.maxMana;
+            }
+          
+
+            int length = endx - startx;
+            int missing = max - current;
+            missing = missing * length / max; //normalize to 0-x range, missing out of x are empty
+            //invert if health
+            if (bar == Bars.Health)
+                {
+                    missing =  length - missing;
+                }
+            foreach (int iy in lines)
+            {
+                Console.SetCursorPosition(startx, iy);
+
+                for (int i = 0; i < length; i++)
+                {
+                    if (bar == Bars.Health)
+                    {
+                        if (i >= missing)//check if missing
+                        {
+                            Console.ForegroundColor = ConsoleColor.Black;
+                        }
+                        else
+                        {
+                            Console.ForegroundColor = c;
+                        }
+                    }
+                    else
+                    {
+                        if (i < missing)//check if missing
+                        {
+                            Console.ForegroundColor = ConsoleColor.Black;
+                        }
+                        else
+                        {
+                            Console.ForegroundColor = c;
+                        }
+                    }
+                    Console.Write(barchar);
+                }
+            }
+
+            lines.Clear();
+
+        }
+        void GetMapSize()
+        {
+            int x = Console.WindowWidth;  //120
+            int y = Console.WindowHeight; //30
+            mapsize = new Map(new Position(1, 1), new Position(((2 * x) / 3) - 1, y - 1 - healthbarsize - 1));
+
+        }
         void DrawPause()
         {
             int x = Console.WindowWidth;  //120
             int y = Console.WindowHeight; //30#            
-            mapsize = new Map(new Position(1, 1), new Position(((2 * x) / 3) - 1, y - 1));
+            GetMapSize();
             pausesize = new Map(new Position(mapsize.min.x+ (mapsize.max.x/3), mapsize.min.y + (mapsize.max.y / 3)), new Position(mapsize.max.x - (mapsize.max.x / 3), mapsize.max.y - (mapsize.max.y / 3)));
             for (int i = pausesize.min.x; i <= pausesize.max.x; i++)
             {
@@ -547,7 +668,7 @@ namespace HelloNamespace
         {
             int x = Console.WindowWidth;  //120
             int y = Console.WindowHeight; //30
-            mapsize = new Map(new Position(1, 1), new Position(((2 * x) / 3) - 1, y - 1));
+            GetMapSize();
             inventorysize = new Map(new Position(((2 * x) / 3) + 1, 1), new Position(x - 1, y - 1));
             switch (panel)
             {
@@ -658,7 +779,7 @@ namespace HelloNamespace
                     {
                         for (int j = inventorysize.min.y; j < inventorysize.max.y; j++)
                         {
-                            Console.BackgroundColor = ConsoleColor.DarkBlue;
+                            Console.BackgroundColor = ConsoleColor.DarkGray;
                             Console.SetCursorPosition(i, j);
                             Console.Write(' ');
                             Console.ResetColor();
@@ -666,8 +787,8 @@ namespace HelloNamespace
                     }
                     Position titlepos2 = GetMiddle(sts, inventorysize, Axis.x);
                     Console.SetCursorPosition(titlepos2.x, 2);
-                    Console.BackgroundColor = ConsoleColor.DarkBlue;
-                    Console.ForegroundColor = ConsoleColor.DarkGray;
+                    Console.BackgroundColor = ConsoleColor.DarkGray;
+                    Console.ForegroundColor = ConsoleColor.White;
                     Console.Write(sts);
                     int statLines = (inventorysize.max.y - inventorysize.min.y) / 2 - 2;
                     int maxwordlength = 12;
@@ -694,7 +815,9 @@ namespace HelloNamespace
                                     text = "Strength:      " + player.player.str;
 
                                 }
-                                Console.ForegroundColor = ConsoleColor.DarkRed;
+                                Console.BackgroundColor = ConsoleColor.DarkGray;
+                                Console.ForegroundColor = ConsoleColor.DarkGreen;
+
                                 break;
                             case 1:
                                 if (player.player.str > 9)
@@ -706,7 +829,8 @@ namespace HelloNamespace
                                     text = "Constitution:  " + player.player.str;
 
                                 }
-                                Console.ForegroundColor = ConsoleColor.DarkGreen;
+                                Console.BackgroundColor = ConsoleColor.DarkGray;
+                                Console.ForegroundColor = ConsoleColor.DarkRed;
                                 break;
                             case 2:
                                 if (player.player.str > 9)
@@ -718,7 +842,34 @@ namespace HelloNamespace
                                     text = "Wisdom:        " + player.player.str;
 
                                 }
-                                Console.ForegroundColor = ConsoleColor.Black;
+                                Console.BackgroundColor = ConsoleColor.DarkGray;
+                                Console.ForegroundColor = ConsoleColor.DarkBlue;
+                                break;
+                            case 3:
+                                text = "";
+                                break;
+                            case 4: // Health
+                                int healthlength = player.player.health.ToString().Length + " / ".Length + player.player.maxHealth.ToString().Length;
+                                text = "Health: ";
+                                for (int i = 0; i < maxwordlength - healthlength; i++) //adjust to how much health player has
+                                {
+                                    text = text + " ";
+                                }
+                                text = text + player.player.health + " / " + player.player.maxHealth;
+                                Console.BackgroundColor = ConsoleColor.DarkGray;
+                                Console.ForegroundColor = ConsoleColor.DarkRed;
+                                break;
+                            case 5: // Mana
+                                int manalength = player.player.mana.ToString().Length + " / ".Length + player.player.maxMana.ToString().Length;
+
+                                text = "Health: ";
+                                for (int i = 0; i < maxwordlength - manalength; i++) //adjust to how much mana player has
+                                {
+                                    text = text + " ";
+                                }
+                                text = text + player.player.mana + " / " + player.player.maxMana; 
+                                Console.BackgroundColor = ConsoleColor.DarkGray;
+                                Console.ForegroundColor = ConsoleColor.DarkBlue;
                                 break;
                             default:
                                 text = "";
@@ -899,6 +1050,11 @@ namespace HelloNamespace
         public Equipment equip;
         public string name;
         public string description;
+        public int directDamage;
+        public int directDamageType; // 0 == melee, 1 == ranged, 2 == magic
+        public int damageboost;
+        public bool damagemultiply; //if false, damageboost gets added flat, if true, added as percentage
+        public int boosttype;  // 0 == melee, 1 == ranged, 2 == magic
         public void Pickup(Player p)
         {
             p.inventory.Add(this);
@@ -1088,7 +1244,7 @@ namespace HelloNamespace
                     //TODO
 
                     //melee player
-                    map[(int)moveto.x, (int)moveto.y].player.Damage(0, this);
+                    map[(int)moveto.x, (int)moveto.y].player.TakeDamage(0, this);
                     Console.Beep();
                 }
                 Console.SetCursorPosition(0, 0);
@@ -1156,12 +1312,14 @@ namespace HelloNamespace
                 {
                     //TODO
                     //melee enemy
-                    map[(int)moveto.x, (int)moveto.y].enemy.Damage(0, this);
+                    
+                    map[(int)moveto.x, (int)moveto.y].enemy.TakeDamage(0, this);
                     Console.Beep();
                 }
                 Console.SetCursorPosition(0, 0);
             }
         }
+       
 
     }
 
@@ -1186,6 +1344,8 @@ namespace HelloNamespace
         // 24           backpack
         // -1           filler slot
         #endregion
+        public List<Item> inventory;
+
         public Player(int s, int w, int c)
         {
            
@@ -1194,16 +1354,24 @@ namespace HelloNamespace
             con = c;
             health = (int)(con * hmod);
             maxHealth = health;
+
+            mana = (int)(wis * mmod);
+            maxMana = mana;
             inventory = new List<Item>();
+            manaregen = w/8; //max mana is w* mmod (3.6f currently)
+            healthregen = 0;
         }
         private Player() //for XML
         { }
 
-        int maxHealth;
-        int health;
+        public int maxHealth, maxMana;
+        public int health, mana;
+        public int manaregen, healthregen;
         public int str, wis, con;
-        private float hmod = 1.2f;
-        public List<Item> inventory;
+        public bool resourceblocked, manablocked, healthblocked = false;
+        private int resourceblockedrounds, manablockedrounds, healthblockedrounds = 0;
+        private float hmod = 2.2f;
+        private float mmod = 3.6f;
         
         void Drop(Item i)
         {
@@ -1226,17 +1394,121 @@ namespace HelloNamespace
             level++;
 
         }
+        
+        public void EndOfRound()
+        {
+            RemoveBlocks();
 
-        public void Damage(int d, Tile attacker)
+            RegenMana();
+            RegenHealth();
+        }
+        public void BlockResource(int resource = 2, int rounds = 1) //0 == health, 1 == mana, 2 == all
+        {
+            switch (resource)
+            {
+                case 0:
+                    healthblocked = true;
+                    if (healthblockedrounds != 0)
+                    {
+                        healthblockedrounds += rounds;
+
+                    }
+                    else
+                    {
+                        healthblockedrounds = rounds;
+                    }
+                    break;
+                case 1:
+                    manablocked = true;
+                    if (manablockedrounds != 0)
+                    {
+                        manablockedrounds += rounds;
+
+                    }
+                    else
+                    {
+                        manablockedrounds = rounds;
+                    }
+                    break;
+                case 2:
+                    resourceblocked = true;
+                    if (resourceblockedrounds != 0)
+                    {
+                        resourceblockedrounds += rounds;
+
+                    }
+                    else
+                    {
+                        resourceblockedrounds = rounds;
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        void RemoveBlocks()
+        {
+            if (manablockedrounds > 0)
+                manablockedrounds--;
+            else
+                manablocked = false;
+           
+            if (healthblockedrounds > 0)
+                healthblockedrounds--;
+            else
+                healthblocked = false;
+
+            if (resourceblockedrounds > 0)
+                resourceblockedrounds--;
+            else
+                resourceblocked = false;
+        }
+        void RegenMana(int a = 0, int b = 0, int c = 0, int d = 0)
+        {
+            if (mana < maxMana && !(resourceblocked || manablocked))
+            {
+                mana += manaregen + a + b + c + d;
+            }
+            if (mana > maxMana)
+            {
+                mana = maxMana;
+            }
+        }
+        void RegenHealth(int a = 0, int b = 0, int c = 0, int d = 0)
+        {
+            if (health < maxHealth && !(resourceblocked || healthblocked))
+            {
+                health += healthregen + a + b + c + d;
+            }
+            if (health > maxHealth)
+            {
+                health = maxHealth;
+            }
+        }
+        public void TakeDamage(int d, Tile attacker)
         {
             if (health - d <= 0)
             {
+                health = 0;
                 Die();
             }
             else
             {
                 health -= d;
             }
+        }
+        public bool UseMana(int c)
+        {
+            if (mana - c < 0 )
+            {
+                return false; //not enough mana
+            }
+            else
+            {
+                mana -= c;
+            }
+            return true; //enough mana
         }
         public void GainLoot(Tile source)
         {
@@ -1265,7 +1537,66 @@ namespace HelloNamespace
         }
         void Die()
         {
+            //RIP
+        }
+        int GetPlayerDamage(int t = 0, bool useitems = true) // 0 == melee, 1 == ranged, 2 == magic
+        {
+            int d = 0;
+            switch (t)
+            {
+                case 0:
+                    if (equipment[19] == null) //fist
+                    {
+                        if (equipment[19].directDamageType == t) //left hand
+                        {
+                            d += equipment[19].directDamage + str / 2;
+                        }
+                    }
+                    else
+                    {
+                        d += str / 2;
+                    }
 
+                    if (equipment[20] == null) //fist
+                    {
+                        if (equipment[20].directDamageType == t) //right hand
+                        {
+                            d += equipment[20].directDamage + str / 2;
+                        }
+                    }
+                    else
+                    {
+                        d += str / 2;
+                    }
+
+                    foreach (Item item in equipment)
+                    {
+                        if (item.damageboost != 0)
+                        {
+                            if (item.boosttype == t)
+                            {
+                                if (item.damagemultiply)
+                                {
+                                    d += (d / 100) * item.damageboost;
+                                }
+                                else
+                                {
+                                    d += item.damageboost;
+                                }
+                            }
+                        }
+                    }
+                    break;
+                case 1:
+                    //TODO str third
+                    break;
+                case 3:
+                    //TODO wis half
+                    break;
+                default:
+                    break;
+            }
+            return d;
         }
     }
 
@@ -1308,11 +1639,11 @@ namespace HelloNamespace
             sightRadius = sr;
             speed = sp;
         }
-        private Enemy()
+        private Enemy() //for XML saving
         {
 
         }
-        public void Damage(int d, Tile attacker)
+        public void TakeDamage(int d, Tile attacker)
         {
             if (health - d <= 0)
             {
@@ -1343,6 +1674,7 @@ namespace HelloNamespace
                 killer.player.GainExp(expdrop);
                 killer.player.GainLoot(this);
             }
+            tile = tile.standingOn;
         }
         void SetTarget(Tile t)
         {
