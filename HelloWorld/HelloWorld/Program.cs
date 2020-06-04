@@ -170,6 +170,7 @@ namespace HelloNamespace
             spock,
             storefront,
             warehouse,
+            water,
             weirdmenu,
             a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,
             quit
@@ -485,7 +486,7 @@ namespace HelloNamespace
                     int[,] map = CG.CreateCave(30, 15, 75, 2, false, 5, 7, true);
                     map = CG.iterateCave(map, 5, 5, 5, true);
                     //Print2dIntArray(map);
-                    CG.WriteMap(map, "test");
+                    CG.WriteMap(map, "water");
                     Console.WriteLine();
                     int[,] error = new int[400, 400];
                     int[,] start = CG.findEmptyCell(map, true);
@@ -498,6 +499,16 @@ namespace HelloNamespace
                         Print2dIntArray(map, true, start.GetLength(0), start.GetLength(1));
                     }
                     //Console.WriteLine(start.GetLength(0) + " " + start.GetLength(1)); 
+                    Console.ReadKey();
+
+                    break;
+                case MenuItems.water:
+                    CaveGenerator cg = new CaveGenerator();
+                    HelloNamespace.Tile[,] map2 = cg.CreateCave(new Program.Point2D(50, 35), 70, 2);
+                    map2 = cg.invertMap(map2);
+                    map2 = cg.addLakes(map2, 7,3);
+                    Console.Clear();
+                    PrintTileArray(map2);
                     Console.ReadKey();
 
                     break;
@@ -885,7 +896,6 @@ namespace HelloNamespace
             }
             return -1;
         }
-        struct Tile { int i; }
         static void CheckerBoard(int x_size = 8, int y_size = 8, bool diagonal_line = false)
         {
             if (!diagonal_line)
@@ -1073,6 +1083,28 @@ namespace HelloNamespace
                     }
                     counter++;
                     Console.Write((string)array[row, col]);
+                }
+            }
+        }
+        static public void PrintTileArray(HelloNamespace.Tile[,] array)
+        {
+            Console.WriteLine(); Console.WriteLine();
+            int x_size = array.GetLength(0);
+            int y_size = array.GetLength(1);
+            int counter = 0;
+            for (int col = 0; col < y_size; col++)
+            {
+                for (int row = 0; row < x_size; row++)
+                {
+                    if (counter >= x_size) //check if we wrote a whole row
+                    {
+                        Console.WriteLine();
+                        counter = 0;
+                    }
+                    counter++;
+                    Console.ForegroundColor = array[row, col].color;
+                    Console.Write(array[row, col].symbol);
+                    Console.ResetColor();
                 }
             }
         }

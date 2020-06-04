@@ -90,36 +90,12 @@ namespace HelloNamespace
                 }
                 else
                 {
-                    WordMaker wm = new WordMaker();
-
-                    worldName = UppercaseFirst(wm.WordFinder(rnd.Next(4, 10)));
-                    worldName.ToUpperInvariant();
-                    if (rnd.Next(0, 10) > 8)
-                    {
-                        worldName += " " + UppercaseFirst(wm.WordFinder(rnd.Next(3, 4)));
-                    }
-                    titleScreen += " " + worldName + "!";
-
-                    Console.Clear();
-                    DrawScreen();
-                    DrawMap(cvg, true, true);
+                    NewWorld();
                 }
             }
             else
             {
-                WordMaker wm = new WordMaker();
-
-                worldName = UppercaseFirst(wm.WordFinder(rnd.Next(4, 10)));
-                worldName.ToUpperInvariant();
-                if (rnd.Next(0, 10) > 8)
-                {
-                    worldName += " " + UppercaseFirst(wm.WordFinder(rnd.Next(3, 4)));
-                }
-                titleScreen += " " + worldName + "!";
-
-                Console.Clear();
-                DrawScreen();
-                DrawMap(cvg, true, true);
+                NewWorld();
             }
             
             sidePanel = SidePanel.Inventory;
@@ -131,6 +107,22 @@ namespace HelloNamespace
             Play();
         }
 
+        void NewWorld()
+        {
+            WordMaker wm = new WordMaker();
+
+            worldName = UppercaseFirst(wm.WordFinder(rnd.Next(4, 10)));
+            worldName.ToUpperInvariant();
+            if (rnd.Next(0, 10) > 8)
+            {
+                worldName += " " + UppercaseFirst(wm.WordFinder(rnd.Next(3, 4)));
+            }
+            titleScreen += " " + worldName + "!";
+
+            Console.Clear();
+            DrawScreen();
+            DrawMap(cvg, true, true, true);
+        }
         public void Play()
         {
             Thread.Sleep(10);
@@ -238,7 +230,7 @@ namespace HelloNamespace
                 Thread.Sleep(10);
                 if (endround)
                 {
-                    //do AI
+                    //AI
                     if (enemies != null)
                     {
                         Pathfinder pf = new Pathfinder();
@@ -743,7 +735,7 @@ namespace HelloNamespace
                     break;
             }
         }
-        void DrawMap(CaveGenerator c, bool replaceempty = false, bool drawplayer = false)
+        void DrawMap(CaveGenerator c, bool replaceempty = false, bool drawplayer = false, bool addlakes = false)
         {
 
             Thread.Sleep(300);
@@ -756,6 +748,10 @@ namespace HelloNamespace
             Console.SetCursorPosition(mapsize.min.x, mapsize.min.y);
             map = c.CreateCave(new Program.Point2D(GetDistance(mapsize, Axis.x) + 2, GetDistance(mapsize, Axis.y) + 1), 70, 2);
             map = c.invertMap(map);
+            if (addlakes)
+            {
+                map = c.addLakes(map, 3, 5);
+            }
             Program.Point2D start = c.findEmptyCell(map, true);
             //Program.Print2dIntArray(map, true, start.GetLength(0), start.GetLength(1));
             map[(int)start.x, (int)start.y] = new Tile('@', new Program.Point2D((int)start.x, (int)start.y), Tile.TileType.Player, ConsoleColor.Blue);
@@ -767,7 +763,7 @@ namespace HelloNamespace
                 for (int j = mapsize.min.y; j < mapsize.max.y; j++)
                 {
                     Console.ForegroundColor = map[i, j].color;
-                    if (map[i, j].type == Tile.TileType.Wall)
+                    if (map[i, j].type != Tile.TileType.Floor && map[i, j].type != Tile.TileType.Player)
                     {
                         Console.SetCursorPosition(i, j);
                         Console.Write(map[i, j].symbol);
@@ -781,7 +777,6 @@ namespace HelloNamespace
                     if (replaceempty && map[i, j].type == Tile.TileType.Floor)
                     {
                         Console.SetCursorPosition(i, j);
-
                         Console.Write(map[i, j].symbol);
                     }
                     Console.ResetColor();
@@ -1019,7 +1014,8 @@ namespace HelloNamespace
             Floor, //can walk on
             Wall,  //blocks player
             Item,  //can be picked up
-            Object //can be interacted with
+            Object, //can be interacted with
+            Water
         }
         public Program.Point2D position;
         public TileType type;
@@ -1029,7 +1025,10 @@ namespace HelloNamespace
             type = TileType.Floor;
             symbol = ' ';
         }
-
+        public bool IsSwimming()
+        {
+            return standingOn.type == TileType.Water;
+        }
         public void TileBorn()
         {
             type = TileType.Wall;
@@ -1103,7 +1102,7 @@ namespace HelloNamespace
             Console.Write(map[(int)position.x, (int)position.y].symbol);
             Console.ResetColor();
         }
-        public void Move(Tile[,] map, Roguelike.Direction dir, bool ignorewalls = false)
+        public void Move(Tile[,] map, Roguelike.Direction dir, bool ignorewalls = false, bool canSwim = true)
         {
             Program.Point2D moveto;
             switch (dir)
@@ -1128,7 +1127,7 @@ namespace HelloNamespace
             {
                 Tile goal = map[(int)moveto.x, (int)moveto.y];
 
-                if (!ignorewalls && (map[(int)moveto.x, (int)moveto.y].type == TileType.Floor || map[(int)moveto.x, (int)moveto.y].type == TileType.Item))
+                if (!ignorewalls && (map[(int)moveto.x, (int)moveto.y].type == TileType.Floor || map[(int)moveto.x, (int)moveto.y].type == TileType.Item) || (canSwim && map[(int)moveto.x, (int)moveto.y].type == TileType.Water))
                 {
                     Console.SetCursorPosition((int)position.x, (int)position.y); //select self
                     map[(int)position.x, (int)position.y] = standingOn; //set tile beneath to standing on

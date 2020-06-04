@@ -271,7 +271,7 @@ namespace HelloNamespace
 
             return count;
         }
-        int examineNeighbours(Tile[,] map, int xVal, int yVal)
+        int examineNeighbours(Tile[,] map, int xVal, int yVal, Tile.TileType t = Tile.TileType.Wall)
         {
             int count = 0;
 
@@ -279,7 +279,7 @@ namespace HelloNamespace
             {
                 for (int y = -1; y < 2; y++)
                 {
-                    if (checkCell(map, xVal + x, yVal + y) == true)
+                    if (checkCell(map, xVal + x, yVal + y, t) == true)
                         count += 1;
                 }
             }
@@ -287,7 +287,95 @@ namespace HelloNamespace
             return count;
         }
 
+        public Tile[,] addLakes(Tile[,] map, int amount, int size = 4)
+        {
 
+            List<Tile> empties = new List<Tile>();
+            foreach (Tile item in map) //get all empty tiles
+            {
+                if (item.type == Tile.TileType.Floor || item.type == Tile.TileType.Null)
+                {
+                    empties.Add(item);
+                }
+            }
+
+            Random rnd = new Random();
+
+            for (int i = 0; i < amount; i++) //add amount of lake seeds
+            {
+                int rtile = rnd.Next(0, empties.Count());
+                map[empties[rtile].position.intx, empties[rtile].position.inty] = new Tile('~', new Program.Point2D(empties[rtile].position.intx, empties[rtile].position.inty), Tile.TileType.Water, ConsoleColor.Cyan);
+                //Program.PrintTileArray(map);
+            }
+            List<Tile> watertiles = new List<Tile>();
+            for (int i = 0; i < size; i++)
+            {
+                Tile[,] t_map = map;
+                foreach (Tile tile in t_map)
+                {
+                    if (tile.type == Tile.TileType.Water)
+                    {
+                        watertiles.Add(tile);
+                    }
+                }
+                foreach (Tile w in watertiles)
+                {
+                    for (int x = -1; x <= 1; x++)
+                    {
+                        for (int y = -1; y <= 1; y++)
+                        {
+                            if (w.position.intx + x > map.GetLength(0) - 1 || w.position.inty + y > map.GetLength(1) - 1 || w.position.intx + x < 0 || w.position.inty + y < 0)
+                            {
+                                //out of bounds
+                                //map[tile.position.intx + x, tile.position.inty + y] = new Tile('-', new Program.Point2D(tile.position.intx + x, tile.position.inty + y), Tile.TileType.Null, ConsoleColor.White);
+                                //Console.Beep();
+                            }
+                            else
+                            { 
+                                if (map[w.position.intx + x, w.position.inty + y].type != Tile.TileType.Wall )
+                                //{
+                                    map[w.position.intx + x, w.position.inty + y] = new Tile('~', new Program.Point2D(w.position.intx + x, w.position.inty + y), Tile.TileType.Water, ConsoleColor.Cyan);
+
+                                //}
+                            }
+                        }
+                    }
+                }
+                t_map = map;
+            }
+            map = SmoothWater(map, 3);
+
+            return map;
+        }
+
+        Tile[,] SmoothWater(Tile[,] map, int iterations, int deathlimit = 5)
+        {
+            Tile[,] t_map = map;
+            for (int i = 0; i < iterations; i++)
+            {
+                foreach (Tile tile in t_map)
+                {
+                    if (tile.type == Tile.TileType.Water)
+                    {
+                        int n = examineNeighbours(map, tile.position.intx, tile.position.inty, Tile.TileType.Water);
+                        if (n < deathlimit)
+                        {
+                            map[tile.position.intx, tile.position.inty] = new Tile(' ', new Program.Point2D(tile.position.intx, tile.position.inty), Tile.TileType.Floor);
+                        }
+                        else
+                        {
+
+                        }
+                    }
+                }
+                t_map = map;
+                //Console.Clear();
+                //Program.PrintTileArray(map);
+                //Console.ReadKey();
+            }
+
+            return map;
+        }
         Boolean checkCell(int[,] map, int x, int y)
         {
             if (x >= 0 & x < map.GetLength(0) &
@@ -304,12 +392,12 @@ namespace HelloNamespace
             }
         }
 
-        Boolean checkCell(Tile[,] map, int x, int y)
+        Boolean checkCell(Tile[,] map, int x, int y, Tile.TileType t = Tile.TileType.Wall)
         {
             if (x >= 0 & x < map.GetLength(0) &
                 y >= 0 & y < map.GetLength(1))
             {
-                if (map[x, y].type == Tile.TileType.Wall)
+                if (map[x, y].type == t)
                     return true;
                 else
                     return false;
