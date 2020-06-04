@@ -1590,7 +1590,7 @@ namespace HelloNamespace
                 case 1:
                     //TODO str third
                     break;
-                case 3:
+                case 2:
                     //TODO wis half
                     break;
                 default:
