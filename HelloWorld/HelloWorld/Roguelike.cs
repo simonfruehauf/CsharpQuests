@@ -5,10 +5,11 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
 using static HelloNamespace.RoguelikeSaver;
+using static HelloNamespace.Tile;
 
 namespace HelloNamespace
 {
-   public class Roguelike
+    public class Roguelike
     {
         string inv = "Inventory";
         string sts = "Stats";
@@ -85,7 +86,7 @@ namespace HelloNamespace
                         if (item.player != null)
                         {
                             player = item;
-                            
+
                         }
                         if (item.enemy != null)
                         {
@@ -107,7 +108,7 @@ namespace HelloNamespace
             {
                 NewWorld();
             }
-            
+
             sidePanel = SidePanel.Inventory;
             //for (int i = 0; i < 100; i++) //Debug to populate player inventory
             //{
@@ -116,7 +117,41 @@ namespace HelloNamespace
             //}
             Play();
         }
-
+        public static Program.Point2D directionAsPoint(Direction dir)
+        {
+            Program.Point2D point;
+            switch (dir)
+            {
+                case Roguelike.Direction.n:
+                    point = new Program.Point2D(0,-1);
+                    break;
+                case Roguelike.Direction.e:
+                    point = new Program.Point2D(1, 0);
+                    break;
+                case Roguelike.Direction.s:
+                    point = new Program.Point2D(0, 1);
+                    break;
+                case Roguelike.Direction.w:
+                    point = new Program.Point2D(- 1, 0);
+                    break;
+                case Roguelike.Direction.ne:
+                    point = new Program.Point2D(1, -1);
+                    break;
+                case Roguelike.Direction.nw:
+                    point = new Program.Point2D(-1, -1);
+                    break;
+                case Roguelike.Direction.se:
+                    point = new Program.Point2D(1, 1);
+                    break;
+                case Roguelike.Direction.sw:
+                    point = new Program.Point2D(-1, 1);
+                    break;
+                default:
+                    point = new Program.Point2D(0,0);
+                    break;
+            }
+            return point;
+        }
         void NewWorld()
         {
             WordMaker wm = new WordMaker();
@@ -142,13 +177,29 @@ namespace HelloNamespace
             do
             {
                 bool endround = false;
+                int type = 0;
+                if (player.player.equipment[20] != null)
+                {
+                    if (player.player.equipment[20].GetType() == typeof(Weapon))
+                    {
+                        type = ((Weapon)player.player.equipment[20]).damageType; //right hand determins attack type
+                    }
+                    else
+                    {
+                        type = 0;
+                    }
+                }
+                else
+                {
+                    type = 0;
+                }
                 currentInput = Console.ReadKey(true);
                 switch (currentInput.Key)
                 {
-                case ConsoleKey.F:  //DEBUG
+                    case ConsoleKey.F:  //DEBUG
 
-                        //SpawnRandomEnemy();
-
+                       //SpawnRandomEnemy();
+                        player.player.health -= 10;
 
                         //Pathfinder pf = new Pathfinder();
                         //Tile target = map[player.standingOn.position.intx+7, player.standingOn.position.inty + 1];
@@ -168,7 +219,7 @@ namespace HelloNamespace
                         break;
                     case ConsoleKey.Tab:
                         int panels = (Enum.GetNames(typeof(SidePanel)).Length);
-                        sidePanel = (SidePanel)((int)(sidePanel + 1) % (panels-1)); //-1 because last is help panel
+                        sidePanel = (SidePanel)((int)(sidePanel + 1) % (panels - 1)); //-1 because last is help panel
                         sidePanelPage = 0; //reset pages
                         DrawPanel(sidePanel);
                         break;
@@ -184,7 +235,7 @@ namespace HelloNamespace
                         }
                         break;
                     case ConsoleKey.K: //prev page
-                        if (!(sidePanelPage-1 < 0))
+                        if (!(sidePanelPage - 1 < 0))
                         {
                             sidePanelPage--;
                             DrawPanel(sidePanel);
@@ -193,23 +244,35 @@ namespace HelloNamespace
                     case ConsoleKey.H: //help
                         DrawPanel(SidePanel.Help);
                         break;
-                    case ConsoleKey.UpArrow: //UP
-                    case ConsoleKey.W:
+                    case ConsoleKey.UpArrow: //UP ATTACK
+                        map[player.position.intx, player.position.inty].TryTarget(map, Direction.n, player.player.GetRange(type), true);
+                        endround = true;
+                        break;
+                    case ConsoleKey.W://UP MOVE
                         player.Move(map, Direction.n, false);
                         endround = true;
                         break;
-                    case ConsoleKey.DownArrow: // DOWN
-                    case ConsoleKey.S:
+                    case ConsoleKey.DownArrow: // DOWN ATTACK
+                        map[player.position.intx, player.position.inty].TryTarget(map, Direction.s, player.player.GetRange(type), true);
+                        endround = true;
+                        break;
+                    case ConsoleKey.S: // DOWN MOVE
                         player.Move(map, Direction.s, false);
                         endround = true;
                         break;
-                    case ConsoleKey.RightArrow: // DOWN
-                    case ConsoleKey.D: // DOWN
+                    case ConsoleKey.RightArrow: // RIGHT ATTACK
+                        map[player.position.intx, player.position.inty].TryTarget(map, Direction.e, player.player.GetRange(type), true);
+                        endround = true;
+                        break;
+                    case ConsoleKey.D: // RIGHT MOVE
                         player.Move(map, Direction.e, false);
                         endround = true;
                         break;
-                    case ConsoleKey.LeftArrow: // DOWN
-                    case ConsoleKey.A: // DOWN
+                    case ConsoleKey.LeftArrow: // LEFT ATTACK
+                        map[player.position.intx, player.position.inty].TryTarget(map, Direction.w, player.player.GetRange(type), true);
+                        endround = true;
+                        break;
+                    case ConsoleKey.A: // LEFT MOVE
                         player.Move(map, Direction.w, false);
                         endround = true;
                         break;
@@ -233,7 +296,7 @@ namespace HelloNamespace
                             default:
                                 break;
                         }
-                        
+
                         break;
                     default:
                         break;
@@ -244,17 +307,31 @@ namespace HelloNamespace
                     DrawBars(Bars.Health);
                     DrawBars(Bars.Mana);
                     //AI
-                    if (enemies != null)
+                    List<Enemy> t_enemies = enemies;
+                    foreach (Enemy e in t_enemies.ToList())
                     {
-                        Pathfinder pf = new Pathfinder();
-                        foreach (Enemy m_enemy in enemies)
+                        if (e == null)
                         {
+                            enemies.Remove(e);
+                        }
+                        else if (e.health <= 0)
+                        {
+                            enemies.Remove(e);
+                        }
+                    }
+                    Pathfinder pf = new Pathfinder();
+                    foreach (Enemy m_enemy in enemies)
+                    {
+                        if (m_enemy != null && m_enemy.tile != null)
+                        {
+
+
                             if (pf.distance(m_enemy.tile, player) < m_enemy.sightRadius)
                             {
                                 m_enemy.target = player;
                                 //sees player
                             }
-                            else if (pf.distance(m_enemy.tile, player) > m_enemy.sightRadius*2)
+                            else if (pf.distance(m_enemy.tile, player) > m_enemy.sightRadius * 2)
                             {
                                 m_enemy.target = null;
                                 //lost player
@@ -263,11 +340,11 @@ namespace HelloNamespace
                             {
                                 Random rnd = new Random();
                                 int chance = rnd.Next(10, 100);
-                                if (chance <= m_enemy.speed *100) //walk tick
+                                if (chance <= m_enemy.speed * 100) //walk tick
                                 {
                                     m_enemy.MoveTowards(map, m_enemy.target);
                                     int i = 1;
-                                    while (m_enemy.speed * 100 - chance*i > 100) 
+                                    while (m_enemy.speed * 100 - chance * i > 100)
                                     {
                                         m_enemy.MoveTowards(map, m_enemy.target);
                                         i++;
@@ -276,10 +353,12 @@ namespace HelloNamespace
                             }
                             Thread.Sleep(10);
                         }
+
+                        Thread.Sleep(10);
                     }
-                    Thread.Sleep(10);
                 }
                 player.player.EndOfRound();
+                DrawPanel(sidePanel);
             } while (running);
         }
         PauseOptions Pause()
@@ -288,9 +367,9 @@ namespace HelloNamespace
             DrawPause();
             //select stuff
             return SelectPause();
-            
 
-            
+
+
         }
         PauseOptions SelectPause()
         {
@@ -304,14 +383,14 @@ namespace HelloNamespace
             int maxwordlength = 13;
             int topbuffer = 5;
             int arrowbuffer = 3;
-            int titlex = (j + (pausesize.max.x - j)/2) - pse.Length/2;
-            positions.Add(new Program.Point2D(titlex, k+1)); //title
+            int titlex = (j + (pausesize.max.x - j) / 2) - pse.Length / 2;
+            positions.Add(new Program.Point2D(titlex, k + 1)); //title
 
-            for (int i = 1; i < pauseOptions+1; i++)
+            for (int i = 1; i < pauseOptions + 1; i++)
             {
-                if (i*2 < pausesize.max.x)
+                if (i * 2 < pausesize.max.x)
                 {
-                    positions.Add(new Program.Point2D(j+topbuffer, k + 2*i ));
+                    positions.Add(new Program.Point2D(j + topbuffer, k + 2 * i));
                 }
             }
             int v = 0;
@@ -435,7 +514,7 @@ namespace HelloNamespace
         {
             new Enemy("Skeleton", 3, 2, 3, 3, null, null, Enemy.Types.melee),
             new Enemy("Ghoul", 3, 2, 3, 3, null, null, Enemy.Types.melee),
-            new Enemy("Goblin", 3, 2, 3, 3, null, null, Enemy.Types.melee),           
+            new Enemy("Goblin", 3, 2, 3, 3, null, null, Enemy.Types.melee),
             new Enemy("Ghost", 3, 2, 3, 3, null, null, Enemy.Types.melee),
             new Enemy("Zombie", 5, 1, 2, rnd.Next(1,3), null, null, Enemy.Types.melee)
 
@@ -498,7 +577,7 @@ namespace HelloNamespace
                     }
                     if (!isEven(mapsize.max.x / 2))
                     {
-                        if ((i == mapsize.max.x / 2 || i == (mapsize.max.x / 2)-1) && j == mapsize.max.y + healthbarsize) //middle bottom
+                        if ((i == mapsize.max.x / 2 || i == (mapsize.max.x / 2) - 1) && j == mapsize.max.y + healthbarsize) //middle bottom
                         {
                             Console.ForegroundColor = ConsoleColor.Blue;
                             Console.SetCursorPosition(i, j);
@@ -514,7 +593,7 @@ namespace HelloNamespace
                             Console.Write(borderchar);
                         }
                     }
-                    
+
                 }
             }
             Console.ResetColor();
@@ -563,21 +642,21 @@ namespace HelloNamespace
             else
             {
                 c = ConsoleColor.DarkBlue;
-                startx = isEven(mapsize.max.x / 2) ? (mapsize.max.x / 2) + 2 : (mapsize.max.x / 2) +1 ;
+                startx = isEven(mapsize.max.x / 2) ? (mapsize.max.x / 2) + 2 : (mapsize.max.x / 2) + 1;
                 endx = mapsize.max.x + 1;
                 current = player.player.mana;
                 max = player.player.maxMana;
             }
-          
+
 
             int length = endx - startx;
             int missing = max - current;
             missing = missing * length / max; //normalize to 0-x range, missing out of x are empty
             //invert if health
             if (bar == Bars.Health)
-                {
-                    missing =  length - missing;
-                }
+            {
+                missing = length - missing;
+            }
             foreach (int iy in lines)
             {
                 Console.SetCursorPosition(startx, iy);
@@ -625,7 +704,7 @@ namespace HelloNamespace
             int x = Console.WindowWidth;  //120
             int y = Console.WindowHeight; //30#            
             GetMapSize();
-            pausesize = new Map(new Position(mapsize.min.x+ (mapsize.max.x/3), mapsize.min.y + (mapsize.max.y / 3)), new Position(mapsize.max.x - (mapsize.max.x / 3), mapsize.max.y - (mapsize.max.y / 3)));
+            pausesize = new Map(new Position(mapsize.min.x + (mapsize.max.x / 3), mapsize.min.y + (mapsize.max.y / 3)), new Position(mapsize.max.x - (mapsize.max.x / 3), mapsize.max.y - (mapsize.max.y / 3)));
             for (int i = pausesize.min.x; i <= pausesize.max.x; i++)
             {
                 for (int j = pausesize.min.y; j <= pausesize.max.y; j++)
@@ -740,7 +819,7 @@ namespace HelloNamespace
                         int m_item = v + sidePanelPage * freeLines;
                         Console.SetCursorPosition((int)item.x, (int)item.y);
                         string text = "";
-                        if (m_item > player.player.inventory.Count-1)
+                        if (m_item > player.player.inventory.Count - 1)
                         {
                             lastpage = true;
                             break;
@@ -753,13 +832,13 @@ namespace HelloNamespace
                             Console.Write(text);
                             Console.ResetColor();
                         }
-                        
+
                         v++;
                     }
                     //items end
                     //write page
                     Console.BackgroundColor = ConsoleColor.DarkGray;
-                    if (sidePanelPage+1 < 10)
+                    if (sidePanelPage + 1 < 10)
                     {
                         Console.SetCursorPosition(inventorysize.max.x - 1, inventorysize.max.y - 1);
                         Console.Write(sidePanelPage + 1);
@@ -867,7 +946,7 @@ namespace HelloNamespace
                                 {
                                     text = text + " ";
                                 }
-                                text = text + player.player.mana + " / " + player.player.maxMana; 
+                                text = text + player.player.mana + " / " + player.player.maxMana;
                                 Console.BackgroundColor = ConsoleColor.DarkGray;
                                 Console.ForegroundColor = ConsoleColor.DarkBlue;
                                 break;
@@ -875,9 +954,9 @@ namespace HelloNamespace
                                 text = "";
                                 break;
                         }
-                            //Console.BackgroundColor = ConsoleColor.DarkGray;
-                            Console.Write(text);
-                        
+                        //Console.BackgroundColor = ConsoleColor.DarkGray;
+                        Console.Write(text);
+
 
                         v2++;
                     }
@@ -907,7 +986,7 @@ namespace HelloNamespace
             //Program.Print2dIntArray(map, true, start.GetLength(0), start.GetLength(1));
             map[(int)start.x, (int)start.y] = new Tile('@', new Program.Point2D((int)start.x, (int)start.y), Tile.TileType.Player, ConsoleColor.Blue);
             map[(int)start.x, (int)start.y].standingOn = new Tile(' ', new Program.Point2D((int)start.x, (int)start.y), Tile.TileType.Floor);
-            map[(int)start.x, (int)start.y].player = new Player(8,8,8);
+            map[(int)start.x, (int)start.y].player = new Player(8, 8, 8);
             player = map[(int)start.x, (int)start.y];
             for (int i = mapsize.min.x; i <= mapsize.max.x; i++)
             {
@@ -1050,11 +1129,10 @@ namespace HelloNamespace
         public Equipment equip;
         public string name;
         public string description;
-        public int directDamage;
-        public int directDamageType; // 0 == melee, 1 == ranged, 2 == magic
         public int damageboost;
         public bool damagemultiply; //if false, damageboost gets added flat, if true, added as percentage
         public int boosttype;  // 0 == melee, 1 == ranged, 2 == magic
+
         public void Pickup(Player p)
         {
             p.inventory.Add(this);
@@ -1063,8 +1141,9 @@ namespace HelloNamespace
     [Serializable]
     public class Weapon : Item
     {
-        int damage;
-        int range;
+        public int damage;
+        public int range; //1 is immediately in front
+        public int damageType; // 0 == melee, 1 == ranged, 2 == magic
         public Weapon(string n, string d, int slot, int dam, int slot2 = -1, int abilityindex = 0, int r = 0)
         {
             if (slot2 != -1)
@@ -1121,7 +1200,7 @@ namespace HelloNamespace
         public int healthbonus;
         public int speedbonus;
         public int manabonus;
-        
+
         public void Ability()
         {
 
@@ -1154,11 +1233,11 @@ namespace HelloNamespace
             public possibleStatus name;
             public int length;
         }
-        
+
         public Item item;
         public Player player;
         public Enemy enemy;
-        public List<Status> statuses; 
+        public List<Status> statuses;
 
         public char symbol;
         public ConsoleColor color;
@@ -1239,13 +1318,12 @@ namespace HelloNamespace
                     Console.Write(symbol);
                     Console.ResetColor();
                 }
-                else if (map[(int)moveto.x, (int)moveto.y].player != null )
+                else if (map[(int)moveto.x, (int)moveto.y].player != null && enemy != null)
                 {
-                    //TODO
+                    map[(int)moveto.x, (int)moveto.y].player.TakeDamage(enemy.damage, this);
 
-                    //melee player
-                    map[(int)moveto.x, (int)moveto.y].player.TakeDamage(0, this);
                     Console.Beep();
+                    Thread.Sleep(100);
                 }
                 Console.SetCursorPosition(0, 0);
             }
@@ -1258,28 +1336,35 @@ namespace HelloNamespace
             Console.Write(map[(int)position.x, (int)position.y].symbol);
             Console.ResetColor();
         }
+        public void DrawSelf()
+        {
+            Console.ForegroundColor = color;
+            Console.SetCursorPosition((int)position.x, (int)position.y);
+            Console.Write(symbol);
+            Console.ResetColor();
+        }
         public void Move(Tile[,] map, Roguelike.Direction dir, bool ignorewalls = false, bool canSwim = true)
         {
             Program.Point2D moveto;
             switch (dir)
             {
                 case Roguelike.Direction.n:
-                    moveto = new Program.Point2D(position.x, position.y-1);
+                    moveto = new Program.Point2D(position.x, position.y - 1);
                     break;
                 case Roguelike.Direction.e:
-                    moveto = new Program.Point2D(position.x+1, position.y);
+                    moveto = new Program.Point2D(position.x + 1, position.y);
                     break;
                 case Roguelike.Direction.s:
-                    moveto = new Program.Point2D(position.x, position.y+1);
+                    moveto = new Program.Point2D(position.x, position.y + 1);
                     break;
                 case Roguelike.Direction.w:
-                    moveto = new Program.Point2D(position.x-1, position.y);
+                    moveto = new Program.Point2D(position.x - 1, position.y);
                     break;
                 default:
                     moveto = new Program.Point2D(position.x, position.y);
                     break;
             }
-            if (!(moveto.x > map.GetLength(0)-1 || moveto.x < 1 || moveto.y > map.GetLength(1)-1 || moveto.y < 1)) //borders
+            if (!(moveto.x > map.GetLength(0) - 1 || moveto.x < 1 || moveto.y > map.GetLength(1) - 1 || moveto.y < 1)) //borders
             {
                 Tile goal = map[(int)moveto.x, (int)moveto.y];
 
@@ -1310,22 +1395,46 @@ namespace HelloNamespace
                 }
                 else if (map[(int)moveto.x, (int)moveto.y].enemy != null)
                 {
-                    //TODO
+                    map[(int)moveto.x, (int)moveto.y].enemy.TakeDamage(player.GetPlayerDamage(0), this);
+                    //if (map[(int)moveto.x, (int)moveto.y].enemy.health <= 0)
+                    //{
+                    //    map[(int)moveto.x, (int)moveto.y].enemy.Die(this);
+                    //}
                     //melee enemy
-                    
-                    map[(int)moveto.x, (int)moveto.y].enemy.TakeDamage(0, this);
                     Console.Beep();
                 }
                 Console.SetCursorPosition(0, 0);
             }
         }
-       
+        public Tile TryTarget(Tile[,] map, Roguelike.Direction direction, int range = 1, bool ignoreplayers = false) //returns first enemy or player in that direction
+        {
+            Program.Point2D dir = Roguelike.directionAsPoint(direction);
+
+            for (int i = 1; i < range; i++)
+            {
+                Program.Point2D tocheck = new Program.Point2D(position.intx + dir.intx*i, position.inty + dir.inty*i);
+                if (map[tocheck.intx, tocheck.inty].enemy != null || map[tocheck.intx, tocheck.inty].player != null)
+                {
+                    if (ignoreplayers && map[tocheck.intx, tocheck.inty].player != null) //ignore players
+                    {
+                        
+                    }
+                    else
+                    {
+                        return map[tocheck.intx, tocheck.inty]; //return first enemy
+                    }
+                }
+
+            }
+
+            return null;
+        }
 
     }
 
     public class Player
     {
-        Item[] equipment = new Item[24];
+        public Item[] equipment = new Item[24];
         int experience;
         public int level;
         int expToNext = 10;
@@ -1348,7 +1457,7 @@ namespace HelloNamespace
 
         public Player(int s, int w, int c)
         {
-           
+
             str = s;
             wis = w;
             con = c;
@@ -1358,28 +1467,26 @@ namespace HelloNamespace
             mana = (int)(wis * mmod);
             maxMana = mana;
             inventory = new List<Item>();
-            manaregen = w/8; //max mana is w* mmod (3.6f currently)
-            healthregen = 0;
+            manaregen = w / 8; //max mana is w* mmod (3.6f currently)
+            healthregen = 50; //50% chance for health per turn, or average 0.5 health per turn
         }
         private Player() //for XML
         { }
-
         public int maxHealth, maxMana;
         public int health, mana;
-        public int manaregen, healthregen;
+        public int manaregen, healthregen; //%chance of regaining 1 resource per turn. each 100 adds a minimum 1 regen per turn.
         public int str, wis, con;
         public bool resourceblocked, manablocked, healthblocked = false;
         private int resourceblockedrounds, manablockedrounds, healthblockedrounds = 0;
         private float hmod = 2.2f;
         private float mmod = 3.6f;
-        
         void Drop(Item i)
         {
             inventory.Remove(i);
         }
         public void GainExp(int exp)
         {
-            if (experience+exp >= expToNext)
+            if (experience + exp >= expToNext)
             {
                 experience = exp - (expToNext - experience);
                 LevelUp();
@@ -1394,11 +1501,10 @@ namespace HelloNamespace
             level++;
 
         }
-        
+
         public void EndOfRound()
         {
             RemoveBlocks();
-
             RegenMana();
             RegenHealth();
         }
@@ -1453,7 +1559,7 @@ namespace HelloNamespace
                 manablockedrounds--;
             else
                 manablocked = false;
-           
+
             if (healthblockedrounds > 0)
                 healthblockedrounds--;
             else
@@ -1466,9 +1572,22 @@ namespace HelloNamespace
         }
         void RegenMana(int a = 0, int b = 0, int c = 0, int d = 0)
         {
-            if (mana < maxMana && !(resourceblocked || manablocked))
+            if (mana < maxMana && !resourceblocked && !manablocked)
             {
-                mana += manaregen + a + b + c + d;
+                Random rnd = new Random();
+                int ch = rnd.Next(1, 100);
+                int regen = 0;
+                int remain = manaregen;
+                while (remain > 100)
+                {
+                    regen++; 
+                    remain -= 100;
+                }
+                if (ch < remain)
+                {
+                    regen++;
+                }
+                mana += regen + a + b + c + d;
             }
             if (mana > maxMana)
             {
@@ -1477,16 +1596,29 @@ namespace HelloNamespace
         }
         void RegenHealth(int a = 0, int b = 0, int c = 0, int d = 0)
         {
-            if (health < maxHealth && !(resourceblocked || healthblocked))
+            if (health < maxHealth && !resourceblocked  && !healthblocked)
             {
-                health += healthregen + a + b + c + d;
+                Random rnd = new Random();
+                int ch = rnd.Next(1, 100);
+                int regen = 0;
+                int remain = healthregen;
+                while (remain > 100)
+                {
+                    regen++; //if 
+                    remain -= 100;
+                }
+                if (ch < remain)
+                {
+                    regen++;
+                }
+                health += regen + a + b + c + d;
             }
             if (health > maxHealth)
             {
                 health = maxHealth;
             }
         }
-        public void TakeDamage(int d, Tile attacker)
+        public void TakeDamage(int d, Tile attacker) //player takes damage
         {
             if (health - d <= 0)
             {
@@ -1500,7 +1632,7 @@ namespace HelloNamespace
         }
         public bool UseMana(int c)
         {
-            if (mana - c < 0 )
+            if (mana - c < 0)
             {
                 return false; //not enough mana
             }
@@ -1517,9 +1649,15 @@ namespace HelloNamespace
         public void GainLoot(Enemy source)
         {
             gold += source.golddrop;
-            foreach (var item in source.drops)
+            if (source.drops != null)
             {
-                inventory.Add(item);
+                foreach (var item in source.drops)
+                {
+                    if (item != null)
+                    {
+                        inventory.Add(item);
+                    }
+                }
             }
         }
         void Heal(int h, Tile healer)
@@ -1539,30 +1677,38 @@ namespace HelloNamespace
         {
             //RIP
         }
-        int GetPlayerDamage(int t = 0, bool useitems = true) // 0 == melee, 1 == ranged, 2 == magic
+        public int GetPlayerDamage(int type = 0, bool useitems = true) // 0 == melee, 1 == ranged, 2 == magic
         {
             int d = 0;
-            switch (t)
+            switch (type)
             {
                 case 0:
-                    if (equipment[19] == null) //fist
+                    if (equipment[19] != null) //fist left
                     {
-                        if (equipment[19].directDamageType == t) //left hand
+                        if (equipment[19].GetType() == typeof(Weapon)) //is weapon
                         {
-                            d += equipment[19].directDamage + str / 2;
+                            if (((Weapon)equipment[19]).damageType == type)
+                            {
+                                d += ((Weapon)equipment[19]).damage + str / 2;
+                            }
                         }
+
                     }
                     else
                     {
                         d += str / 2;
                     }
 
-                    if (equipment[20] == null) //fist
+                    if (equipment[20] != null) //fist right
                     {
-                        if (equipment[20].directDamageType == t) //right hand
+                        if (equipment[20].GetType() == typeof(Weapon)) //is weapon
                         {
-                            d += equipment[20].directDamage + str / 2;
+                            if (((Weapon)equipment[20]).damageType == type)
+                            {
+                                d += ((Weapon)equipment[20]).damage + str / 2;
+                            }
                         }
+
                     }
                     else
                     {
@@ -1571,32 +1717,226 @@ namespace HelloNamespace
 
                     foreach (Item item in equipment)
                     {
-                        if (item.damageboost != 0)
+                        if (item != null)
                         {
-                            if (item.boosttype == t)
+                            if (item.damageboost != 0)
                             {
-                                if (item.damagemultiply)
+                                if (item.boosttype == type)
                                 {
-                                    d += (d / 100) * item.damageboost;
-                                }
-                                else
-                                {
-                                    d += item.damageboost;
+                                    if (item.damagemultiply)
+                                    {
+                                        d += (d / 100) * item.damageboost;
+                                    }
+                                    else
+                                    {
+                                        d += item.damageboost;
+                                    }
                                 }
                             }
                         }
                     }
                     break;
-                case 1:
-                    //TODO str third
+                case 1: //ranged
+                    if (equipment[19] != null) //have equip
+                    {
+                        if (equipment[19].GetType() == typeof(Weapon)) //is weapon
+                        {
+                            if (((Weapon)equipment[19]).damageType == type) //is ranged
+                            {
+                                d += ((Weapon)equipment[19]).damage; //no str added
+                            }
+                        }
+
+                    }
+                    else
+                    {
+                        d += 0; //fists are not ranged equipment
+                    }
+
+                    if (equipment[20] != null) //fist right
+                    {
+                        if (equipment[20].GetType() == typeof(Weapon)) //is weapon
+                        {
+                            if (((Weapon)equipment[20]).damageType == type)
+                            {
+                                d += ((Weapon)equipment[20]).damage; //no str added
+                            }
+                        }
+                    }
+                    else
+                    {
+                        d += 0;//fists are not ranged equipment
+                    }
+                    foreach (Item item in equipment)
+                    {
+                        if (item != null)
+                        {
+                            if (item.damageboost != 0)
+                            {
+                                if (item.boosttype == type)
+                                {
+                                    if (item.damagemultiply)
+                                    {
+                                        d += (d / 100) * item.damageboost;
+                                    }
+                                    else
+                                    {
+                                        d += item.damageboost;
+                                    }
+                                }
+                            }
+                        }
+                    }
                     break;
-                case 2:
-                    //TODO wis half
+                case 2: //magic
+                    if (equipment[19] != null) //fist left
+                    {
+                        if (equipment[19].GetType() == typeof(Weapon)) //is weapon
+                        {
+                            if (((Weapon)equipment[19]).damageType == type) //is ranged
+                            {
+                                d += ((Weapon)equipment[19]).damage + wis / 2;
+                            }
+                        }
+
+                    }
+                    else
+                    {
+                        d += 0; //fists are not magic weapons
+                    }
+
+                    if (equipment[20] != null) //fist right
+                    {
+                        if (equipment[20].GetType() == typeof(Weapon)) //is weapon
+                        {
+                            if (((Weapon)equipment[20]).damageType == type)
+                            {
+                                d += ((Weapon)equipment[20]).damage + wis / 2;
+                            }
+                        }
+
+                    }
+                    else
+                    {
+                        d += 0;//fists are not magic weapons
+                    }
+
+                    foreach (Item item in equipment)
+                    {
+                        if (item != null)
+                        {
+                            if (item.damageboost != 0)
+                            {
+                                if (item.boosttype == type)
+                                {
+                                    if (item.damagemultiply)
+                                    {
+                                        d += (d / 100) * item.damageboost;
+                                    }
+                                    else
+                                    {
+                                        d += item.damageboost;
+                                    }
+                                }
+                            }
+                        }
+                    }
                     break;
                 default:
                     break;
             }
             return d;
+        }
+        public int GetRange(int type = 0) // 0 == melee, 1 == ranged, 2 == magic // if this returns 0, we don't have a wepon of this type
+        {
+            int range = 0;
+            switch (type)
+            {
+                case 0: //melee
+                    if (equipment[19] != null) //have weapon
+                    {
+                        if (equipment[19].GetType() == typeof(Weapon)) //is weapon
+                        {
+                            if (((Weapon)equipment[19]).damageType == type)
+                            {
+                                range = ((Weapon)equipment[19]).range;
+                            }
+                        }
+
+                    }
+                    else if (equipment[20] != null) //have weapon
+                    {
+                        if (equipment[20].GetType() == typeof(Weapon)) //is weapon
+                        {
+                            if (((Weapon)equipment[20]).damageType == type)
+                            {
+                                range = ((Weapon)equipment[20]).range;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        range = 1; //fists
+                    }
+                    return range;
+
+                case 1: //range
+                    if (equipment[19] != null) //have weapon
+                    {
+                        if (equipment[19].GetType() == typeof(Weapon)) //is weapon
+                        {
+                            if (((Weapon)equipment[19]).damageType == type)
+                            {
+                                range = ((Weapon)equipment[19]).range;
+                            }
+                        }
+
+                    }
+                    else if (equipment[20] != null) //have weapon
+                    {
+                        if (equipment[20].GetType() == typeof(Weapon)) //is weapon
+                        {
+                            if (((Weapon)equipment[20]).damageType == type)
+                            {
+                                range = ((Weapon)equipment[20]).range;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        range = 0; //no ranged weapon
+                    }
+                    return range;
+                case 3: //magic
+                    if (equipment[19] != null) //have weapon
+                    {
+                        if (equipment[19].GetType() == typeof(Weapon)) //is weapon
+                        {
+                            if (((Weapon)equipment[19]).damageType == type)
+                            {
+                                range = ((Weapon)equipment[19]).range;
+                            }
+                        }
+
+                    }
+                    else if (equipment[20] != null) //have weapon
+                    {
+                        if (equipment[20].GetType() == typeof(Weapon)) //is weapon
+                        {
+                            if (((Weapon)equipment[20]).damageType == type)
+                            {
+                                range = ((Weapon)equipment[20]).range;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        range = 0; //no weapon
+                    }
+                    return range;
+                default:
+                    return 1;
+            }
         }
     }
 
@@ -1619,12 +1959,12 @@ namespace HelloNamespace
         public float speed; //tiles or attacks per tick, 1 == 1 tile, 3 == 3 tiles
         public enum Types
         {
-            ranged, 
+            ranged,
             melee,
             other
         }
         internal Types type;
-        public Enemy(string n, int h, int da, int xp, int g, List<Item> d = null, Item l = null, Types t = Types.melee, Tile tl = null, int sr = 5                                                                                                                                                                                                                                                                                                                             , float sp = 0.75f)
+        public Enemy(string n, int h, int da, int xp, int g, List<Item> d = null, Item l = null, Types t = Types.melee, Tile tl = null, int sr = 5, float sp = 0.75f)
         {
             damage = da;
             name = n;
@@ -1643,16 +1983,18 @@ namespace HelloNamespace
         {
 
         }
-        public void TakeDamage(int d, Tile attacker)
+        public void TakeDamage(int d, Tile attacker) //enemy takes damage
         {
             if (health - d <= 0)
             {
+                health = 0;
                 Die(attacker);
             }
             else
             {
                 health -= d;
             }
+
         }
         public void Heal(int h, Tile healer)
         {
@@ -1674,8 +2016,18 @@ namespace HelloNamespace
                 killer.player.GainExp(expdrop);
                 killer.player.GainLoot(this);
             }
-            tile = tile.standingOn;
+            if (tile.enemy != null)
+            {
+                tile.enemy = null;
+                tile.type = tile.standingOn.type;
+                tile.symbol = tile.standingOn.symbol;
+                tile.position = tile.standingOn.position;
+                tile.color = tile.standingOn.color;
+                tile = tile.standingOn;
+                tile.DrawSelf();
+            }
         }
+
         void SetTarget(Tile t)
         {
             target = t;
@@ -1706,12 +2058,12 @@ namespace HelloNamespace
                 tile.MoveTeleport(m, path[0]);
                 path.RemoveAt(0);
             }
-            
+
         }
     }
     public class Boss : Enemy
     {
-        public Boss(string n, int h, int da, int xp, int g, List<Item> d = null, Item l = null, Types t = Types.melee) : base(n,h,da,xp,g,d,l,t)
+        public Boss(string n, int h, int da, int xp, int g, List<Item> d = null, Item l = null, Types t = Types.melee) : base(n, h, da, xp, g, d, l, t)
         {
             damage = da;
             name = n;
