@@ -10,16 +10,63 @@ using System.IO;
 namespace HelloNamespace
 {
 
-    class RoguelikeSaver
+    class SaveHandler
     {
         public static string savefiles = "files\\roguelike\\";
-        public static string mapsave = "map";
-        public static string playersave = "player";
-        
-        public static void SaveMap(Tile[,] map, string name = "default")
+        public static string mapsave = "maps\\";
+        public static string mapprefix = "m";
+        public static string playersave = "players\\";
+        public static string playerprefix = "p";
+        public static void SaveMap(Tile[,] map, string name = "default", bool removePlayer = false)
         { 
-            string file = savefiles + mapsave + "-" + name + ".xml";
+            string file = savefiles + mapsave + mapprefix+ "-" + name + ".xml";
             List<List<Tile>> convertedMap = new List<List<Tile>>();
+
+            if (!Directory.Exists(savefiles))
+            {
+                var d = Directory.CreateDirectory(savefiles);
+                var f = File.Create(file);
+                f.Close();
+            }
+            if (!Directory.Exists(savefiles+mapsave))
+            {
+                var d = Directory.CreateDirectory(savefiles + mapsave);
+                var f = File.Create(file);
+                f.Close();
+            }
+            if (!Directory.Exists(savefiles + playersave))
+            {
+                var d = Directory.CreateDirectory(savefiles + playersave);
+                var f = File.Create(file);
+                f.Close();
+            }
+            if (!File.Exists(file))
+            {
+                var f = File.Create(file);
+                f.Close();
+            }
+            if (removePlayer)
+            {
+                foreach (Tile tile in map)
+                {
+                    if (tile.player != null)
+                    {
+                        map[tile.position.intx, tile.position.inty] = tile.standingOn;
+                    }
+                }
+            }
+            Type[] types = new Type[] { typeof(Weapon) };
+            using (StreamWriter sw = new StreamWriter(file))
+            {
+                XmlSerializer x = new XmlSerializer(typeof(List<List<Tile>>),types);
+                //XmlSerializer x = new XmlSerializer(typeof(Tile[,])); //does not support multidimensional arrays
+                x.Serialize(sw, ConvertToListOfLists(map));
+            }
+            
+        }
+        public static void SavePlayer(Tile p, string name = "default")
+        {
+            string file = savefiles + playersave +playerprefix+"-" + name + ".xml";
 
             if (!Directory.Exists(savefiles))
             {
@@ -32,19 +79,17 @@ namespace HelloNamespace
                 var f = File.Create(file);
                 f.Close();
             }
-            Type[] types = new Type[] { typeof(Weapon) };
+           
             using (StreamWriter sw = new StreamWriter(file))
             {
-                XmlSerializer x = new XmlSerializer(typeof(List<List<Tile>>),types);
+                XmlSerializer x = new XmlSerializer(typeof(Tile));
                 //XmlSerializer x = new XmlSerializer(typeof(Tile[,])); //does not support multidimensional arrays
-    
-                x.Serialize(sw, ConvertToListOfLists(map));
+                x.Serialize(sw, p);
             }
-            
         }
         public static Tile[,] ReadMap(string name = "default")
         {
-            string file = savefiles + mapsave + "-" + name + ".xml";
+            string file = savefiles + mapsave + mapprefix + "-" + name + ".xml";
             if (!File.Exists(file))
             {
                 var f = File.Create(file);
@@ -60,6 +105,23 @@ namespace HelloNamespace
                 m = (List<List<Tile>>)x.Deserialize(sw);
             }
             return ConvertToTileMap(m);
+        }
+        public static Tile ReadPlayer(string name = "default")
+        {
+            string file = savefiles + playersave + playerprefix + "-" + name + ".xml";
+            Tile p;
+            if (!File.Exists(file))
+            {
+                var f = File.Create(file);
+                f.Close();
+                return null;
+            }
+            using (StreamReader sw = new StreamReader(file))
+            {
+                XmlSerializer x = new XmlSerializer(typeof(Tile));
+                p = (Tile)x.Deserialize(sw);
+            }
+            return p;
         }
         public static List<List<Tile>> ConvertToListOfLists(Tile[,] array)
         {

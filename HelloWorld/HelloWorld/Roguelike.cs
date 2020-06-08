@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
-using static HelloNamespace.RoguelikeSaver;
+using static HelloNamespace.SaveHandler;
 using static HelloNamespace.Tile;
 
 namespace HelloNamespace
@@ -30,7 +30,7 @@ namespace HelloNamespace
         static Random rnd = new Random();
         List<Enemy> enemies = new List<Enemy>();
         CaveGenerator cvg = new CaveGenerator();
-
+        
         enum SidePanel
         {
             Inventory,
@@ -71,33 +71,62 @@ namespace HelloNamespace
         };
         public Roguelike()
         {
-            if (System.IO.Directory.Exists(RoguelikeSaver.savefiles))
+            if (System.IO.Directory.Exists(savefiles))
             {
-                int count = System.IO.Directory.GetFiles(RoguelikeSaver.savefiles).Length;
-                if (count > 0)
+                if (System.IO.Directory.Exists(savefiles + "\\players"))
                 {
-                    string toread = System.IO.Directory.GetFiles(RoguelikeSaver.savefiles).First();
-                    worldName = toread.Split('-')[1].Split('.').First();
-                    map = ReadMap(worldName);
-                    //find player
-                    titleScreen += " " + worldName + "!";
-                    foreach (Tile item in map)
+                    //currently just gets the first savefile //TODO select player to load
+                    int count = System.IO.Directory.GetFiles(savefiles + "\\players").Length;
+                    if (count > 0)
                     {
-                        if (item.player != null)
-                        {
-                            player = item;
+                        string toread = System.IO.Directory.GetFiles(savefiles + "\\players").First();
+                        toread = toread.Split('-')[1].Split('.').First();
 
-                        }
-                        if (item.enemy != null)
-                        {
-                            item.enemy.tile = item;
-                            enemies.Add(item.enemy);
-                        }
+                        player = ReadPlayer(toread);
                     }
-                    //end find player
-                    Console.Clear();
-                    DrawScreen();
-                    DrawMap(map, true, true);
+                }
+                else
+                {
+                    NewWorld();
+                }
+                if (System.IO.Directory.Exists(savefiles + "\\maps"))
+                {
+                    //currently just gets the first savefile //TODO select map to load
+                    int count = System.IO.Directory.GetFiles(savefiles + "\\maps").Length;
+                    if (count > 0)
+                    {
+                        string toread = System.IO.Directory.GetFiles(savefiles + "\\maps").First();
+                        worldName = toread.Split('-')[1].Split('.').First();
+                            map = ReadMap(worldName);
+                        //find enemies
+                        titleScreen += " " + worldName + "!";
+                        foreach (Tile item in map)
+                        {
+                            //if (item.player != null)
+                            //{
+                            //    player = item;
+                            //}
+
+                            if (item.isPortal)
+                            {
+
+                            }
+                            if (item.enemy != null)
+                            {
+                                item.enemy.tile = item;
+                                enemies.Add(item.enemy);
+                            }
+                        }
+
+                        //end find enemies
+                        Console.Clear();
+                        DrawScreen();
+                        DrawMap(map, true, true);
+                    }
+                    else
+                    {
+                        NewWorld();
+                    }
                 }
                 else
                 {
@@ -152,8 +181,9 @@ namespace HelloNamespace
             }
             return point;
         }
-        void NewWorld()
+        void NewWorld(bool fromportal = false, string fromworld = "", bool toportal = true)
         {
+            string oldWorldname = fromworld;
             WordMaker wm = new WordMaker();
 
             worldName = UppercaseFirst(wm.WordFinder(rnd.Next(4, 10)));
@@ -166,8 +196,26 @@ namespace HelloNamespace
 
             Console.Clear();
             DrawScreen();
-            DrawMap(cvg, true, true, true);
+            CreateDrawMap(cvg, true, true, true, fromportal, oldWorldname, toportal);
+            SaveMap(map, worldName);
+            SavePlayer(player, "default");
+            AddWorld(worldName);
+            player.player.worldindex = worldName;
 
+        }
+
+        public void SwitchLevel(string load, bool transition)
+        {
+            ReadMap(load);
+
+        }
+
+        public void AddWorld(string s)
+        {
+            if (player != null && player.player != null)
+            {
+                player.player.worlds.Add(s);
+            }
         }
         public void Play()
         {
@@ -290,7 +338,7 @@ namespace HelloNamespace
                                 break;
                             case PauseOptions.Quit: //exit
                                 running = false;
-                                RoguelikeSaver.SaveMap(map, worldName);
+                                SaveMap(map, worldName);
                                 Console.Clear();
                                 break;
                             default:
@@ -358,6 +406,56 @@ namespace HelloNamespace
                     }
                 }
                 player.player.EndOfRound();
+                if (player.standingOn.isPortal)
+                {
+                    //save this world
+
+                    SaveMap(map, worldName);
+                    string file = savefiles + mapsave + mapprefix+"-" + player.standingOn.PortalTo + ".xml";
+                    //load map or create new
+
+                    if (System.IO.File.Exists(file))
+                    {
+                        map = ReadMap(worldName);
+                        titleScreen += " " + worldName + "!";
+                        foreach (Tile item in map)
+                        {                       
+                            //find portal
+                            if (item.isPortal == true && item.PortalTo == worldName)
+                            {
+                                Tile item2 = item;
+                                map[item.position.intx, item.position.inty] = player;
+                                player.standingOn = item2;
+
+                            }
+                            if (item.enemy != null)
+                            {
+                                item.enemy.tile = item;
+                                enemies.Add(item.enemy);
+                            }
+                        }
+                    }
+                    else //create new world with a portal to this one
+                    {
+                        NewWorld(true, worldName, true);//replaces current "map"
+                        SaveMap(map, worldName, true); //save map without player
+                        SavePlayer(player, "default"); //TODO implement player names
+                    }
+                    foreach (Tile tile in map) //move current player to there
+                    {
+                        if (tile.isPortal == true && tile.PortalTo == player.player.lastWorld)
+                        {
+                            Tile tile2 = tile;
+                            map[tile.position.intx, tile.position.inty] = player;
+                            player.standingOn = tile2;
+                            break;
+                        }
+                    }
+
+
+
+
+                }
                 DrawPanel(sidePanel);
             } while (running);
         }
@@ -956,16 +1054,13 @@ namespace HelloNamespace
                         }
                         //Console.BackgroundColor = ConsoleColor.DarkGray;
                         Console.Write(text);
-
-
                         v2++;
                     }
                     Console.ResetColor();
-
                     break;
             }
         }
-        void DrawMap(CaveGenerator c, bool replaceempty = false, bool drawplayer = false, bool addlakes = false)
+        void CreateDrawMap(CaveGenerator c, bool replaceempty = false, bool drawplayer = false, bool addlakes = false, bool fromportal = false, string fromWorld = "", bool toportal = true)
         {
 
             Thread.Sleep(300);
@@ -984,10 +1079,30 @@ namespace HelloNamespace
             }
             Program.Point2D start = c.findEmptyCell(map, true);
             //Program.Print2dIntArray(map, true, start.GetLength(0), start.GetLength(1));
-            map[(int)start.x, (int)start.y] = new Tile('@', new Program.Point2D((int)start.x, (int)start.y), Tile.TileType.Player, ConsoleColor.Blue);
-            map[(int)start.x, (int)start.y].standingOn = new Tile(' ', new Program.Point2D((int)start.x, (int)start.y), Tile.TileType.Floor);
-            map[(int)start.x, (int)start.y].player = new Player(8, 8, 8);
-            player = map[(int)start.x, (int)start.y];
+            if (fromportal == false)
+            {
+                map[(int)start.x, (int)start.y] = new Tile('@', new Program.Point2D((int)start.x, (int)start.y), Tile.TileType.Player, ConsoleColor.Blue);
+                map[(int)start.x, (int)start.y].standingOn = new Tile(' ', new Program.Point2D((int)start.x, (int)start.y), Tile.TileType.Floor);
+                map[(int)start.x, (int)start.y].player = new Player(8, 8, 8);
+                player = map[(int)start.x, (int)start.y];
+                
+            }
+            else
+            {
+                //make from portal
+                map[(int)start.x, (int)start.y] = new Tile('*', new Program.Point2D((int)start.x, (int)start.y), Tile.TileType.Floor, ConsoleColor.DarkMagenta);
+                map[(int)start.x, (int)start.y].isPortal = true;
+                map[(int)start.x, (int)start.y].PortalTo = fromWorld;
+            }
+            if (toportal)
+            {
+                //makeToPortal
+                start = c.findEmptyCell(map, false);
+                map[(int)start.x, (int)start.y] = new Tile('*', new Program.Point2D((int)start.x, (int)start.y), Tile.TileType.Floor, ConsoleColor.DarkMagenta);
+                map[(int)start.x, (int)start.y].isPortal = true;
+                map[(int)start.x, (int)start.y].PortalTo = "";
+            }
+
             for (int i = mapsize.min.x; i <= mapsize.max.x; i++)
             {
                 for (int j = mapsize.min.y; j < mapsize.max.y; j++)
@@ -1012,8 +1127,6 @@ namespace HelloNamespace
                     Console.ResetColor();
                 }
             }
-
-
         }
         void DrawMap(Tile[,] map, bool replaceempty = false, bool drawplayer = false)
         {
@@ -1047,7 +1160,11 @@ namespace HelloNamespace
                     else
                     {
                         Console.SetCursorPosition(i, j);
-
+                        Console.Write(map[i, j].symbol);
+                    }
+                    if (map[i, j].isPortal)
+                    {
+                        Console.SetCursorPosition(i, j);
                         Console.Write(map[i, j].symbol);
                     }
                     Console.ResetColor();
@@ -1214,12 +1331,14 @@ namespace HelloNamespace
 
         }
 
-        public Tile(char s, Program.Point2D pos, TileType t, ConsoleColor col = ConsoleColor.White)
+        public Tile(char s, Program.Point2D pos, TileType t, ConsoleColor col = ConsoleColor.White, bool p = false, string to = null)
         {
             symbol = s;
             type = t;
             position = pos;
             color = col;
+            isPortal = p;
+            PortalTo = to;
         }
         public enum possibleStatus
         {
@@ -1233,6 +1352,9 @@ namespace HelloNamespace
             public possibleStatus name;
             public int length;
         }
+
+        public bool isPortal;
+        public string PortalTo;
 
         public Item item;
         public Player player;
@@ -1429,8 +1551,8 @@ namespace HelloNamespace
 
             return null;
         }
-
     }
+
 
     public class Player
     {
@@ -1455,6 +1577,9 @@ namespace HelloNamespace
         #endregion
         public List<Item> inventory;
 
+        public List<string> worlds = new List<string>();
+        public string worldindex = "";
+        public string lastWorld = "";
         public Player(int s, int w, int c)
         {
 
