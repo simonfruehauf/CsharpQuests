@@ -87,55 +87,86 @@ namespace HelloNamespace
                 }
                 else
                 {
-                    NewWorld();
-                }
-                if (System.IO.Directory.Exists(savefiles + "\\maps"))
-                {
-                    //currently just gets the first savefile //TODO select map to load
-                    int count = System.IO.Directory.GetFiles(savefiles + "\\maps").Length;
-                    if (count > 0)
+                    if (System.IO.Directory.Exists(savefiles + "\\maps"))
                     {
-                        string toread = System.IO.Directory.GetFiles(savefiles + "\\maps").First();
-                        worldName = toread.Split('-')[1].Split('.').First();
-                            map = ReadMap(worldName);
-                        //find enemies
-                        titleScreen += " " + worldName + "!";
-                        foreach (Tile item in map)
+                        //currently just gets the first savefile //TODO select map to load
+                        int count = System.IO.Directory.GetFiles(savefiles + "\\maps").Length;
+                        if (count > 0)
                         {
-                            //if (item.player != null)
-                            //{
-                            //    player = item;
-                            //}
-
-                            if (item.isPortal)
+                            string toread = System.IO.Directory.GetFiles(savefiles + "\\maps").First();
+                            worldName = toread.Split('-')[1].Split('.').First();
+                            map = ReadMap(worldName);
+                            //find enemies
+                            titleScreen += " " + worldName + "!";
+                            foreach (Tile item in map)
                             {
+                                //if (item.player != null)
+                                //{
+                                //    player = item;
+                                //}
 
+                                if (item.isPortal)
+                                {
+
+                                }
+                                if (item.enemy != null)
+                                {
+                                    item.enemy.tile = item;
+                                    enemies.Add(item.enemy);
+                                }
                             }
-                            if (item.enemy != null)
-                            {
-                                item.enemy.tile = item;
-                                enemies.Add(item.enemy);
-                            }
+
+                            //end find enemies
+                            Console.Clear();
+                            DrawScreen();
+                            DrawMap(map, true, true);
                         }
-
-                        //end find enemies
-                        Console.Clear();
-                        DrawScreen();
-                        DrawMap(map, true, true);
+                        NewWorld();
                     }
                     else
                     {
-                        NewWorld();
+                        NewWorld(false, "", true);
                     }
                 }
-                else
+            }
+            if (System.IO.Directory.Exists(savefiles + "\\maps"))
+            {
+                //currently just gets the first savefile //TODO select map to load
+                int count = System.IO.Directory.GetFiles(savefiles + "\\maps").Length;
+                if (count > 0)
                 {
-                    NewWorld();
+                    string toread = System.IO.Directory.GetFiles(savefiles + "\\maps").First();
+                    worldName = toread.Split('-')[1].Split('.').First();
+                    map = ReadMap(worldName);
+                    //find enemies
+                    titleScreen += " " + worldName + "!";
+                    foreach (Tile item in map)
+                    {
+                        //if (item.player != null)
+                        //{
+                        //    player = item;
+                        //}
+
+                        if (item.isPortal)
+                        {
+
+                        }
+                        if (item.enemy != null)
+                        {
+                            item.enemy.tile = item;
+                            enemies.Add(item.enemy);
+                        }
+                    }
+
+                    //end find enemies
+                    Console.Clear();
+                    DrawScreen();
+                    DrawMap(map, true, true);
                 }
             }
             else
             {
-                NewWorld();
+                NewWorld(false, "", true);
             }
 
             sidePanel = SidePanel.Inventory;
@@ -416,17 +447,41 @@ namespace HelloNamespace
 
                     if (System.IO.File.Exists(file))
                     {
-                        map = ReadMap(worldName);
+                        map = ReadMap(player.standingOn.PortalTo);
                         titleScreen += " " + worldName + "!";
                         foreach (Tile item in map)
                         {                       
-                            //find portal
-                            if (item.isPortal == true && item.PortalTo == worldName)
+                            //find portal & move player there
+                            if (item.isPortal == true && item.PortalTo == player.player.lastWorld)
                             {
                                 Tile item2 = item;
                                 map[item.position.intx, item.position.inty] = player;
                                 player.standingOn = item2;
-
+                                player.standingOn.PortalTo = item2.PortalTo;
+                            }
+                            if (item.enemy != null)
+                            {
+                                item.enemy.tile = item;
+                                enemies.Add(item.enemy);
+                            }
+                        }
+                        DrawMap(map, true, true);
+                    }
+                    else //create new world with a portal to this one
+                    {
+                        player.player.lastWorld = worldName;
+                        NewWorld(true, worldName, true);//replaces current "map"
+                        SaveMap(map, worldName, true); //save map without player
+                        SavePlayer(player, "default"); //TODO implement player names
+                        foreach (Tile item in map)
+                        {
+                            //find portal & move player there
+                            if (item.isPortal == true && item.PortalTo == player.player.lastWorld)
+                            {
+                                Tile item2 = item;
+                                map[item.position.intx, item.position.inty] = player;
+                                player.standingOn = item2;
+                                player.standingOn.PortalTo = item2.PortalTo;
                             }
                             if (item.enemy != null)
                             {
@@ -435,26 +490,6 @@ namespace HelloNamespace
                             }
                         }
                     }
-                    else //create new world with a portal to this one
-                    {
-                        NewWorld(true, worldName, true);//replaces current "map"
-                        SaveMap(map, worldName, true); //save map without player
-                        SavePlayer(player, "default"); //TODO implement player names
-                    }
-                    foreach (Tile tile in map) //move current player to there
-                    {
-                        if (tile.isPortal == true && tile.PortalTo == player.player.lastWorld)
-                        {
-                            Tile tile2 = tile;
-                            map[tile.position.intx, tile.position.inty] = player;
-                            player.standingOn = tile2;
-                            break;
-                        }
-                    }
-
-
-
-
                 }
                 DrawPanel(sidePanel);
             } while (running);
@@ -1413,6 +1448,7 @@ namespace HelloNamespace
                 {
                     Console.SetCursorPosition((int)position.x, (int)position.y); //select self
                     map[(int)position.x, (int)position.y] = standingOn; //set tile beneath to standing on
+
                     if (map[(int)position.x, (int)position.y].color != null)
                     {
                         Console.ForegroundColor = map[(int)position.x, (int)position.y].color; //set color of tile
@@ -1422,6 +1458,10 @@ namespace HelloNamespace
                     Console.ResetColor();
 
                     standingOn = map[(int)moveto.x, (int)moveto.y]; //set tile beneath to goal
+                    if (standingOn.isPortal)
+                    {
+                        standingOn.PortalTo = map[(int)moveto.x, (int)moveto.y].PortalTo;
+                    }
                     if (goal.type == TileType.Item && type == TileType.Player)
                     {
                         map[(int)position.x, (int)position.y].item.Pickup(player); //pickup if we are player & goal is item
@@ -1499,6 +1539,10 @@ namespace HelloNamespace
                     Console.ResetColor();
 
                     standingOn = map[(int)moveto.x, (int)moveto.y]; //set tile beneath to goal
+                    if (standingOn.isPortal)
+                    {
+                        standingOn.PortalTo = map[(int)moveto.x, (int)moveto.y].PortalTo;
+                    }
                     if (goal.type == TileType.Item && type == TileType.Player)
                     {
                         map[(int)position.x, (int)position.y].item.Pickup(player); //pickup if we are player & goal is item
