@@ -14,6 +14,11 @@ namespace HelloNamespace
         Random rnd = new Random();
         public int[,] Map;
         public Tile[,] TileMap;
+
+        public void UseSeed(int seed)
+        {
+            rnd = new Random(seed);
+        }
         public dynamic ReadMap(string filename, bool asInt = false)
         {
 
