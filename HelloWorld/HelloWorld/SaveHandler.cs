@@ -10,7 +10,7 @@ using System.IO;
 namespace HelloNamespace
 {
 
-    class RoguelikeSaver
+    class SaveHandler
     {
         public static string savefiles = "files\\roguelike\\";
         public static string mapsave = "map";

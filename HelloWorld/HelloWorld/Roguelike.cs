@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
-using static HelloNamespace.RoguelikeSaver;
+using static HelloNamespace.SaveHandler;
 using static HelloNamespace.Tile;
 
 namespace HelloNamespace
@@ -71,12 +71,12 @@ namespace HelloNamespace
         };
         public Roguelike()
         {
-            if (System.IO.Directory.Exists(RoguelikeSaver.savefiles))
+            if (System.IO.Directory.Exists(SaveHandler.savefiles))
             {
-                int count = System.IO.Directory.GetFiles(RoguelikeSaver.savefiles).Length;
+                int count = System.IO.Directory.GetFiles(SaveHandler.savefiles).Length;
                 if (count > 0)
                 {
-                    string toread = System.IO.Directory.GetFiles(RoguelikeSaver.savefiles).First();
+                    string toread = System.IO.Directory.GetFiles(SaveHandler.savefiles).First();
                     worldName = toread.Split('-')[1].Split('.').First();
                     map = ReadMap(worldName);
                     //find player
@@ -290,7 +290,7 @@ namespace HelloNamespace
                                 break;
                             case PauseOptions.Quit: //exit
                                 running = false;
-                                RoguelikeSaver.SaveMap(map, worldName);
+                                SaveHandler.SaveMap(map, worldName);
                                 Console.Clear();
                                 break;
                             default:
