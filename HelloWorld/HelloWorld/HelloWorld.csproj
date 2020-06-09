@@ -51,7 +51,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RandomStatGenerator.cs" />
-    <Compile Include="RoguelikeSaver.cs" />
+    <Compile Include="SaveHandler.cs" />
     <Compile Include="RPS.cs" />
     <Compile Include="Snake.cs" />
     <Compile Include="Warehouse.cs" />

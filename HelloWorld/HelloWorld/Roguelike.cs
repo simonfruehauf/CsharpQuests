@@ -71,37 +71,90 @@ namespace HelloNamespace
         };
         public Roguelike()
         {
-            if (System.IO.Directory.Exists(SaveHandler.savefiles))
+            if (System.IO.Directory.Exists(savefiles))
             {
-                int count = System.IO.Directory.GetFiles(SaveHandler.savefiles).Length;
+                if (System.IO.Directory.Exists(savefiles + "\\players"))
+                {
+                    //currently just gets the first savefile //TODO select player to load
+                    int count = System.IO.Directory.GetFiles(savefiles + "\\players").Length;
+                    if (count > 0)
+                    {
+                        string toread = System.IO.Directory.GetFiles(savefiles + "\\players").First();
+                        toread = toread.Split('-')[1].Split('.').First();
+
+                        player = ReadPlayer(toread);
+                    }
+                }
+                else
+                {
+                    if (System.IO.Directory.Exists(savefiles + "\\maps"))
+                    {
+                        //currently just gets the first savefile //TODO select map to load
+                        int count = System.IO.Directory.GetFiles(savefiles + "\\maps").Length;
+                        if (count > 0)
+                        {
+                            string toread = System.IO.Directory.GetFiles(savefiles + "\\maps").First();
+                            worldName = toread.Split('-')[1].Split('.').First();
+                            map = ReadMap(worldName);
+                            //find enemies
+                            titleScreen += " " + worldName + "!";
+                            foreach (Tile item in map)
+                            {
+                                if (item.player != null)
+                                {
+                                    player = item;
+                                }
+
+                                if (item.enemy != null)
+                                {
+                                    item.enemy.tile = item;
+                                    enemies.Add(item.enemy);
+                                }
+                            }
+
+                            //end find enemies
+                            Console.Clear();
+                            DrawScreen();
+                            DrawMap(map, true, true);
+                        }
+                        NewWorld();
+                    }
+                    else
+                    {
+                        NewWorld();
+                    }
+                }
+            }
+            if (System.IO.Directory.Exists(savefiles + "\\maps"))
+            {
+                //currently just gets the first savefile //TODO select map to load
+                int count = System.IO.Directory.GetFiles(savefiles + "\\maps").Length;
                 if (count > 0)
                 {
-                    string toread = System.IO.Directory.GetFiles(SaveHandler.savefiles).First();
+                    string toread = System.IO.Directory.GetFiles(savefiles + "\\maps").First();
                     worldName = toread.Split('-')[1].Split('.').First();
                     map = ReadMap(worldName);
-                    //find player
+                    //find enemies
                     titleScreen += " " + worldName + "!";
                     foreach (Tile item in map)
                     {
                         if (item.player != null)
                         {
                             player = item;
-
                         }
+
+
                         if (item.enemy != null)
                         {
                             item.enemy.tile = item;
                             enemies.Add(item.enemy);
                         }
                     }
-                    //end find player
+
+                    //end find enemies
                     Console.Clear();
                     DrawScreen();
                     DrawMap(map, true, true);
-                }
-                else
-                {
-                    NewWorld();
                 }
             }
             else
