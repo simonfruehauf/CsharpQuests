@@ -25,6 +25,9 @@ namespace HelloNamespace
             if (!Directory.Exists(savefiles))
             {
                 var d = Directory.CreateDirectory(savefiles);
+                var d2 = Directory.CreateDirectory(savefiles + mapsave);
+                var d3 = Directory.CreateDirectory(savefiles+playersave);
+
                 var f = File.Create(file);
                 f.Close();
             }
