@@ -110,6 +110,36 @@ namespace HelloNamespace
 
                         playerTile = ReadPlayer(toread);
                         Areas = playerTile.player.world;
+                        worldName = playerTile.player.currentArea;
+                        if (System.IO.Directory.Exists(savefiles + mapsave))
+                        {
+                            map = ReadMap(worldName);
+                            if (map == null)
+                            {
+                                NewWorld();
+                            }
+                            //find enemies
+                            titleScreen += " " + worldName + "!";
+                            foreach (Tile item in map)
+                            {
+                                if (item.player != null)
+                                {
+                                    playerTile = item;
+                                }
+
+                                if (item.enemy != null)
+                                {
+                                    item.enemy.tile = item;
+                                    enemies.Add(item.enemy);
+                                }
+                            }
+
+                            //end find enemies
+                            Console.Clear();
+                            DrawScreen();
+                            DrawMap(map, true, true);
+
+                        }
                     }
                     else
                     {
@@ -122,10 +152,10 @@ namespace HelloNamespace
                     if (System.IO.Directory.Exists(savefiles + mapsave))
                     {
                         //currently just gets the first savefile //TODO select map to load
-                        int count = System.IO.Directory.GetFiles(savefiles + "\\maps").Length;
+                        int count = System.IO.Directory.GetFiles(savefiles + mapsave).Length;
                         if (count > 0)
                         {
-                            string toread = System.IO.Directory.GetFiles(savefiles + "\\maps").First();
+                            string toread = System.IO.Directory.GetFiles(savefiles + mapsave).First();
                             worldName = toread.Split('-')[1].Split('.').First();
                             map = ReadMap(worldName);
                             //find enemies
@@ -235,11 +265,13 @@ namespace HelloNamespace
             }
             else //create path to new world
             {
+                List<Program.Point2D> edge = new List<Program.Point2D>();
                 if (playerTile.position.x <= 1)
                 {
                     //east
                     LinkWorlds(oldWorld, worldName, Direction.e);
                     LinkWorlds(worldName, oldWorld, Direction.w);
+                    edge = findEmtpyEdge(Direction.w);
 
                 }
                 else if (playerTile.position.x >= map.GetLength(0) - 1)
@@ -247,13 +279,14 @@ namespace HelloNamespace
                     //west
                     LinkWorlds(oldWorld, worldName, Direction.w);
                     LinkWorlds(worldName, oldWorld, Direction.e);
-
+                    edge = findEmtpyEdge(Direction.e);
                 }
                 else if (playerTile.position.y <= 1)
                 {
                     //south
                     LinkWorlds(oldWorld, worldName, Direction.s);
                     LinkWorlds(worldName, oldWorld, Direction.n);
+                    edge = findEmtpyEdge(Direction.n);
 
                 }
                 else if (playerTile.position.y >= map.GetLength(1) - 1)
@@ -261,6 +294,7 @@ namespace HelloNamespace
                     //north
                     LinkWorlds(oldWorld, worldName, Direction.n);
                     LinkWorlds(worldName, oldWorld, Direction.s);
+                    edge = findEmtpyEdge(Direction.s);
                 }
 
                 //create paths
@@ -305,56 +339,46 @@ namespace HelloNamespace
             }
             return true;
         }
-        void createPath(Program.Point2D p)
+        List<Program.Point2D> findEmtpyEdge(Direction d)
         {
+            List<Program.Point2D> values = new List<Program.Point2D>();
             Program.Point2D dir = new Program.Point2D(0, 0);
-            Program.Point2D start = new Program.Point2D(p.intx, p.inty); //find start, player inverted
-            if (p.intx <= 1)
+            Program.Point2D start = new Program.Point2D(0, 0);
+            bool down = true;
+            switch (d)
             {
-                //to the left from max
-                dir = new Program.Point2D(-1, 0);
-                start = new Program.Point2D(0, playerTile.position.inty);
+                case Direction.n:
+                    dir = new Program.Point2D(1, 0);
+                    start = new Program.Point2D(1, 1);
+                    down = false;
+                    break;
+                case Direction.e:
+                    dir = new Program.Point2D(0, 1);
+                    start = new Program.Point2D(map.GetLength(0) - 1, 1);
+                    break;
+                case Direction.s:
+                    dir = new Program.Point2D(1, 0);
+                    start = new Program.Point2D(1, map.GetLength(1)-1);
+                    down = false;
+                    break;
+                case Direction.w:
+                    dir = new Program.Point2D(0, 1);
+                    start = new Program.Point2D(1,1);
+                    break;
+                default:
+                    break;
             }
-            if (p.intx >= map.GetLength(0)-1)
+            int count = map.GetLength(down ? 1 : 0) - 2;
+            for (int i = 0; i < count; i++)
             {
-                //to the right from 0
-                dir = new Program.Point2D(1, 0);
-                start = new Program.Point2D(map.GetLength(0), playerTile.position.inty);
-
-            }
-            if (p.inty <= 1)
-            {
-                //up from max
-                dir = new Program.Point2D(0, -1);
-                start = new Program.Point2D(playerTile.position.intx, map.GetLength(1));
-
-            }
-            if (p.inty >= map.GetLength(1)-1)
-            {
-                //down from 0
-                dir = new Program.Point2D(0, 1);
-                start = new Program.Point2D(playerTile.position.intx, 0);
-
-            }
-            bool foundempty = false;
-            int c = 1;
-            do
-            {
-                Tile t = map[start.intx + dir.intx * c, start.inty + dir.inty * c];
-
-                if (map[start.intx + dir.intx * c, start.inty + dir.inty * c].type == TileType.Wall)
+                Program.Point2D p = map[start.intx + dir.intx * i, start.inty + dir.inty * i].position;
+                if (map[start.intx + dir.intx*i, start.inty + dir.inty * i].type == TileType.Floor || map[start.intx + dir.intx * i, start.inty + dir.inty * i].type == TileType.Water)
                 {
-                    //make not wall
-                    map[start.intx + dir.intx * c, start.inty + dir.inty * c] = new Tile(' ', new Program.Point2D(start.intx + dir.intx * c, start.inty + dir.inty * c), TileType.Floor);
+                    values.Add(map[start.intx + dir.intx * i, start.inty + dir.inty * i].position);
                 }
-                if (map[start.intx + dir.intx * c, start.inty + dir.inty * c].type == TileType.Floor || map[start.intx + dir.intx * c, start.inty + dir.inty * c].type == TileType.Water)
-                {
-                    foundempty = true;
-                }
-                c++;
-            } while (!foundempty);
+            }
 
-
+            return values;
         }
         public void Play()
         {
@@ -478,7 +502,9 @@ namespace HelloNamespace
                                 break;
                             case PauseOptions.Quit: //exit
                                 running = false;
-                                SaveMap(map, worldName);
+                                SaveMap(map, worldName, true);
+                                playerTile.player.world = Areas;
+                                playerTile.player.currentArea = worldName;
                                 SavePlayer(playerTile, "default");
                                 Console.Clear();
                                 break;
@@ -612,7 +638,47 @@ namespace HelloNamespace
                     {
                         map = ReadMap(toload);
                         MovePlayerNewMap();
+                        List<Program.Point2D> edge = new List<Program.Point2D>();
+                        if (playerTile.position.x <= 1)
+                        {
+                            edge = findEmtpyEdge(Direction.w);
+
+                        }
+                        else if (playerTile.position.x >= map.GetLength(0) - 1)
+                        {
+                            
+                            edge = findEmtpyEdge(Direction.e);
+                        }
+                        else if (playerTile.position.y <= 1)
+                        {
+                            //south
+                            edge = findEmtpyEdge(Direction.n);
+
+                        }
+                        else if (playerTile.position.y >= map.GetLength(1) - 1)
+                        {
+                            //north
+                            edge = findEmtpyEdge(Direction.s);
+                        }
+
+                        //create paths
+                        //TODO currently does not work
+                        //createPath(playerTile.position);
+
+                        //find empty on edge, put player there
+                        //pick random empty
+                        if (edge.Count == 0)
+                        {
+                            //couldn't find empty space. shit
+                        }
+                        else
+                        {
+                            Program.Point2D playerpos = edge[rnd.Next(0, edge.Count() - 1)];
+                            playerTile.MoveTeleport(map, playerpos);
+                        }
+
                         worldName = toload;
+                        DrawBorder();
                         DrawMap(map, true, true);
                     }
                     playerTile.player.offscreen = false;
@@ -835,15 +901,10 @@ namespace HelloNamespace
                 max = maxsize;
             }
         }
-        void DrawScreen(bool sleep = true)
+        void DrawBorder()
         {
             int x = Console.WindowWidth;  //120
             int y = Console.WindowHeight; //30
-            GetMapSize();
-            inventorysize = new Map(new Position(((2 * x) / 3) + 1, 1), new Position(x - 1, y - 1));
-
-
-            #region drawborder
             for (int i = 0; i <= x; i++)
             {
                 for (int j = 0; j <= y; j++)
@@ -882,6 +943,17 @@ namespace HelloNamespace
                 }
             }
             Console.ResetColor();
+        }
+        void DrawScreen(bool sleep = true)
+        {
+            int x = Console.WindowWidth;  //120
+            int y = Console.WindowHeight; //30
+            GetMapSize();
+            inventorysize = new Map(new Position(((2 * x) / 3) + 1, 1), new Position(x - 1, y - 1));
+
+
+            #region drawborder
+            DrawBorder();
             #endregion
 
 
@@ -1576,9 +1648,9 @@ namespace HelloNamespace
         public void MoveTeleport(Tile[,] map, Program.Point2D point, bool ignorewalls = false) //teleport
         {
             Program.Point2D moveto = point;
-            if (!(moveto.x > map.GetLength(0) - 1 || moveto.x < 1 || moveto.y > map.GetLength(1) - 1 || moveto.y < 1)) //borders
+            if (!(moveto.x > map.GetLength(0) || moveto.x < 0 || moveto.y > map.GetLength(1) || moveto.y < 0)) //borders
             {
-                Tile goal = map[(int)moveto.x, (int)moveto.y];
+                Tile goal = map[moveto.intx, moveto.inty];
 
                 if (!ignorewalls && (map[(int)moveto.x, (int)moveto.y].type == TileType.Floor || map[(int)moveto.x, (int)moveto.y].type == TileType.Item))
                 {
@@ -1587,7 +1659,6 @@ namespace HelloNamespace
                     if (map[(int)position.x, (int)position.y].color != null)
                     {
                         Console.ForegroundColor = map[(int)position.x, (int)position.y].color; //set color of tile
-
                     }
                     Console.Write(map[(int)position.x, (int)position.y].symbol); //draw tile beneath
                     Console.ResetColor();
@@ -1623,6 +1694,7 @@ namespace HelloNamespace
             else
             {
                 //moving out of the map
+                int nil = 0;
             }
 
         }
@@ -1759,6 +1831,7 @@ namespace HelloNamespace
 
         public bool offscreen; //used to generate a new map
         public List<Roguelike.MapDirections> world;
+        public string currentArea;
         public Player(int s, int w, int c)
         {
             str = s;
