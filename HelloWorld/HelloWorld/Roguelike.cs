@@ -19,6 +19,31 @@ namespace HelloNamespace
         char barchar = '█';
         string worldName;
         int healthbarsize = 1;
+        List<MapDirections> Areas;
+        public struct MapDirections
+        {
+            public string area;
+            public MapPaths paths { get; set; }
+            public MapDirections(string a, MapPaths p)
+            {
+                area = a;
+                paths = p;
+            }
+        }
+        public struct MapPaths 
+        {
+            public string west { get; set; }
+            public string east { get; set; }
+            public string north { get; set; }
+            public string south { get; set; }
+            public MapPaths(string w, string e, string n, string s)
+            {
+                west = w;
+                east = e;
+                north = n;
+                south = s;
+            }
+        }
 
         Tile[,] map;
         Map mapsize;
@@ -26,7 +51,7 @@ namespace HelloNamespace
         Map inventorysize;
         bool running = true;
         ConsoleKeyInfo currentInput;
-        public Tile player;
+        public Tile playerTile;
         static Random rnd = new Random();
         List<Enemy> enemies = new List<Enemy>();
         CaveGenerator cvg = new CaveGenerator();
@@ -71,23 +96,30 @@ namespace HelloNamespace
         };
         public Roguelike()
         {
+            Areas = new List<MapDirections>();
             if (System.IO.Directory.Exists(savefiles))
             {
-                if (System.IO.Directory.Exists(savefiles + "\\players"))
+                if (System.IO.Directory.Exists(savefiles + playersave))
                 {
                     //currently just gets the first savefile //TODO select player to load
-                    int count = System.IO.Directory.GetFiles(savefiles + "\\players").Length;
+                    int count = System.IO.Directory.GetFiles(savefiles + playersave).Length;
                     if (count > 0)
                     {
-                        string toread = System.IO.Directory.GetFiles(savefiles + "\\players").First();
+                        string toread = System.IO.Directory.GetFiles(savefiles + playersave).First();
                         toread = toread.Split('-')[1].Split('.').First();
 
-                        player = ReadPlayer(toread);
+                        playerTile = ReadPlayer(toread);
+                        Areas = playerTile.player.world;
+                    }
+                    else
+                    {
+                        //save directory exists, but no player save
+                        NewWorld();
                     }
                 }
                 else
                 {
-                    if (System.IO.Directory.Exists(savefiles + "\\maps"))
+                    if (System.IO.Directory.Exists(savefiles + mapsave))
                     {
                         //currently just gets the first savefile //TODO select map to load
                         int count = System.IO.Directory.GetFiles(savefiles + "\\maps").Length;
@@ -102,7 +134,7 @@ namespace HelloNamespace
                             {
                                 if (item.player != null)
                                 {
-                                    player = item;
+                                    playerTile = item;
                                 }
 
                                 if (item.enemy != null)
@@ -117,49 +149,12 @@ namespace HelloNamespace
                             DrawScreen();
                             DrawMap(map, true, true);
                         }
-                        NewWorld();
                     }
                     else
                     {
                         NewWorld();
                     }
                 }
-            }
-            if (System.IO.Directory.Exists(savefiles + "\\maps"))
-            {
-                //currently just gets the first savefile //TODO select map to load
-                int count = System.IO.Directory.GetFiles(savefiles + "\\maps").Length;
-                if (count > 0)
-                {
-                    string toread = System.IO.Directory.GetFiles(savefiles + "\\maps").First();
-                    worldName = toread.Split('-')[1].Split('.').First();
-                    map = ReadMap(worldName);
-                    //find enemies
-                    titleScreen += " " + worldName + "!";
-                    foreach (Tile item in map)
-                    {
-                        if (item.player != null)
-                        {
-                            player = item;
-                        }
-
-
-                        if (item.enemy != null)
-                        {
-                            item.enemy.tile = item;
-                            enemies.Add(item.enemy);
-                        }
-                    }
-
-                    //end find enemies
-                    Console.Clear();
-                    DrawScreen();
-                    DrawMap(map, true, true);
-                }
-            }
-            else
-            {
-                NewWorld();
             }
 
             sidePanel = SidePanel.Inventory;
@@ -205,8 +200,12 @@ namespace HelloNamespace
             }
             return point;
         }
-        void NewWorld()
+        void NewWorld(string oldWorld = "")
         {
+            if (worldName != "" && map != null)
+            {
+                SaveMap(map, worldName, true); //save old map
+            }
             WordMaker wm = new WordMaker();
 
             worldName = UppercaseFirst(wm.WordFinder(rnd.Next(4, 10)));
@@ -215,11 +214,146 @@ namespace HelloNamespace
             {
                 worldName += " " + UppercaseFirst(wm.WordFinder(rnd.Next(3, 4)));
             }
-            titleScreen += " " + worldName + "!";
+            titleScreen = "Welcome to the world of "+ worldName + "!";
 
             Console.Clear();
             DrawScreen();
-            DrawMap(cvg, true, true, true);
+            if (playerTile != null && playerTile.player != null)
+            {
+                CreateDrawMap(cvg, true, true, true, playerTile.player); 
+                MovePlayerNewMap();
+
+            }
+            else
+            {
+                CreateDrawMap(cvg, true, true, true);
+            }
+            SaveMap(map, worldName, true); //save new map
+            if (oldWorld == "")
+            {
+                Areas.Add(new MapDirections(worldName, new MapPaths())); //adding possible paths
+            }
+            else //create path to new world
+            {
+                if (playerTile.position.x <= 1)
+                {
+                    //east
+                    LinkWorlds(oldWorld, worldName, Direction.e);
+                    LinkWorlds(worldName, oldWorld, Direction.w);
+
+                }
+                else if (playerTile.position.x >= map.GetLength(0) - 1)
+                {
+                    //west
+                    LinkWorlds(oldWorld, worldName, Direction.w);
+                    LinkWorlds(worldName, oldWorld, Direction.e);
+
+                }
+                else if (playerTile.position.y <= 1)
+                {
+                    //south
+                    LinkWorlds(oldWorld, worldName, Direction.s);
+                    LinkWorlds(worldName, oldWorld, Direction.n);
+
+                }
+                else if (playerTile.position.y >= map.GetLength(1) - 1)
+                {
+                    //north
+                    LinkWorlds(oldWorld, worldName, Direction.n);
+                    LinkWorlds(worldName, oldWorld, Direction.s);
+                }
+
+                //create paths
+                //TODO currently does not work
+                //createPath(playerTile.position);
+            }
+
+        }
+        bool LinkWorlds(string from, string to, Direction d)
+        {
+            int ind = -1;
+            retryfind:
+            for (int i = 0; i < Areas.Count; i++)
+            {
+                if (Areas[i].area == from)
+                {
+                    ind = i;
+                }
+            }
+            if (ind == -1)
+            {
+                Areas.Add(new MapDirections(from, new MapPaths())); //adding possible paths
+                goto retryfind;
+            }
+            else
+            {
+                switch (d)
+                {
+                    case Direction.n:
+                        Areas[ind] = new MapDirections(Areas[ind].area, new MapPaths(Areas[ind].paths.west, Areas[ind].paths.east, to, Areas[ind].paths.south));
+                            break;
+                    case Direction.e:
+                        Areas[ind] = new MapDirections(Areas[ind].area, new MapPaths(Areas[ind].paths.west, to, Areas[ind].paths.north, Areas[ind].paths.south));
+                        break;
+                    case Direction.s:
+                        Areas[ind] = new MapDirections(Areas[ind].area, new MapPaths(Areas[ind].paths.west, Areas[ind].paths.east, Areas[ind].paths.north, to));
+                        break;
+                    case Direction.w:
+                        Areas[ind] = new MapDirections(Areas[ind].area, new MapPaths(to, Areas[ind].paths.east, Areas[ind].paths.north, Areas[ind].paths.south));
+                        break;
+                }
+            }
+            return true;
+        }
+        void createPath(Program.Point2D p)
+        {
+            Program.Point2D dir = new Program.Point2D(0, 0);
+            Program.Point2D start = new Program.Point2D(p.intx, p.inty); //find start, player inverted
+            if (p.intx <= 1)
+            {
+                //to the left from max
+                dir = new Program.Point2D(-1, 0);
+                start = new Program.Point2D(0, playerTile.position.inty);
+            }
+            if (p.intx >= map.GetLength(0)-1)
+            {
+                //to the right from 0
+                dir = new Program.Point2D(1, 0);
+                start = new Program.Point2D(map.GetLength(0), playerTile.position.inty);
+
+            }
+            if (p.inty <= 1)
+            {
+                //up from max
+                dir = new Program.Point2D(0, -1);
+                start = new Program.Point2D(playerTile.position.intx, map.GetLength(1));
+
+            }
+            if (p.inty >= map.GetLength(1)-1)
+            {
+                //down from 0
+                dir = new Program.Point2D(0, 1);
+                start = new Program.Point2D(playerTile.position.intx, 0);
+
+            }
+            bool foundempty = false;
+            int c = 1;
+            do
+            {
+                Tile t = map[start.intx + dir.intx * c, start.inty + dir.inty * c];
+
+                if (map[start.intx + dir.intx * c, start.inty + dir.inty * c].type == TileType.Wall)
+                {
+                    //make not wall
+                    map[start.intx + dir.intx * c, start.inty + dir.inty * c] = new Tile(' ', new Program.Point2D(start.intx + dir.intx * c, start.inty + dir.inty * c), TileType.Floor);
+                }
+                if (map[start.intx + dir.intx * c, start.inty + dir.inty * c].type == TileType.Floor || map[start.intx + dir.intx * c, start.inty + dir.inty * c].type == TileType.Water)
+                {
+                    foundempty = true;
+                }
+                c++;
+            } while (!foundempty);
+
 
         }
         public void Play()
@@ -231,11 +365,11 @@ namespace HelloNamespace
             {
                 bool endround = false;
                 int type = 0;
-                if (player.player.equipment[20] != null)
+                if (playerTile.player.equipment[20] != null)
                 {
-                    if (player.player.equipment[20].GetType() == typeof(Weapon))
+                    if (playerTile.player.equipment[20].GetType() == typeof(Weapon))
                     {
-                        type = ((Weapon)player.player.equipment[20]).damageType; //right hand determins attack type
+                        type = ((Weapon)playerTile.player.equipment[20]).damageType; //right hand determins attack type
                     }
                     else
                     {
@@ -246,13 +380,14 @@ namespace HelloNamespace
                 {
                     type = 0;
                 }
+                playerTile.DrawSelf();
                 currentInput = Console.ReadKey(true);
                 switch (currentInput.Key)
                 {
                     case ConsoleKey.F:  //DEBUG
 
                        //SpawnRandomEnemy();
-                        player.player.health -= 10;
+                        playerTile.player.health -= 10;
 
                         //Pathfinder pf = new Pathfinder();
                         //Tile target = map[player.standingOn.position.intx+7, player.standingOn.position.inty + 1];
@@ -298,35 +433,35 @@ namespace HelloNamespace
                         DrawPanel(SidePanel.Help);
                         break;
                     case ConsoleKey.UpArrow: //UP ATTACK
-                        map[player.position.intx, player.position.inty].TryTarget(map, Direction.n, player.player.GetRange(type), true);
+                        map[playerTile.position.intx, playerTile.position.inty].TryTarget(map, Direction.n, playerTile.player.GetRange(type), true);
                         endround = true;
                         break;
                     case ConsoleKey.W://UP MOVE
-                        player.Move(map, Direction.n, false);
+                        playerTile.Move(map, Direction.n, false);
                         endround = true;
                         break;
                     case ConsoleKey.DownArrow: // DOWN ATTACK
-                        map[player.position.intx, player.position.inty].TryTarget(map, Direction.s, player.player.GetRange(type), true);
+                        map[playerTile.position.intx, playerTile.position.inty].TryTarget(map, Direction.s, playerTile.player.GetRange(type), true);
                         endround = true;
                         break;
                     case ConsoleKey.S: // DOWN MOVE
-                        player.Move(map, Direction.s, false);
+                        playerTile.Move(map, Direction.s, false);
                         endround = true;
                         break;
                     case ConsoleKey.RightArrow: // RIGHT ATTACK
-                        map[player.position.intx, player.position.inty].TryTarget(map, Direction.e, player.player.GetRange(type), true);
+                        map[playerTile.position.intx, playerTile.position.inty].TryTarget(map, Direction.e, playerTile.player.GetRange(type), true);
                         endround = true;
                         break;
                     case ConsoleKey.D: // RIGHT MOVE
-                        player.Move(map, Direction.e, false);
+                        playerTile.Move(map, Direction.e, false);
                         endround = true;
                         break;
                     case ConsoleKey.LeftArrow: // LEFT ATTACK
-                        map[player.position.intx, player.position.inty].TryTarget(map, Direction.w, player.player.GetRange(type), true);
+                        map[playerTile.position.intx, playerTile.position.inty].TryTarget(map, Direction.w, playerTile.player.GetRange(type), true);
                         endround = true;
                         break;
                     case ConsoleKey.A: // LEFT MOVE
-                        player.Move(map, Direction.w, false);
+                        playerTile.Move(map, Direction.w, false);
                         endround = true;
                         break;
                     case ConsoleKey.Spacebar: // SKIP
@@ -343,7 +478,8 @@ namespace HelloNamespace
                                 break;
                             case PauseOptions.Quit: //exit
                                 running = false;
-                                SaveHandler.SaveMap(map, worldName);
+                                SaveMap(map, worldName);
+                                SavePlayer(playerTile, "default");
                                 Console.Clear();
                                 break;
                             default:
@@ -379,12 +515,12 @@ namespace HelloNamespace
                         {
 
 
-                            if (pf.distance(m_enemy.tile, player) < m_enemy.sightRadius)
+                            if (pf.distance(m_enemy.tile, playerTile) < m_enemy.sightRadius)
                             {
-                                m_enemy.target = player;
+                                m_enemy.target = playerTile;
                                 //sees player
                             }
-                            else if (pf.distance(m_enemy.tile, player) > m_enemy.sightRadius * 2)
+                            else if (pf.distance(m_enemy.tile, playerTile) > m_enemy.sightRadius * 2)
                             {
                                 m_enemy.target = null;
                                 //lost player
@@ -410,9 +546,105 @@ namespace HelloNamespace
                         Thread.Sleep(10);
                     }
                 }
-                player.player.EndOfRound();
-                DrawPanel(sidePanel);
+                playerTile.player.EndOfRound();
+                if (playerTile.player.offscreen)
+                {
+                    string toload = "";
+                    foreach (MapDirections item in Areas)
+                    {
+                        if (item.area == worldName) //current world
+                        {
+                            if (playerTile.position.x <= 1)
+                            {
+                                //west
+                                if (item.paths.west!=null)
+                                {
+                                    toload = item.paths.west;
+                                }
+                                else
+                                {
+                                    toload = "";
+                                }
+                            }
+                            else if (playerTile.position.x >= map.GetLength(0)-1)
+                            {
+                                //east
+                                if (item.paths.east != null)
+                                {
+                                    toload = item.paths.east;
+                                }
+                                else
+                                {
+                                    toload = "";
+                                }
+                            }
+                            else if (playerTile.position.y <= 1)
+                            {
+                                //north
+                                if (item.paths.north != null)
+                                {
+                                    toload = item.paths.north;
+                                }
+                                else
+                                {
+                                    toload = "";
+                                }
+                            }
+                            else if (playerTile.position.y >= map.GetLength(1)-1)
+                            {
+                                //south
+                                if (item.paths.south != null)
+                                {
+                                    toload = item.paths.south;
+                                }
+                                else
+                                {
+                                    toload = "";
+                                }
+                            }
+                        }
+                    }
+                    if (toload == "")
+                    {
+                        NewWorld(worldName);
+                    }
+                    else //load that map 
+                    {
+                        map = ReadMap(toload);
+                        MovePlayerNewMap();
+                        worldName = toload;
+                        DrawMap(map, true, true);
+                    }
+                    playerTile.player.offscreen = false;
+                }
+                //DrawPanel(sidePanel);
             } while (running);
+        }
+        void MovePlayerNewMap()
+        {
+            //TODO invert player position
+            if (playerTile.position.x <= 1)
+            {
+                //north to south
+                playerTile.position = new Program.Point2D(map.GetLength(0) - 1, playerTile.position.inty) ;
+            }
+            else if (playerTile.position.y <= 1)
+            {
+                //west to east
+                playerTile.position = new Program.Point2D(playerTile.position.intx, map.GetLength(1) - 1) ;
+
+            }
+            else if (playerTile.position.x >= map.GetLength(0)-1)
+            {
+                //south to north
+                playerTile.position = new Program.Point2D(1, playerTile.position.inty);
+            }
+            else if (playerTile.position.y >= map.GetLength(1)-1)
+            {
+                //west to east
+                playerTile.position = new Program.Point2D(playerTile.position.intx, 1);
+            }
+            map[playerTile.position.intx, playerTile.position.inty] = playerTile;
         }
         PauseOptions Pause()
         {
@@ -534,9 +766,9 @@ namespace HelloNamespace
         public void SpawnRandomEnemy()
         {
             int x, y;
-            x = rnd.Next(player.position.intx - 10, player.position.intx + 20);
-            y = rnd.Next(player.position.inty - 10, player.position.inty + 20);
-            if (Pathfinder.IsValidCoord(x, y, map) && (x != player.position.intx && y != player.position.inty))
+            x = rnd.Next(playerTile.position.intx - 10, playerTile.position.intx + 20);
+            y = rnd.Next(playerTile.position.inty - 10, playerTile.position.inty + 20);
+            if (Pathfinder.IsValidCoord(x, y, map) && (x != playerTile.position.intx && y != playerTile.position.inty))
             {
                 SpawnRandomEnemy(new Program.Point2D(x, y));
             }
@@ -689,16 +921,16 @@ namespace HelloNamespace
                 startx = mapsize.min.x;
                 endx = isEven(mapsize.max.x / 2) ? (mapsize.max.x / 2) - 2 : (mapsize.max.x / 2) - 1;
                 c = ConsoleColor.DarkRed;
-                current = player.player.health;
-                max = player.player.maxHealth;
+                current = playerTile.player.health;
+                max = playerTile.player.maxHealth;
             }
             else
             {
                 c = ConsoleColor.DarkBlue;
                 startx = isEven(mapsize.max.x / 2) ? (mapsize.max.x / 2) + 2 : (mapsize.max.x / 2) + 1;
                 endx = mapsize.max.x + 1;
-                current = player.player.mana;
-                max = player.player.maxMana;
+                current = playerTile.player.mana;
+                max = playerTile.player.maxMana;
             }
 
 
@@ -872,7 +1104,7 @@ namespace HelloNamespace
                         int m_item = v + sidePanelPage * freeLines;
                         Console.SetCursorPosition((int)item.x, (int)item.y);
                         string text = "";
-                        if (m_item > player.player.inventory.Count - 1)
+                        if (m_item > playerTile.player.inventory.Count - 1)
                         {
                             lastpage = true;
                             break;
@@ -880,7 +1112,7 @@ namespace HelloNamespace
                         else
                         {
                             lastpage = false;
-                            text = player.player.inventory[v + (sidePanelPage * freeLines)].name;
+                            text = playerTile.player.inventory[v + (sidePanelPage * freeLines)].name;
                             Console.BackgroundColor = ConsoleColor.DarkGray;
                             Console.Write(text);
                             Console.ResetColor();
@@ -938,13 +1170,13 @@ namespace HelloNamespace
                         switch (v2)
                         {
                             case 0:
-                                if (player.player.str > 9)
+                                if (playerTile.player.str > 9)
                                 {
-                                    text = "Strength:     " + player.player.str;
+                                    text = "Strength:     " + playerTile.player.str;
                                 }
                                 else
                                 {
-                                    text = "Strength:      " + player.player.str;
+                                    text = "Strength:      " + playerTile.player.str;
 
                                 }
                                 Console.BackgroundColor = ConsoleColor.DarkGray;
@@ -952,26 +1184,26 @@ namespace HelloNamespace
 
                                 break;
                             case 1:
-                                if (player.player.str > 9)
+                                if (playerTile.player.str > 9)
                                 {
-                                    text = "Constitution: " + player.player.str;
+                                    text = "Constitution: " + playerTile.player.str;
                                 }
                                 else
                                 {
-                                    text = "Constitution:  " + player.player.str;
+                                    text = "Constitution:  " + playerTile.player.str;
 
                                 }
                                 Console.BackgroundColor = ConsoleColor.DarkGray;
                                 Console.ForegroundColor = ConsoleColor.DarkRed;
                                 break;
                             case 2:
-                                if (player.player.str > 9)
+                                if (playerTile.player.str > 9)
                                 {
-                                    text = "Wisdom:       " + player.player.str;
+                                    text = "Wisdom:       " + playerTile.player.str;
                                 }
                                 else
                                 {
-                                    text = "Wisdom:        " + player.player.str;
+                                    text = "Wisdom:        " + playerTile.player.str;
 
                                 }
                                 Console.BackgroundColor = ConsoleColor.DarkGray;
@@ -981,25 +1213,25 @@ namespace HelloNamespace
                                 text = "";
                                 break;
                             case 4: // Health
-                                int healthlength = player.player.health.ToString().Length + " / ".Length + player.player.maxHealth.ToString().Length;
+                                int healthlength = playerTile.player.health.ToString().Length + " / ".Length + playerTile.player.maxHealth.ToString().Length;
                                 text = "Health: ";
                                 for (int i = 0; i < maxwordlength - healthlength; i++) //adjust to how much health player has
                                 {
                                     text = text + " ";
                                 }
-                                text = text + player.player.health + " / " + player.player.maxHealth;
+                                text = text + playerTile.player.health + " / " + playerTile.player.maxHealth;
                                 Console.BackgroundColor = ConsoleColor.DarkGray;
                                 Console.ForegroundColor = ConsoleColor.DarkRed;
                                 break;
                             case 5: // Mana
-                                int manalength = player.player.mana.ToString().Length + " / ".Length + player.player.maxMana.ToString().Length;
+                                int manalength = playerTile.player.mana.ToString().Length + " / ".Length + playerTile.player.maxMana.ToString().Length;
 
                                 text = "Health: ";
                                 for (int i = 0; i < maxwordlength - manalength; i++) //adjust to how much mana player has
                                 {
                                     text = text + " ";
                                 }
-                                text = text + player.player.mana + " / " + player.player.maxMana;
+                                text = text + playerTile.player.mana + " / " + playerTile.player.maxMana;
                                 Console.BackgroundColor = ConsoleColor.DarkGray;
                                 Console.ForegroundColor = ConsoleColor.DarkBlue;
                                 break;
@@ -1018,7 +1250,7 @@ namespace HelloNamespace
                     break;
             }
         }
-        void DrawMap(CaveGenerator c, bool replaceempty = false, bool drawplayer = false, bool addlakes = false)
+        void CreateDrawMap(CaveGenerator c, bool replaceempty = false, bool drawplayer = false, bool addlakes = false, Player p = null)
         {
 
             Thread.Sleep(300);
@@ -1037,10 +1269,18 @@ namespace HelloNamespace
             }
             Program.Point2D start = c.findEmptyCell(map, true);
             //Program.Print2dIntArray(map, true, start.GetLength(0), start.GetLength(1));
-            map[(int)start.x, (int)start.y] = new Tile('@', new Program.Point2D((int)start.x, (int)start.y), Tile.TileType.Player, ConsoleColor.Blue);
-            map[(int)start.x, (int)start.y].standingOn = new Tile(' ', new Program.Point2D((int)start.x, (int)start.y), Tile.TileType.Floor);
-            map[(int)start.x, (int)start.y].player = new Player(8, 8, 8);
-            player = map[(int)start.x, (int)start.y];
+            
+            if (p == null)
+            {
+                map[(int)start.x, (int)start.y] = new Tile('@', new Program.Point2D((int)start.x, (int)start.y), Tile.TileType.Player, ConsoleColor.Blue);
+                map[(int)start.x, (int)start.y].standingOn = new Tile(' ', new Program.Point2D((int)start.x, (int)start.y), Tile.TileType.Floor);
+                map[(int)start.x, (int)start.y].player = new Player(8, 8, 8);
+                playerTile = map[(int)start.x, (int)start.y];
+            }
+            else
+            {
+
+            }
             for (int i = mapsize.min.x; i <= mapsize.max.x; i++)
             {
                 for (int j = mapsize.min.y; j < mapsize.max.y; j++)
@@ -1380,6 +1620,10 @@ namespace HelloNamespace
                 }
                 Console.SetCursorPosition(0, 0);
             }
+            else
+            {
+                //moving out of the map
+            }
 
         }
         public void DrawSelf(Tile[,] map)
@@ -1458,6 +1702,11 @@ namespace HelloNamespace
                 }
                 Console.SetCursorPosition(0, 0);
             }
+            else
+            {
+                //moving out of the map
+                player.offscreen = true;
+            }
         }
         public Tile TryTarget(Tile[,] map, Roguelike.Direction direction, int range = 1, bool ignoreplayers = false) //returns first enemy or player in that direction
         {
@@ -1508,9 +1757,10 @@ namespace HelloNamespace
         #endregion
         public List<Item> inventory;
 
+        public bool offscreen; //used to generate a new map
+        public List<Roguelike.MapDirections> world;
         public Player(int s, int w, int c)
         {
-
             str = s;
             wis = w;
             con = c;
@@ -1522,6 +1772,7 @@ namespace HelloNamespace
             inventory = new List<Item>();
             manaregen = w / 8; //max mana is w* mmod (3.6f currently)
             healthregen = 50; //50% chance for health per turn, or average 0.5 health per turn
+            world = new List<Roguelike.MapDirections>();
         }
         private Player() //for XML
         { }
