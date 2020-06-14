@@ -52,9 +52,12 @@ namespace HelloNamespace
             {
                 foreach (Tile tile in map)
                 {
-                    if (tile.player != null)
+                    if (tile != null)
                     {
-                        map[tile.position.intx, tile.position.inty] = tile.standingOn;
+                        if (tile.player != null)
+                        {
+                            map[tile.position.intx, tile.position.inty] = tile.standingOn;
+                        }
                     }
                 }
             }
@@ -74,6 +77,12 @@ namespace HelloNamespace
             if (!Directory.Exists(savefiles))
             {
                 var d = Directory.CreateDirectory(savefiles);
+                var f = File.Create(file);
+                f.Close();
+            }
+            if (!Directory.Exists(savefiles+playersave))
+            {
+                var d = Directory.CreateDirectory(savefiles + playersave);
                 var f = File.Create(file);
                 f.Close();
             }

@@ -47,7 +47,8 @@
     <Compile Include="Cisharpmon.cs" />
     <Compile Include="MapReader.cs" />
     <Compile Include="Pathfinder.cs" />
-    <Compile Include="Roguelike.cs" />
+    <Compile Include="Rogue\Spell.cs" />
+    <Compile Include="Rogue\Roguelike.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RandomStatGenerator.cs" />

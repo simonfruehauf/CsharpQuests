@@ -97,95 +97,98 @@ namespace HelloNamespace
         public Roguelike()
         {
             Areas = new List<MapDirections>();
-            if (System.IO.Directory.Exists(savefiles))
-            {
-                if (System.IO.Directory.Exists(savefiles + playersave))
-                {
-                    //currently just gets the first savefile //TODO select player to load
-                    int count = System.IO.Directory.GetFiles(savefiles + playersave).Length;
-                    if (count > 0)
-                    {
-                        string toread = System.IO.Directory.GetFiles(savefiles + playersave).First();
-                        toread = toread.Split('-')[1].Split('.').First();
+            //PlayerSelect()
+            DrawPlayerSelect();
 
-                        playerTile = ReadPlayer(toread);
-                        Areas = playerTile.player.world;
-                        worldName = playerTile.player.currentArea;
-                        if (System.IO.Directory.Exists(savefiles + mapsave))
-                        {
-                            map = ReadMap(worldName);
-                            if (map == null)
-                            {
-                                NewWorld();
-                            }
-                            //find enemies
-                            titleScreen += " " + worldName + "!";
-                            foreach (Tile item in map)
-                            {
-                                if (item.player != null)
-                                {
-                                    playerTile = item;
-                                }
+            //if (System.IO.Directory.Exists(savefiles))
+            //{
+            //    if (System.IO.Directory.Exists(savefiles + playersave))
+            //    {
+            //        //currently just gets the first savefile //TODO select player to load
+            //        int count = System.IO.Directory.GetFiles(savefiles + playersave).Length;
+            //        if (count > 0)
+            //        {
+            //            string toread = System.IO.Directory.GetFiles(savefiles + playersave).First();
+            //            toread = toread.Split('-')[1].Split('.').First();
 
-                                if (item.enemy != null)
-                                {
-                                    item.enemy.tile = item;
-                                    enemies.Add(item.enemy);
-                                }
-                            }
+            //            playerTile = ReadPlayer(toread);
+            //            Areas = playerTile.player.world;
+            //            worldName = playerTile.player.currentArea;
+            //            if (System.IO.Directory.Exists(savefiles + mapsave))
+            //            {
+            //                map = ReadMap(worldName);
+            //                if (map == null)
+            //                {
+            //                    NewWorld();
+            //                }
+            //                //find enemies
+            //                titleScreen += " " + worldName + "!";
+            //                foreach (Tile item in map)
+            //                {
+            //                    if (item.player != null)
+            //                    {
+            //                        playerTile = item;
+            //                    }
 
-                            //end find enemies
-                            Console.Clear();
-                            DrawScreen();
-                            DrawMap(map, true, true);
+            //                    if (item.enemy != null)
+            //                    {
+            //                        item.enemy.tile = item;
+            //                        enemies.Add(item.enemy);
+            //                    }
+            //                }
 
-                        }
-                    }
-                    else
-                    {
-                        //save directory exists, but no player save
-                        NewWorld();
-                    }
-                }
-                else
-                {
-                    if (System.IO.Directory.Exists(savefiles + mapsave))
-                    {
-                        //currently just gets the first savefile //TODO select map to load
-                        int count = System.IO.Directory.GetFiles(savefiles + mapsave).Length;
-                        if (count > 0)
-                        {
-                            string toread = System.IO.Directory.GetFiles(savefiles + mapsave).First();
-                            worldName = toread.Split('-')[1].Split('.').First();
-                            map = ReadMap(worldName);
-                            //find enemies
-                            titleScreen += " " + worldName + "!";
-                            foreach (Tile item in map)
-                            {
-                                if (item.player != null)
-                                {
-                                    playerTile = item;
-                                }
+            //                //end find enemies
+            //                Console.Clear();
+            //                DrawScreen();
+            //                DrawMap(map, true, true);
 
-                                if (item.enemy != null)
-                                {
-                                    item.enemy.tile = item;
-                                    enemies.Add(item.enemy);
-                                }
-                            }
+            //            }
+            //        }
+            //        else
+            //        {
+            //            //save directory exists, but no player save
+            //            NewWorld();
+            //        }
+            //    }
+            //    else
+            //    {
+            //        if (System.IO.Directory.Exists(savefiles + mapsave))
+            //        {
+            //            //currently just gets the first savefile //TODO select map to load
+            //            int count = System.IO.Directory.GetFiles(savefiles + mapsave).Length;
+            //            if (count > 0)
+            //            {
+            //                string toread = System.IO.Directory.GetFiles(savefiles + mapsave).First();
+            //                worldName = toread.Split('-')[1].Split('.').First();
+            //                map = ReadMap(worldName);
+            //                //find enemies
+            //                titleScreen += " " + worldName + "!";
+            //                foreach (Tile item in map)
+            //                {
+            //                    if (item.player != null)
+            //                    {
+            //                        playerTile = item;
+            //                    }
 
-                            //end find enemies
-                            Console.Clear();
-                            DrawScreen();
-                            DrawMap(map, true, true);
-                        }
-                    }
-                    else
-                    {
-                        NewWorld();
-                    }
-                }
-            }
+            //                    if (item.enemy != null)
+            //                    {
+            //                        item.enemy.tile = item;
+            //                        enemies.Add(item.enemy);
+            //                    }
+            //                }
+
+            //                //end find enemies
+            //                Console.Clear();
+            //                DrawScreen();
+            //                DrawMap(map, true, true);
+            //            }
+            //        }
+            //        else
+            //        {
+            //            NewWorld();
+            //        }
+            //    }
+            //}
 
             sidePanel = SidePanel.Inventory;
             //for (int i = 0; i < 100; i++) //Debug to populate player inventory
@@ -193,7 +196,380 @@ namespace HelloNamespace
             //    Item item = Artefacts[rnd.Next(0, Artefacts.Count - 1)];
             //    item.Pickup(player.player);
             //}
+            DrawMap(map, true, true);
             Play();
+        }
+        void DrawPlayerSelect()
+        {
+            List<string> players = new List<string>();
+
+            if (System.IO.Directory.Exists(savefiles))
+            {
+                if (System.IO.Directory.Exists(savefiles + playersave))
+                {
+                    string[] pl = System.IO.Directory.GetFiles(savefiles + playersave);
+                    players = pl.ToList();
+                    List<string> players2 = new List<string>();
+                    foreach (string s in players)
+                    {
+                        players2.Add(s.Split('-')[1].Split('.').First());
+                    }
+                    players = players2;
+                }
+                else 
+                {
+                    //goto player creation, directories will be made in SavePlayer()
+                    CreatePlayer();
+                }
+            }
+            else
+            {
+                //goto player creation, directories will be made in SavePlayer()
+                CreatePlayer();
+            }
+            if (players.Count == 0)
+            {
+                //goto player creation, empty directory
+                CreatePlayer();
+            }
+            else
+            {
+                //TODO draw selector, let select, load
+                DrawBorder();
+
+                int x = Console.WindowWidth;  //120
+                int y = Console.WindowHeight; //30
+                inventorysize = new Map(new Position(((2 * x) / 3) + 1, 1), new Position(x - 1, y - 1));
+                //draw title
+                //draw "Player select"
+                //draw all names
+                int playercount = players.Count();
+                bool exit = false;
+                int startbuffer = inventorysize.min.x+3;
+                int maxwordlength = 15;
+                int buffer = 3;
+                int j = 0;
+                int k = 0;
+                string arrow = "<--";
+                int maxperrow = ((Console.WindowHeight - 2) / 2);
+                List<Program.Point2D> positions = new List<Program.Point2D>();
+                for (int i = 0; i < playercount; i++)
+                {
+                    if (k * 2 >= Console.WindowHeight - 5)
+                    {
+
+                        positions.Add(new Program.Point2D(startbuffer + j * (maxwordlength + buffer + arrow.Length), 2 + k * 2));
+                        j++;
+                        k = 0;
+                    }
+                    else
+                    {
+                        positions.Add(new Program.Point2D(startbuffer + j * (maxwordlength + buffer + arrow.Length), 2 + k * 2));
+                        k++;
+                    }
+                }
+                int v = 0;
+                foreach (Program.Point2D item in positions)
+                {
+                    Console.SetCursorPosition((int)item.x, (int)item.y);
+                    Console.Write(players[v]);
+                    v++;
+                }
+                int selector = 0; 
+                bool newplayer = false;
+                do
+                {
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.SetCursorPosition((int)positions[selector].x + maxwordlength, (int)positions[selector].y); //current position
+                    Console.Write(arrow);
+                    Console.ResetColor();
+
+                    ConsoleKeyInfo input = Console.ReadKey(true);
+                    switch (input.Key)
+                    {
+                        case ConsoleKey.N:
+                            newplayer = true;
+                            exit = true;
+                            break;
+                        case ConsoleKey.Enter:
+                            exit = true;
+                            break;
+                        case ConsoleKey.UpArrow:
+                            if ((selector % maxperrow) - 1 < 0)
+                            {
+                                selector = selector + (maxperrow - 1);
+
+                                if (selector >= playercount)
+                                {
+                                    selector = playercount - 1;
+                                }
+                            }
+                            else
+                            {
+                                selector = ((selector - 1) % playercount + playercount) % playercount; // keeps it between 0 and x and not -x and x
+                            }
+                            break;
+                        case ConsoleKey.DownArrow:
+                            selector = (selector + 1) % playercount;
+
+                            break;
+                        case ConsoleKey.Q:
+                        case ConsoleKey.Escape:
+                            //exit
+                            selector = playercount - 1;
+                            exit = true;
+                            Environment.Exit(1);
+                            break;
+                        case ConsoleKey.H:
+                            string helptext = "Press up & down to move the cursor, and enter to select.";
+                            Console.SetCursorPosition(Console.WindowWidth / 2 - helptext.Length / 2, 1);
+                            Console.Write(helptext);
+                            Console.SetCursorPosition((int)positions[selector].x + maxwordlength, (int)positions[selector].y); //current position
+                            break;
+                        //help
+                        default:
+                            break;
+                    }
+                    //redraw arrow at index
+                    Console.SetCursorPosition(Console.CursorLeft - arrow.Length, Console.CursorTop);
+                    for (int i = 0; i < arrow.Length; i++)
+                    {
+                        Console.Write(" ");
+                    }
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.SetCursorPosition((int)positions[selector].x + maxwordlength, (int)positions[selector].y); //current position
+                    Console.Write(arrow);
+                    Console.ResetColor();
+
+
+                } while (!exit);
+                Console.Clear();
+                //load player
+                if (newplayer)
+                {
+                    CreatePlayer();
+                }
+                else
+                {
+                    playerTile = ReadPlayer(players[selector]);
+                    worldName = playerTile.player.currentArea;
+                    if (playerTile.player.currentArea != "" && playerTile.player.currentArea != null )
+                    {
+                        map = ReadMap(playerTile.player.currentArea);
+                        worldName = playerTile.player.currentArea;
+                    }
+                    else
+                    {
+                        NewWorld();
+                    }
+                    DrawScreen();
+                }
+            }
+        }
+        void CreatePlayer()
+        {
+            if (playerTile == null)
+            {
+
+                Tile pl = new Tile('@', new Program.Point2D(0, 0), TileType.Player, ConsoleColor.Blue);
+                DrawScreen(false, false);
+                string name = "default";
+                //TODO read name
+                Console.SetCursorPosition(inventorysize.min.x+2,inventorysize.min.y+1);
+                Write.TypeLine("What will be your name?");
+                Console.SetCursorPosition(inventorysize.min.x + 2, inventorysize.min.y + 2);
+                name = MakePlayerName();
+                Console.Clear();
+                DrawScreen(false, false);
+                Dictionary<string, int> stats = MakePlayerStat();
+                Player p = new Player(name, stats["str"], stats["wis"], stats["con"]);
+                pl.player = p;
+                SavePlayer(pl, name);
+                playerTile = ReadPlayer(name);
+                NewWorld();
+                CaveGenerator c = new CaveGenerator();
+                playerTile.position = c.findEmptyCell(map, true);
+                playerTile.color = ConsoleColor.Blue;
+                playerTile.player.currentArea = worldName;
+                playerTile.standingOn = map[playerTile.position.intx, playerTile.position.inty];
+                SavePlayer(pl, name);
+                SaveMap(map, worldName, false);
+            }
+        }
+        string MakePlayerName()
+        {
+            string n = Console.ReadLine();
+            return n == "" ? "default" : n;
+        }
+        Dictionary<string, int> MakePlayerStat()
+        {
+            Dictionary<string, int> dic = new Dictionary<string, int>();
+            dic.Add("str", 1);
+            dic.Add("wis", 1);
+            dic.Add("con", 1);
+            string[] s = new string[3]
+            {
+                "str", "wis", "con"
+            };
+            int x = Console.WindowWidth;  //120
+            int y = Console.WindowHeight; //30
+            inventorysize = new Map(new Position(((2 * x) / 3) + 1, 1), new Position(x - 1, y - 1));
+            string[] stats = new string[3]
+            {
+                "Strength:        ",
+                "Wisdom:          ",
+                "Constitution:    "
+            };
+
+            //draw title
+            //draw "Player select"
+            //draw all names
+            int statamount = 3; 
+            bool exit = false;
+            int startbuffer = inventorysize.min.x + 2;
+            int maxwordlength = 20;
+            int buffer = 3;
+            int j = 0;
+            int k = 0;
+            string arrow = "<--";
+            List<Program.Point2D> positions = new List<Program.Point2D>();
+            for (int i = 0; i < statamount; i++)
+            {
+                if (k * 2 >= Console.WindowHeight - 5)
+                {
+
+                    positions.Add(new Program.Point2D(startbuffer + j * (maxwordlength + buffer + arrow.Length), 2 + k * 2));
+                    j++;
+                    k = 0;
+                }
+                else
+                {
+                    positions.Add(new Program.Point2D(startbuffer + j * (maxwordlength + buffer + arrow.Length), 2 + k * 2));
+                    k++;
+                }
+            }
+            int v = 0;
+            foreach (Program.Point2D item in positions)
+            {
+                Console.SetCursorPosition((int)item.x, (int)item.y);
+                Console.Write(stats[v] + dic[s[v]]);
+                v++;
+            }
+            int selector = 0;
+            int remaining = 17;
+            do
+            {
+                Console.SetCursorPosition((int)positions[positions.Count - 1].x, (int)positions[positions.Count - 1].y + 2); //current position
+                if (remaining < 9)
+                {
+                    Console.Write("Remaining points:  " + remaining);
+                }
+                else
+                {
+                    Console.Write("Remaining points: " + remaining);
+                }
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.SetCursorPosition((int)positions[selector].x + maxwordlength, (int)positions[selector].y); //current position
+                Console.Write(arrow);
+                Console.ResetColor();
+                ConsoleKeyInfo input = Console.ReadKey(true);
+                switch (input.Key)
+                {
+                    case ConsoleKey.Enter:
+                        exit = true;
+                        break;
+                    case ConsoleKey.LeftArrow:
+                        //decrease
+                        if (dic[s[selector]] > 1)
+                        {
+                            dic = changeStats(dic, s[selector], -1);
+                            remaining++;
+                        }
+                        break;
+                    case ConsoleKey.RightArrow:
+                        //increase
+                        if (remaining > 0 && dic[s[selector]] < 12)
+                        {
+                            dic = changeStats(dic, s[selector], 1);
+                            remaining--;
+                        }
+                        break;
+                    case ConsoleKey.UpArrow:
+                        selector = ((selector - 1) % statamount + statamount) % statamount; // keeps it between 0 and x and not -x and x
+                        break;
+                    case ConsoleKey.DownArrow:
+                        selector = (selector + 1) % statamount;
+
+                        break;
+                    case ConsoleKey.Q:
+                    case ConsoleKey.Escape:
+                        //exit
+                        selector = statamount - 1;
+                        exit = true;
+                        Environment.Exit(1);
+                        break;
+                    case ConsoleKey.H:
+                        string helptext = "Press up & down to move the cursor, and left and right to increase/decrease your stats. Enter to confirm.";
+                        Console.SetCursorPosition(Console.WindowWidth / 2 - helptext.Length / 2, 1);
+                        Console.Write(helptext);
+                        Console.SetCursorPosition((int)positions[selector].x + maxwordlength, (int)positions[selector].y); //current position
+                        break;
+                    default:
+                        break;
+                }
+                //redraw arrow at index
+                Console.SetCursorPosition(Console.CursorLeft - arrow.Length, Console.CursorTop);
+                for (int i = 0; i < arrow.Length; i++)
+                {
+                    Console.Write(" ");
+                }
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.SetCursorPosition((int)positions[selector].x + maxwordlength, (int)positions[selector].y); //current position
+                Console.Write(arrow);
+                Console.ResetColor();
+                v = 0;
+
+                foreach (Program.Point2D item in positions)
+                {
+                    Console.SetCursorPosition((int)item.x, (int)item.y);
+                    bool two = false;
+                    if (dic[s[v]] > 9)
+                    {
+                        two = true;
+                    }
+                    Console.Write(stats[v] + dic[s[v]] + (two ? "" : " "));
+                    v++;
+                }
+
+                //draw remaining points
+
+                
+            } while (!exit);
+
+            //TODO draw and read stat assignment
+            return dic;
+        }
+        Dictionary<string, int> changeStats(Dictionary<string, int> d, string key, int v, bool keepPositive = true)
+        {
+            if (d.ContainsKey(key))
+            {
+                if (d[key] + v < 0)
+                {
+
+                }
+                else
+                {
+                    d[key] += v;
+                }
+            }
+            else
+            {
+                if (v < 0)
+                {
+                    d.Add(key, v);
+                }
+            }
+            return d;
         }
         public static Program.Point2D directionAsPoint(Direction dir)
         {
@@ -296,10 +672,6 @@ namespace HelloNamespace
                     LinkWorlds(worldName, oldWorld, Direction.s);
                     edge = findEmtpyEdge(Direction.s);
                 }
-
-                //create paths
-                //TODO currently does not work
-                //createPath(playerTile.position);
             }
 
         }
@@ -502,10 +874,10 @@ namespace HelloNamespace
                                 break;
                             case PauseOptions.Quit: //exit
                                 running = false;
-                                SaveMap(map, worldName, true);
+                                SaveMap(map, worldName, false);
                                 playerTile.player.world = Areas;
                                 playerTile.player.currentArea = worldName;
-                                SavePlayer(playerTile, "default");
+                                SavePlayer(playerTile, playerTile.player.name);
                                 Console.Clear();
                                 break;
                             default:
@@ -661,10 +1033,6 @@ namespace HelloNamespace
                             edge = findEmtpyEdge(Direction.s);
                         }
 
-                        //create paths
-                        //TODO currently does not work
-                        //createPath(playerTile.position);
-
                         //find empty on edge, put player there
                         //pick random empty
                         if (edge.Count == 0)
@@ -688,7 +1056,6 @@ namespace HelloNamespace
         }
         void MovePlayerNewMap()
         {
-            //TODO invert player position
             if (playerTile.position.x <= 1)
             {
                 //north to south
@@ -944,7 +1311,7 @@ namespace HelloNamespace
             }
             Console.ResetColor();
         }
-        void DrawScreen(bool sleep = true)
+        void DrawScreen(bool sleep = true, bool title = true)
         {
             int x = Console.WindowWidth;  //120
             int y = Console.WindowHeight; //30
@@ -957,12 +1324,14 @@ namespace HelloNamespace
             #endregion
 
 
-
-            //Console.SetCursorPosition(mapsize.min.x + 2, mapsize.min.y + 2);
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.SetCursorPosition(GetMiddle(titleScreen, mapsize, Axis.x).x, GetMiddle("", mapsize, Axis.y).x - 1);
-            Console.Write(titleScreen);
-            Console.ResetColor();
+            if (title)
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.SetCursorPosition(GetMiddle(titleScreen, mapsize, Axis.x).x, GetMiddle("", mapsize, Axis.y).x - 1);
+                Console.Write(titleScreen);
+                Console.ResetColor();
+            }
+            
 
 
             Console.SetCursorPosition(0, 0);
@@ -1256,26 +1625,26 @@ namespace HelloNamespace
 
                                 break;
                             case 1:
-                                if (playerTile.player.str > 9)
+                                if (playerTile.player.con > 9)
                                 {
-                                    text = "Constitution: " + playerTile.player.str;
+                                    text = "Constitution: " + playerTile.player.con;
                                 }
                                 else
                                 {
-                                    text = "Constitution:  " + playerTile.player.str;
+                                    text = "Constitution:  " + playerTile.player.con;
 
                                 }
                                 Console.BackgroundColor = ConsoleColor.DarkGray;
                                 Console.ForegroundColor = ConsoleColor.DarkRed;
                                 break;
                             case 2:
-                                if (playerTile.player.str > 9)
+                                if (playerTile.player.wis > 9)
                                 {
-                                    text = "Wisdom:       " + playerTile.player.str;
+                                    text = "Wisdom:       " + playerTile.player.wis;
                                 }
                                 else
                                 {
-                                    text = "Wisdom:        " + playerTile.player.str;
+                                    text = "Wisdom:        " + playerTile.player.wis;
 
                                 }
                                 Console.BackgroundColor = ConsoleColor.DarkGray;
@@ -1298,7 +1667,7 @@ namespace HelloNamespace
                             case 5: // Mana
                                 int manalength = playerTile.player.mana.ToString().Length + " / ".Length + playerTile.player.maxMana.ToString().Length;
 
-                                text = "Health: ";
+                                text = "Mana: ";
                                 for (int i = 0; i < maxwordlength - manalength; i++) //adjust to how much mana player has
                                 {
                                     text = text + " ";
@@ -1346,7 +1715,7 @@ namespace HelloNamespace
             {
                 map[(int)start.x, (int)start.y] = new Tile('@', new Program.Point2D((int)start.x, (int)start.y), Tile.TileType.Player, ConsoleColor.Blue);
                 map[(int)start.x, (int)start.y].standingOn = new Tile(' ', new Program.Point2D((int)start.x, (int)start.y), Tile.TileType.Floor);
-                map[(int)start.x, (int)start.y].player = new Player(8, 8, 8);
+                map[(int)start.x, (int)start.y].player = new Player("default", 8, 8, 8);
                 playerTile = map[(int)start.x, (int)start.y];
             }
             else
@@ -1808,6 +2177,7 @@ namespace HelloNamespace
 
     public class Player
     {
+        public string name;
         public Item[] equipment = new Item[24];
         int experience;
         public int level;
@@ -1832,8 +2202,9 @@ namespace HelloNamespace
         public bool offscreen; //used to generate a new map
         public List<Roguelike.MapDirections> world;
         public string currentArea;
-        public Player(int s, int w, int c)
+        public Player(string n, int s, int w, int c)
         {
+            name = n;
             str = s;
             wis = w;
             con = c;
