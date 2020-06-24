@@ -234,7 +234,6 @@ namespace HelloNamespace
             }
             else
             {
-                //TODO draw selector, let select, load
                 DrawBorder();
 
                 int x = Console.WindowWidth;  //120
@@ -374,7 +373,6 @@ namespace HelloNamespace
                 Tile pl = new Tile('@', new Program.Point2D(0, 0), TileType.Player, ConsoleColor.Blue);
                 DrawScreen(false, false);
                 string name = "default";
-                //TODO read name
                 Console.SetCursorPosition(inventorysize.min.x+2,inventorysize.min.y+1);
                 Write.TypeLine("What will be your name?");
                 Console.SetCursorPosition(inventorysize.min.x + 2, inventorysize.min.y + 2);
@@ -546,7 +544,6 @@ namespace HelloNamespace
                 
             } while (!exit);
 
-            //TODO draw and read stat assignment
             return dic;
         }
         Dictionary<string, int> changeStats(Dictionary<string, int> d, string key, int v, bool keepPositive = true)
